@@ -1,6 +1,6 @@
 import type { Candidate } from "@shared/actions/catalogue";
 import type { Context, Impact } from "@shared/actions/types";
-import { short } from "@shared/format";
+import { rupees, short } from "@shared/format";
 import type { MessageKey } from "@shared/i18n";
 import { impactVars } from "@shared/i18n/reason";
 import type { Range } from "@shared/range";
@@ -20,12 +20,18 @@ function Column({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-type Line = { key: MessageKey; range: Range };
+type Line = { key: MessageKey; range: Range; format: (n: number) => string };
 
 /** A line for a figure worth showing, worded by its sign; nothing for noise. */
-function signed(range: Range | null, floor: number, better: MessageKey, worse: MessageKey): Line[] {
+function signed(
+  range: Range | null,
+  floor: number,
+  better: MessageKey,
+  worse: MessageKey,
+  format = short,
+): Line[] {
   if (!range || Math.abs(range.mid) < floor) return [];
-  return [{ key: range.mid > 0 ? better : worse, range }];
+  return [{ key: range.mid > 0 ? better : worse, range, format }];
 }
 
 function lines(impact: Impact): Record<"protect" | "prevent" | "wallet", Line[]> {
@@ -36,9 +42,9 @@ function lines(impact: Impact): Record<"protect" | "prevent" | "wallet", Line[]>
       ...signed(impact.pm25g, NOTICEABLE.pm, "impact.pm", "impact.pmMore"),
     ],
     wallet: [
-      ...signed(impact.inrPerDay, NOTICEABLE.inr, "impact.saves", "impact.costs"),
+      ...signed(impact.inrPerDay, NOTICEABLE.inr, "impact.saves", "impact.costs", rupees),
       ...(impact.inrOnce && impact.inrOnce.mid > 0
-        ? [{ key: "impact.once" as const, range: impact.inrOnce }]
+        ? [{ key: "impact.once" as const, range: impact.inrOnce, format: rupees }]
         : []),
     ],
   };
@@ -62,14 +68,14 @@ export function ImpactPanel({
   const vars = impactVars(lang, ctx, candidate, time);
   const { protect, prevent, wallet } = lines(impact);
 
-  const line = ({ key, range }: Line) => {
+  const line = ({ key, range, format }: Line) => {
     const [low = 0, high = 0] = [Math.abs(range.low), Math.abs(range.high)].sort((a, b) => a - b);
     return (
       <p key={key}>
-        <span className="font-medium">{t(key, { mid: short(Math.abs(range.mid)) })}</span>
-        {short(low) !== short(high) && (
+        <span className="font-medium">{t(key, { mid: format(Math.abs(range.mid)) })}</span>
+        {format(low) !== format(high) && (
           <span className="block text-sm text-muted">
-            {t("impact.range", { low: short(low), high: short(high) })}
+            {t("impact.range", { low: format(low), high: format(high) })}
           </span>
         )}
       </p>

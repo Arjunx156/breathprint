@@ -1,5 +1,5 @@
 import type { Candidate } from "@shared/actions/catalogue";
-import { short, sig } from "@shared/format";
+import { rupees, short, sig } from "@shared/format";
 import { CIGARETTE_EXPOSURE } from "@shared/i18n/reason";
 import { useApp } from "../../app/state";
 
@@ -27,7 +27,6 @@ function figure(n: number): string {
 function Figures({ totals: x, large }: { totals: Totals; large: boolean }) {
   const { t } = useApp();
   const value = large ? "num text-5xl leading-none" : "num text-3xl leading-none";
-  const money = Math.round(Math.abs(x.inrPerDay));
   return (
     <dl className="mt-3 space-y-5">
       <div>
@@ -49,10 +48,10 @@ function Figures({ totals: x, large }: { totals: Totals; large: boolean }) {
       <div>
         <dt className="sr-only">{t("impact.wallet")}</dt>
         <dd>
-          <span className={value}>₹{money}</span>
+          <span className={value}>₹{rupees(x.inrPerDay)}</span>
           <span className="mt-1 block text-sm text-muted">
             {t(x.inrPerDay >= 0 ? "ledger.saves" : "ledger.spends")}
-            {x.inrOnce > 0 && `, ${t("ledger.once", { once: sig(x.inrOnce) })}`}
+            {x.inrOnce > 0 && `, ${t("ledger.once", { once: rupees(sig(x.inrOnce)) })}`}
           </span>
         </dd>
       </div>

@@ -3,7 +3,7 @@ import type { Context, Impact } from "../actions/types";
 import { pm25At } from "../air";
 import { healthLevel } from "../aqi";
 import { picker } from "../factors";
-import { short, sig } from "../format";
+import { rupees, short, sig } from "../format";
 import type { Reasoner } from "../plan";
 import type { Language } from "../profile";
 import { isMessageKey, type MessageKey, names, t, type Vars } from "./index";
@@ -25,8 +25,8 @@ export function impactVars(lang: Language, ctx: Context, c: Candidate, time: str
     cig: short((i.exposure?.mid ?? 0) / CIGARETTE_EXPOSURE),
     co2: short(i.co2kg?.mid ?? 0),
     pm: short(i.pm25g?.mid ?? 0),
-    inr: Math.round(Math.abs(i.inrPerDay?.mid ?? 0)),
-    once: sig(i.inrOnce?.mid ?? 0),
+    inr: rupees(i.inrPerDay?.mid ?? 0),
+    once: rupees(sig(i.inrOnce?.mid ?? 0)),
   };
 }
 

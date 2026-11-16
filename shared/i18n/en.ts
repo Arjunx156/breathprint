@@ -246,7 +246,7 @@ export const en = {
   "ledger.preventPm": "and {pm} g of PM2.5 kept off the street",
   "ledger.saves": "saved each day",
   "ledger.spends": "spent each day",
-  "ledger.once": "plus ₹{once} once",
+  "ledger.once": "after a one-off ₹{once}",
   "ledger.note":
     "Cigarette figures show scale, after Berkeley Earth; they are not a medical measure.",
 
@@ -259,8 +259,8 @@ export const en = {
   "impact.co2": "{mid} kg less CO2",
   "impact.pm": "{mid} g less PM2.5",
   "impact.saves": "₹{mid} saved a day",
-  "impact.costs": "₹{mid} a day",
-  "impact.once": "₹{mid} once",
+  "impact.costs": "₹{mid} spent a day",
+  "impact.once": "₹{mid} spent once",
   "impact.co2More": "{mid} kg more CO2",
   "impact.pmMore": "{mid} g more PM2.5",
   "impact.none": "No change",

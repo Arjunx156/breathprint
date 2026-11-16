@@ -69,7 +69,7 @@ describe("rule plan wording", () => {
     expect(step?.reason).toMatch(
       /^About \d+% less PM2\.5 in the day for Kabir, Anya and Dadi, roughly [\d.]+ cigarettes' worth\./,
     );
-    expect(step?.reason).toContain("A one-off ₹3500.");
+    expect(step?.reason).toContain("A one-off ₹3,500.");
   });
 
   test("the headline follows the day's level", () => {

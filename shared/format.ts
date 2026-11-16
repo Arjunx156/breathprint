@@ -12,5 +12,8 @@ export function short(n: number): string {
   return sig(n, 2).toString();
 }
 
+/** Whole rupees grouped the Indian way, so 3500 reads 3,500 and 120000 reads 1,20,000. */
+export const rupees = (n: number) => Math.round(Math.abs(n)).toLocaleString("en-IN");
+
 /** HH:MM from a local YYYY-MM-DDTHH:MM time. */
 export const clock = (time: string) => time.slice(11, 16);

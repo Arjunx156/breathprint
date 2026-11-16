@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
-import { siteUrl } from "./scripts/site";
+import { siteUrl } from "./scripts/site.ts";
 
 const at = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
