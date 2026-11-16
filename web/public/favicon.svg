@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Breathprint</title>
+  <rect width="64" height="64" rx="14" fill="#16171a"/>
+  <g fill="none" stroke-linecap="round" stroke-width="4.5">
+    <path d="M13 51V34a19 19 0 0 1 38 0v7" stroke="#f4f3f0"/>
+    <path d="M22.5 53V34a9.5 9.5 0 0 1 19 0v13" stroke="#f4f3f0"/>
+    <path d="M32 34v21" stroke="#8db8f2"/>
+  </g>
+</svg>

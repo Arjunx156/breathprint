@@ -1,0 +1,90 @@
+import { forModel, LANGUAGES } from "@shared/profile";
+import { useState } from "react";
+import { Link, Redirect, useLocation } from "wouter";
+import { useApp } from "../../app/state";
+import { Choice } from "../../components/fields";
+
+const SCALES = ["IN", "US"] as const;
+
+function Forget() {
+  const { t, forget } = useApp();
+  const [, navigate] = useLocation();
+  const [asking, setAsking] = useState(false);
+  if (!asking)
+    return (
+      <button type="button" className="btn btn-quiet" onClick={() => setAsking(true)}>
+        {t("settings.forget")}
+      </button>
+    );
+  return (
+    <div role="alert" className="border-l-2 border-[var(--lvl-4)] pl-4">
+      <p>{t("settings.forgetConfirm")}</p>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => {
+            forget();
+            navigate("/setup");
+          }}
+        >
+          {t("settings.forgetYes")}
+        </button>
+        <button type="button" className="btn btn-quiet" onClick={() => setAsking(false)}>
+          {t("settings.cancel")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function SettingsPage() {
+  const { t, profile, demo, saveProfile, exitDemo } = useApp();
+  if (!profile) return <Redirect to="/setup" replace />;
+
+  return (
+    <div className="max-w-2xl">
+      <h1 className="num text-5xl leading-tight">{t("settings.title")}</h1>
+
+      <div className="mt-10 space-y-8">
+        <Choice
+          legend={t("setup.language")}
+          options={LANGUAGES}
+          value={profile.language}
+          label={(v) => t(`language.${v}`)}
+          onChange={(language) => saveProfile({ ...profile, language })}
+        />
+        <Choice
+          legend={t("setup.scale")}
+          options={SCALES}
+          value={profile.scale}
+          label={(v) => t(`scale.${v}`)}
+          onChange={(scale) => saveProfile({ ...profile, scale })}
+        />
+        <Link href="/setup" className="btn btn-quiet">
+          {t("settings.edit")}
+        </Link>
+      </div>
+
+      <section aria-labelledby="knows" className="mt-16">
+        <h2 id="knows" className="text-2xl font-semibold">
+          {t("settings.knows")}
+        </h2>
+        <p className="mt-2 max-w-prose text-muted">{t("settings.knowsIntro")}</p>
+        <pre className="mt-4 rounded-xl bg-surface p-4 text-xs leading-relaxed whitespace-pre-wrap ring-1 ring-line [overflow-wrap:anywhere]">
+          {JSON.stringify(forModel(profile), null, 2)}
+        </pre>
+      </section>
+
+      <section className="mt-16 border-t border-line pt-8">
+        {demo ? (
+          <button type="button" className="btn btn-quiet" onClick={exitDemo}>
+            {t("demo.exit")}
+          </button>
+        ) : (
+          <Forget />
+        )}
+      </section>
+    </div>
+  );
+}
