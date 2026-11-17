@@ -94,6 +94,27 @@ describe("guards", () => {
     expect(res.status).toBe(403);
   });
 
+  test("accepts its own pages when TLS ends before the server", async () => {
+    // Vercel hands the function an http:// URL while the browser's Origin says https://.
+    const res = await app().request("http://breathprint.example/api/health", {
+      method: "POST",
+      headers: { origin: "https://breathprint.example", "content-type": "application/json" },
+      body: "{}",
+    });
+    expect(res.status).not.toBe(403);
+  });
+
+  test("refuses a lookalike host and an opaque origin", async () => {
+    for (const origin of ["https://breathprint.example.evil.example", "null"]) {
+      const res = await app().request("http://breathprint.example/api/health", {
+        method: "POST",
+        headers: { origin, "content-type": "application/json" },
+        body: "{}",
+      });
+      expect(res.status).toBe(403);
+    }
+  });
+
   test("refuses bodies over the limit", async () => {
     const res = await post(app(), {
       headers: { origin: "http://localhost", "content-type": "application/json" },
