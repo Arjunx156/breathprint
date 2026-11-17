@@ -7,20 +7,34 @@ import { cardById } from "./knowledge/search";
  * citations and action titles, and drop any id that doesn't exist.
  */
 
-const MARKER = /\s*\[([KA]):([a-z0-9-]{1,40})\]/g;
+const MARKER = /\s*\[(?:([KA]):)?([a-z][a-z0-9-]{0,39})\]/g;
 /** A marker cut off by the end of the stream so far, like "[K:mas". */
-const PARTIAL = /\s*\[(?:[KA](?::[a-z0-9-]*)?)?$/;
+const PARTIAL = /\s*\[(?:[KA](?::[a-z0-9-]*)?|[a-z][a-z0-9-]*)?$/;
 const ITEM = /^[-*•]\s+(.+)$/;
+const BARE_BULLET = /^[-*•]$/;
 
 export type Block = { kind: "p"; text: string } | { kind: "list"; items: string[] };
 export type Answer = { blocks: Block[]; cards: string[]; actions: string[] };
+
+/**
+ * What one bracket cites. The model sometimes drops the K: or A:, so a bare
+ * id counts when it names a real card or action; any other bracket is text.
+ */
+function cited(kind: string | undefined, id: string): "K" | "A" | null {
+  if (kind === "K" || kind === "A") return kind;
+  if (cardById(id)) return "K";
+  if (actionById(id)) return "A";
+  return null;
+}
 
 /** Every id the text cites, in order of first mention, known or not. */
 export function markers(text: string): { cards: string[]; actions: string[] } {
   const cards = new Set<string>();
   const actions = new Set<string>();
   for (const [, kind, id] of text.matchAll(MARKER)) {
-    if (id) (kind === "K" ? cards : actions).add(id);
+    if (!id) continue;
+    const as = cited(kind, id);
+    if (as) (as === "K" ? cards : actions).add(id);
   }
   return { cards: [...cards], actions: [...actions] };
 }
@@ -28,7 +42,7 @@ export function markers(text: string): { cards: string[]; actions: string[] } {
 /** The words alone: markers, half-streamed markers and stray emphasis removed. */
 export function cleanText(text: string): string {
   return text
-    .replace(MARKER, "")
+    .replace(MARKER, (whole, kind?: string, id = "") => (cited(kind, id) ? "" : whole))
     .replace(PARTIAL, "")
     .replace(/\*\*|__/g, "");
 }
@@ -48,6 +62,8 @@ export function blocksOf(text: string): Block[] {
   };
   for (const raw of text.split("\n")) {
     const line = raw.trim();
+    // A bullet that held only a marker is empty once the marker is gone.
+    if (BARE_BULLET.test(line)) continue;
     const item = ITEM.exec(line)?.[1];
     if (!line) {
       endPara();

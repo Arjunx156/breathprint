@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "A smog-season assistant that plans low-exposure, low-emission days for families and communities.",
-  "author": "Arjun Krishnan <harisuresh886@gmail.com>",
+  "author": "Arjun Krishnan <4rjunkrishnan@gmail.com>",
   "license": "MIT",
   "type": "module",
   "scripts": {

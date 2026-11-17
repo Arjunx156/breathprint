@@ -1,6 +1,6 @@
 /** Units that make a number a claim worth checking, in English and Hindi. */
 const UNIT =
-  "%|percent|µg|μg|ug|mcg|mg|kg|g|grams?|kilograms?|tonnes?|cigarettes?|प्रतिशत|किलो|ग्राम|सिगरेट";
+  "%|percent|µg|μg|ug|mcg|mg|kg|g|grams?|kilograms?|tonnes?|cigarettes?|m³|cubic met(?:re|er)s?|प्रतिशत|किलो|ग्राम|सिगरेट";
 const PREFIX = String.raw`₹|rs\.?\s?|inr\s?|aqi\s(?:of\s|is\s)?|एक्यूआई\s`;
 const FIGURE = new RegExp(
   String.raw`(${PREFIX})?(\d[\d,]*(?:\.\d+)?)(\s?(?:${UNIT})(?![\p{L}]))?`,

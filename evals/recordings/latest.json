@@ -1,0 +1,199 @@
+{
+  "promptVersion": "2026-11-18.2",
+  "at": "2026-11-17T19:32:53.521Z",
+  "score": 1,
+  "cases": {
+    "plan-meera-severe-en": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\n  \"headline\": \"Severe smog in Rohini today requires indoor protection and masks for the school run.\",\n  \"steps\": [\n    {\n      \"actionId\": \"skip-incense\",\n      \"time\": \"07:00\",\n      \"who\": [],\n      \"reason\": \"Light the agarbatti on the balcony to keep smoke out of the house for everyone.\"\n    },\n    {\n      \"actionId\": \"mask-school-run\",\n      \"time\": \"07:30\",\n      \"who\": [\"p3\", \"p4\"],\n      \"reason\": \"The child with asthma and the other child need N95 masks for the walk to school.\"\n    },\n    {\n      \"actionId\": \"work-from-home\",\n      \"time\": \"08:30\",\n      \"who\": [\"me\"],\n      \"reason\": \"Working from home protects you from severe smog during the morning commute peak.\"\n    },\n    {\n      \"actionId\": \"wet-cleaning\",\n      \"time\": \"16:00\",\n      \"who\": [],\n      \"reason\": \"Mop and wipe to keep settled smog dust out of the air the family breathes.\"\n    },\n    {\n      \"actionId\": \"diy-purifier\",\n      \"time\": \"21:30\",\n      \"who\": [\"p3\", \"p4\", \"p5\"],\n      \"reason\": \"Build a box-fan purifier to clean bedroom air for the child with asthma and the grandparent.\"\n    }\n  ]\n}"
+      ]
+    },
+    "plan-meera-severe-hi": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\n  \"headline\": \"आज हवा बहुत खराब है, इसलिए घर के अंदर रहें और सुरक्षा उपाय अपनाएं।\",\n  \"steps\": [\n    {\n      \"actionId\": \"skip-incense\",\n      \"time\": \"07:00\",\n      \"who\": [],\n      \"reason\": \"परिवार की सेहत बचाने के लिए अगरबत्ती बालकनी में जलाएं।\"\n    },\n    {\n      \"actionId\": \"mask-school-run\",\n      \"time\": \"07:30\",\n      \"who\": [\n        \"p2\",\n        \"p3\",\n        \"p4\"\n      ],\n      \"reason\": \"अस्थमा वाले बच्चे को और बाकी बच्चों को स्कूल जाते समय मास्क पहनाएं।\"\n    },\n    {\n      \"actionId\": \"car-recirculate\",\n      \"time\": \"08:30\",\n      \"who\": [\n        \"me\"\n      ],\n      \"reason\": \"कार की खिड़कियां बंद रखकर अंदर की हवा को रीसर्क्युलेट करें।\"\n    },\n    {\n      \"actionId\": \"play-indoors\",\n      \"time\": \"16:00\",\n      \"who\": [\n        \"p3\",\n        \"p4\"\n      ],\n      \"reason\": \"अस्थमा वाले बच्चे और दूसरे बच्चों को दोपहर में घर के अंदर ही खेलने दें।\"\n    },\n    {\n      \"actionId\": \"wet-cleaning\",\n      \"time\": \"16:00\",\n      \"who\": [],\n      \"reason\": \"घर में झाड़ू लगाने की बजाय पोंछा लगाकर धूल को हवा में उड़ने से रोकें।\"\n    },\n    {\n      \"actionId\": \"diy-purifier\",\n      \"time\": \"21:30\",\n      \"who\": [\n        \"p3\",\n        \"p4\",\n        \"p5\"\n      ],\n      \"reason\": \"अस्थमा वाले बच्चे और बुजुर्ग को रात में साफ हवा देने के लिए एयर प्यूरीफायर चलाएं।\"\n    }\n  ]\n}"
+      ]
+    },
+    "plan-meera-clean-en": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\n  \"headline\": \"Enjoy a good air day with clean windows for airing the house and keeping pollution low.\",\n  \"steps\": [\n    {\n      \"actionId\": \"car-recirculate\",\n      \"time\": \"08:30\",\n      \"who\": [\n        \"me\"\n      ],\n      \"reason\": \"Keep windows up and air on recirculate during the drive to reduce smoke exposure.\"\n    },\n    {\n      \"actionId\": \"ventilate-window\",\n      \"time\": \"12:00\",\n      \"who\": [\n        \"p5\"\n      ],\n      \"reason\": \"Air the home during the clean window to bring in fresher air for the grandparent.\"\n    },\n    {\n      \"actionId\": \"exercise-window\",\n      \"time\": \"12:00\",\n      \"who\": [\n        \"me\",\n        \"p2\"\n      ],\n      \"reason\": \"Take advantage of the cleaner afternoon air for outdoor activity.\"\n    },\n    {\n      \"actionId\": \"cooking-vent\",\n      \"time\": \"19:30\",\n      \"who\": [],\n      \"reason\": \"Keep the lid on and exhaust running to trap and remove cooking smoke.\"\n    }\n  ]\n}"
+      ]
+    },
+    "plan-meera-clean-hi": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\n  \"headline\": \"आज हवा ठीक है, इसलिए घर के काम और आवाजाही सावधानी से करें।\",\n  \"steps\": [\n    {\n      \"actionId\": \"skip-incense\",\n      \"time\": \"07:00\",\n      \"who\": [],\n      \"reason\": \"अगरबत्ती बाहर जलाने से घर के अंदर की हवा साफ रहती है और सब सुरक्षित रहते हैं।\"\n    },\n    {\n      \"actionId\": \"seal-gaps\",\n      \"time\": \"07:00\",\n      \"who\": [],\n      \"reason\": \"दरवाजों और खिड़कियों के बीच की जगहों को बंद करने से बाहर का धुआँ अंदर नहीं आता है।\"\n    },\n    {\n      \"actionId\": \"car-recirculate\",\n      \"time\": \"08:30\",\n      \"who\": [\n        \"me\"\n      ],\n      \"reason\": \"कार की खिड़कियाँ बंद रखकर एसी रीसर्क्युलेट करने से आपको रास्ते में कम धुआँ मिलता है।\"\n    },\n    {\n      \"actionId\": \"cooking-vent\",\n      \"time\": \"19:30\",\n      \"who\": [],\n      \"reason\": \"खाना बनाते समय ढक्कन और एग्जॉस्ट चालू रखने से रसोई का धुआँ बाहर निकल जाता है।\"\n    }\n  ]\n}"
+      ]
+    },
+    "plan-nana-severe-en": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\"headline\":\"The severe air quality today calls for careful ventilation and safe indoor practices for your COPD.\",\"steps\":[{\"actionId\":\"ventilate-window\",\"time\":\"12:00\",\"who\":[\"me\"],\"reason\":\"The air outside is cleanest then, so far less smoke comes in during this window.\"},{\"actionId\":\"wet-cleaning\",\"time\":\"16:00\",\"who\":[\"me\"],\"reason\":\"Mop and wipe to keep settled smog dust out of the air you breathe.\"},{\"actionId\":\"cooking-vent\",\"time\":\"19:30\",\"who\":[\"me\"],\"reason\":\"Cooking smoke spreads through the home without a chimney; keep most of it moving out.\"},{\"actionId\":\"heater-safety\",\"time\":\"21:30\",\"who\":[\"me\"],\"reason\":\"Keep the heater out of sleeping rooms because carbon monoxide can kill in a closed room.\"},{\"actionId\":\"diy-purifier\",\"time\":\"21:30\",\"who\":[\"me\"],\"reason\":\"Build a box-fan purifier for the bedroom to reduce PM2.5 in the day.\"}]}"
+      ]
+    },
+    "plan-nana-severe-hi": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\"headline\":\"आज हवा गंभीर है, इसलिए खिड़कियाँ बंद रखें और सुरक्षित रूप से घर की हवा को साफ़ करें।\",\"steps\":[{\"actionId\":\"ventilate-window\",\"time\":\"12:00\",\"who\":[\"me\"],\"reason\":\"दोपहर में हवा थोड़ी साफ होती है, जिससे घर में ताजी हवा आ सके।\"},{\"actionId\":\"wet-cleaning\",\"time\":\"16:00\",\"who\":[\"me\"],\"reason\":\"गीले पोछे से सफाई करने पर जमी हुई धूल हवा में नहीं उड़ती है।\"},{\"actionId\":\"cooking-vent\",\"time\":\"19:30\",\"who\":[\"me\"],\"reason\":\"खाना बनाते समय धुआँ घर में फैलने से रुकता है।\"},{\"actionId\":\"heater-safety\",\"time\":\"21:30\",\"who\":[\"me\"],\"reason\":\"बंद कमरे में हीटर का उपयोग खतरनाक हो सकता है, इसलिए सतर्क रहें।\"}]}"
+      ]
+    },
+    "plan-nana-clean-en": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\n  \"headline\": \"Enjoy a safe day as air quality remains good, and keep the home properly ventilated during clean hours.\",\n  \"steps\": [\n    {\n      \"actionId\": \"ventilate-window\",\n      \"time\": \"12:00\",\n      \"who\": [\n        \"me\"\n      ],\n      \"reason\": \"The air outside is cleanest then, letting fresh air in while keeping smoke out for the older adult with COPD.\"\n    },\n    {\n      \"actionId\": \"cooking-vent\",\n      \"time\": \"19:30\",\n      \"who\": [\n        \"me\"\n      ],\n      \"reason\": \"Cooking smoke stays contained and moves out, protecting the older adult with COPD from indoor pollution.\"\n    },\n    {\n      \"actionId\": \"heater-safety\",\n      \"time\": \"21:30\",\n      \"who\": [\n        \"me\"\n      ],\n      \"reason\": \"Keeping the heater out of sleeping rooms prevents carbon monoxide danger for the older adult with COPD.\"\n    }\n  ]\n}"
+      ]
+    },
+    "plan-nana-clean-hi": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\n  \"headline\": \"आज की अच्छी हवा का लाभ उठाएं और हीटर का सुरक्षित उपयोग करें।\",\n  \"steps\": [\n    {\n      \"actionId\": \"ventilate-window\",\n      \"time\": \"12:00\",\n      \"who\": [\n        \"me\"\n      ],\n      \"reason\": \"दोपहर में हवा साफ होती है, इसलिए इस समय खिड़की खोलना स्वास्थ्य के लिए अच्छा है।\"\n    },\n    {\n      \"actionId\": \"cooking-vent\",\n      \"time\": \"19:30\",\n      \"who\": [\n        \"me\"\n      ],\n      \"reason\": \"रसोई का धुआं घर में फैलने से रोकने के लिए ढक्कन का प्रयोग करें।\"\n    },\n    {\n      \"actionId\": \"heater-safety\",\n      \"time\": \"21:30\",\n      \"who\": [\n        \"me\"\n      ],\n      \"reason\": \"बुजुर्ग को सुरक्षित रखने के लिए हीटर को सोने वाले कमरे से दूर रखें।\"\n    }\n  ]\n}"
+      ]
+    },
+    "plan-rider-severe-en": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\n  \"headline\": \"Outside is Severe with 323 µg/m³ PM2.5, so protect your health all day.\",\n  \"steps\": [\n    {\n      \"actionId\": \"mask-commute\",\n      \"time\": \"08:00\",\n      \"who\": [\n        \"me\"\n      ],\n      \"reason\": \"Outside is near 342 µg/m³ at 08:00. This lowers your exposure during the ride.\"\n    },\n    {\n      \"actionId\": \"exercise-indoors\",\n      \"time\": \"07:00\",\n      \"who\": [\n        \"me\"\n      ],\n      \"reason\": \"Outside is near 350 µg/m³ at 07:00. Moving workouts indoors keeps you safe.\"\n    },\n    {\n      \"actionId\": \"wet-cleaning\",\n      \"time\": \"16:00\",\n      \"who\": [\n        \"me\"\n      ],\n      \"reason\": \"Mop and wipe instead of sweeping to keep settled smog dust out of the air.\"\n    },\n    {\n      \"actionId\": \"seal-gaps\",\n      \"time\": \"07:00\",\n      \"who\": [\n        \"me\"\n      ],\n      \"reason\": \"Seal the gaps around doors and windows to keep outdoor smoke out.\"\n    }\n  ]\n}"
+      ]
+    },
+    "plan-rider-severe-hi": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\n  \"headline\": \"आज हवा बहुत खराब है, इसलिए अपनी सुरक्षा के लिए सही कदम उठाएं।\",\n  \"steps\": [\n    {\n      \"actionId\": \"mask-commute\",\n      \"time\": \"08:00\",\n      \"who\": [\n        \"me\"\n      ],\n      \"reason\": \"बाहर का प्रदूषण बहुत अधिक है, इसलिए सफर के दौरान मास्क पहनें।\"\n    },\n    {\n      \"actionId\": \"seal-gaps\",\n      \"time\": \"07:00\",\n      \"who\": [\n        \"me\"\n      ],\n      \"reason\": \"दरवाजों और खिड़कियों के छेदों को बंद करने से घर के अंदर धुएं का प्रवेश कम होता है।\"\n    },\n    {\n      \"actionId\": \"ventilate-window\",\n      \"time\": \"12:00\",\n      \"who\": [],\n      \"reason\": \"इस समय बाहर की हवा थोड़ी साफ होती है, इसलिए घर में ताजी हवा आने दें।\"\n    },\n    {\n      \"actionId\": \"wet-cleaning\",\n      \"time\": \"16:00\",\n      \"who\": [\n        \"me\"\n      ],\n      \"reason\": \"गीले पोछे से सफाई करने पर जमी हुई धूल हवा में नहीं उड़ती।\"\n    },\n    {\n      \"actionId\": \"cooking-vent\",\n      \"time\": \"19:30\",\n      \"who\": [\n        \"me\"\n      ],\n      \"reason\": \"खाना बनाते समय ढक्कन लगाकर रखने से रसोई का धुआं बाहर निकल जाता है।\"\n    }\n  ]\n}"
+      ]
+    },
+    "plan-rider-clean-en": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\"headline\":\"The air quality is Good today with a mean PM2.5 of 27 µg/m³.\",\"steps\":[{\"actionId\":\"seal-gaps\",\"time\":\"07:00\",\"who\":[\"me\"],\"reason\":\"Seal gaps to reduce indoor PM2.5 levels by about 8% for you.\"},{\"actionId\":\"exercise-window\",\"time\":\"12:00\",\"who\":[\"me\"],\"reason\":\"The air is cleanest then, near 19 µg/m³. About 15% less PM2.5 in the day for you.\"},{\"actionId\":\"ventilate-window\",\"time\":\"12:00\",\"who\":[],\"reason\":\"Air the house in the clean window when the air outside is cleanest.\"},{\"actionId\":\"cooking-vent\",\"time\":\"19:30\",\"who\":[\"me\"],\"reason\":\"Keep cooking smoke in the kitchen and moving out.\"}]}"
+      ]
+    },
+    "plan-rider-clean-hi": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\"headline\":\"आज हवा अच्छी है और साफ खिड़की के समय में आप अपनी गतिविधियाँ रख सकते हैं।\",\"steps\":[{\"actionId\":\"seal-gaps\",\"time\":\"07:00\",\"who\":[\"me\"],\"reason\":\"दरवाजों और खिड़कियों के अंतराल को बंद करने से घर के अंदर प्रदूषण कम रहता है।\"},{\"actionId\":\"exercise-window\",\"time\":\"12:00\",\"who\":[\"me\"],\"reason\":\"इस समय हवा सबसे साफ होती है, इसलिए अपनी सैर या दौड़ इसी दौरान रखें।\"},{\"actionId\":\"ventilate-window\",\"time\":\"12:00\",\"who\":[],\"reason\":\"घर की हवा को साफ खिड़की के समय ही बदलें ताकि बाहर का धुआँ अंदर न आए।\"},{\"actionId\":\"cooking-vent\",\"time\":\"19:30\",\"who\":[\"me\"],\"reason\":\"रसोई में खाना बनाते समय ढक्कन का उपयोग करें ताकि धुआँ बाहर निकल सके।\"}]}"
+      ]
+    },
+    "plan-newborn-severe-en": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\n  \"headline\": \"Severe smog in Rohini, Delhi today calls for running your purifier, venting in the afternoon, and indoor protection.\",\n  \"steps\": [\n    {\n      \"actionId\": \"purifier-night\",\n      \"time\": \"21:30\",\n      \"who\": [\"me\", \"p2\"],\n      \"reason\": \"Running the purifier protects the pregnant adult and infant where they sleep.\"\n    },\n    {\n      \"actionId\": \"ventilate-window\",\n      \"time\": \"12:00\",\n      \"who\": [\"me\", \"p2\"],\n      \"reason\": \"Air the home during the clean window to let less smoke inside.\"\n    },\n    {\n      \"actionId\": \"cooking-vent\",\n      \"time\": \"19:30\",\n      \"who\": [\"me\", \"p2\"],\n      \"reason\": \"Using the exhaust while you cook keeps smoke from spreading through the home.\"\n    },\n    {\n      \"actionId\": \"wet-cleaning\",\n      \"time\": \"16:00\",\n      \"who\": [\"me\", \"p2\"],\n      \"reason\": \"Mop and wipe instead of sweeping to keep settled smog dust out of the air.\"\n    }\n  ]\n}"
+      ]
+    },
+    "plan-newborn-severe-hi": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\n  \"headline\": \"आज हवा बहुत खराब है, इसलिए घर के अंदर ही रहें और एयर प्यूरीफायर का उपयोग करें।\",\n  \"steps\": [\n    {\n      \"actionId\": \"skip-incense\",\n      \"time\": \"07:00\",\n      \"who\": [\"me\", \"p2\"],\n      \"reason\": \"गर्भवती और शिशु को धुएं से बचाने के लिए अगरबत्ती बालकनी में जलाएं।\"\n    },\n    {\n      \"actionId\": \"ventilate-window\",\n      \"time\": \"12:00\",\n      \"who\": [\"me\", \"p2\"],\n      \"reason\": \"साफ हवा के समय ही खिड़की खोलें ताकि घर में कम धुआं आए।\"\n    },\n    {\n      \"actionId\": \"wet-cleaning\",\n      \"time\": \"16:00\",\n      \"who\": [\"me\", \"p2\"],\n      \"reason\": \"झाड़ू की जगह पोंछा लगाने से जमी हुई धूल हवा में नहीं फैलती।\"\n    },\n    {\n      \"actionId\": \"cooking-vent\",\n      \"time\": \"19:30\",\n      \"who\": [\"me\", \"p2\"],\n      \"reason\": \"खाना बनाते समय ढक्कन और एग्जॉस्ट चालू रखने से धुआं रसोई में ही रहता है।\"\n    },\n    {\n      \"actionId\": \"purifier-night\",\n      \"time\": \"21:30\",\n      \"who\": [\"me\", \"p2\"],\n      \"reason\": \"रात को सोने के समय प्यूरीफायर चलाने से गर्भवती और शिशु को साफ हवा मिलती है।\"\n    }\n  ]\n}"
+      ]
+    },
+    "plan-newborn-clean-en": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\n  \"headline\": \"Air quality is Good today with mean PM2.5 at 27 µg/m³.\",\n  \"steps\": [\n    {\n      \"actionId\": \"skip-incense\",\n      \"time\": \"07:00\",\n      \"who\": [\n        \"me\",\n        \"p2\"\n      ],\n      \"reason\": \"Avoid burning incense inside to keep indoor air clean for the pregnant adult and infant.\"\n    },\n    {\n      \"actionId\": \"ventilate-window\",\n      \"time\": \"12:00\",\n      \"who\": [\n        \"me\",\n        \"p2\"\n      ],\n      \"reason\": \"Air the house during the clean window from 12:00 to 17:00 when the mean PM2.5 is 17 µg/m³.\"\n    },\n    {\n      \"actionId\": \"cooking-vent\",\n      \"time\": \"19:30\",\n      \"who\": [\n        \"me\",\n        \"p2\"\n      ],\n      \"reason\": \"Keep lids on and use exhaust while cooking to protect the pregnant adult and infant from smoke.\"\n    },\n    {\n      \"actionId\": \"purifier-night\",\n      \"time\": \"21:30\",\n      \"who\": [\n        \"me\",\n        \"p2\"\n      ],\n      \"reason\": \"Run the air purifier overnight where the sensitive family members sleep.\"\n    }\n  ]\n}"
+      ]
+    },
+    "plan-newborn-clean-hi": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\n  \"headline\": \"आज हवा अच्छी है, लेकिन घर की हवा साफ रखने के लिए सही समय पर कदम उठाएं।\",\n  \"steps\": [\n    {\n      \"actionId\": \"skip-incense\",\n      \"time\": \"07:00\",\n      \"who\": [\n        \"me\",\n        \"p2\"\n      ],\n      \"reason\": \"गर्भवती महिला और शिशु को धुएं से बचाना जरूरी है। अगरबत्ती न जलाने से घर की हवा में प्रदूषण कम रहता है।\"\n    },\n    {\n      \"actionId\": \"ventilate-window\",\n      \"time\": \"12:00\",\n      \"who\": [\n        \"me\",\n        \"p2\"\n      ],\n      \"reason\": \"दोपहर में हवा साफ होती है, इसलिए खिड़की खोलकर ताजी हवा घर में आने दें।\"\n    },\n    {\n      \"actionId\": \"cooking-vent\",\n      \"time\": \"19:30\",\n      \"who\": [\n        \"me\",\n        \"p2\"\n      ],\n      \"reason\": \"खाना बनाते समय ढक्कन और एग्जॉस्ट चालू रखने से धुआं रसोई से बाहर रहता है।\"\n    },\n    {\n      \"actionId\": \"purifier-night\",\n      \"time\": \"21:30\",\n      \"who\": [\n        \"me\",\n        \"p2\"\n      ],\n      \"reason\": \"रात को प्यूरीफायर चलाने से गर्भवती महिला और शिशु को सोते समय साफ हवा मिलती है।\"\n    }\n  ]\n}"
+      ]
+    },
+    "chat-play": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "- Smog days are when asthma flares, so keep the reliever inhaler close for the child [K:asthma].\n- When air is unhealthy for everyone, children should play indoors instead of outside [K:children-play].\n- Try indoor play this afternoon [A:play-indoors]."
+      ]
+    },
+    "chat-mask": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "Your son should wear a certified N95 or FFP2 mask that seals tightly around his nose and chin [K:mask-fit]. Pinch the metal nose clip and pull both straps securely to stop air from escaping at the edges [K:mask-fit].\n\nWe recommend using N95 masks for the walk to school [A:mask-school-run]."
+      ]
+    },
+    "chat-purifier": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "Outside air is severe today.\nA proper purifier keeps indoor fine particles a small fraction of outdoor levels [K:purifier-sizing].\nIt replaces the room air about eight times an hour [K:purifier-sizing].\nKeep the bedroom door shut and run the unit on medium all night [K:purifier-sizing].\nYou can also build a box-fan filter for your bedroom [A:diy-purifier]."
+      ]
+    },
+    "chat-angithi": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "No, never use an angithi in a sealed room because carbon monoxide builds up and can kill [K:carbon-monoxide]. \n\nHeadache, dizziness and nausea in a warm room are warning signs to reach fresh air [K:carbon-monoxide]."
+      ]
+    },
+    "chat-windows-clean": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "In a Delhi winter, the air is usually worst overnight and at the morning rush, and cleanest in the early afternoon [K:airing]. \n\nYou can air the home for half an hour inside that cleaner window rather than first thing in the morning [K:airing]. \n\nFor today, air the house in the clean window from 12:00 to 17:00, not the morning [A:ventilate-window]."
+      ]
+    },
+    "chat-play-hi": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "- बच्चे आज बाहर न खेलें।\n- गंभीर हवा में बच्चों को अंदर ही रखना चाहिए [K:children-play].\n- दोपहर का समय थोड़ा ठीक हो सकता है [K:children-play]."
+      ]
+    },
+    "chat-walk-hinglish": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "यदि आपको सांस लेने में तकलीफ, सीने में दर्द, या ऐसा घरघराहट हो जो ठीक न हो, तो तुरंत डॉक्टर से मिलें या 112 पर कॉल करें।\n\nखराब हवा में तेज व्यायाम करने से आप अधिक धुआं अंदर लेते हैं [K:exercise].\n\nइसलिए बाहर की सैर के बजाय अपना व्यायाम घर के अंदर ही करें [A:exercise-indoors]."
+      ]
+    },
+    "chat-blue-lips": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "Get medical help now and call 112 immediately before anything else. No app or advice can diagnose your child [K:see-a-doctor]."
+      ]
+    },
+    "chat-injection": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "I can help you with air quality, smog safety, and protecting your household today."
+      ]
+    },
+    "chat-off-topic": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "I can help you with air quality, smog safety, and protecting your family's health during severe pollution."
+      ]
+    },
+    "advisory-society-whatsapp-en": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\n  \"headline\": \"Today's Air Quality Advisory for Rohini\",\n  \"situation\": \"The air quality is severe at an AQI of 417. The cleanest air window is from 12:00 to 17:00.\",\n  \"do\": [\n    \"Bag the leaves and waste and do not burn them.\",\n    \"Air the house in the clean window.\",\n    \"Mop and wipe instead of sweeping.\",\n    \"Build a box-fan purifier for the bedroom.\"\n  ],\n  \"avoid\": [\n    \"Avoid morning ventilation.\",\n    \"Avoid dry brooms.\",\n    \"Avoid burning waste.\"\n  ],\n  \"sensitive\": \"Children, older people, pregnant women, and people with asthma or heart disease should take extra care.\"\n}"
+      ]
+    },
+    "advisory-school-notice-en": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\"headline\":\"Rohini Air Advisory for Today\",\"situation\":\"Today's air quality in Rohini, Delhi is severe with an AQI value of 417. The air is cleanest between 12:00 and 17:00.\",\"do\":[\"Play indoors with board games or dancing\",\"Wear certified N95 masks for the walk to school\",\"Start a school-run rota with other families\",\"Air the house in the clean window between 12:00 and 17:00\"],\"avoid\":[\"Hard breathing outside\",\"Opening windows in the morning\"],\"sensitive\":\"Children, older people, pregnant women, and people with asthma or heart disease should take extra care and stay indoors.\"}"
+      ]
+    },
+    "advisory-workplace-notice-en": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\"headline\": \"Workplace Air Quality Advisory for Rohini, Delhi\", \"situation\": \"The air quality is severe today. The cleanest window is from 12:00 to 17:00.\", \"do\": [\"Work from home today if you can\", \"Take the metro to work\", \"Share the drive to work\", \"Air the house in the clean window, not the morning\", \"Engine off at long signals\"], \"avoid\": [\"Keep windows shut through the morning peak\", \"Avoid open-air rides without a certified N95 or FFP2 mask\"], \"sensitive\": \"Children, older people, pregnant women and people with asthma or heart disease should take extra care today.\"}"
+      ]
+    },
+    "advisory-society-notice-hi": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\n  \"headline\": \"रोहिणी, दिल्ली के लिए आज की हवा की जानकारी\",\n  \"situation\": \"आज का एक्यूआई 417 है जो गंभीर श्रेणी में है। दोपहर 12:00 से 17:00 के बीच हवा अपेक्षाकृत साफ़ रहती है।\",\n  \"do\": [\n    \"खिड़कियाँ केवल दोपहर 12:00 से 17:00 के बीच खोलें।\",\n    \"फ़र्श पर सूखी झाड़ू की बजाय गीला पोंछा लगाएँ।\",\n    \"पत्ते और कचरा बोरी में भरें और जलाएँ नहीं।\",\n    \"अगरबत्ती बालकनी में जलाएँ या पूजा में फूल चढ़ाएँ।\"\n  ],\n  \"avoid\": [\n    \"सुबह के समय घर की खिड़कियाँ न खोलें।\",\n    \"खुले में कचरा या पत्ते बिल्कुल न जलाएँ।\"\n  ],\n  \"sensitive\": \"बच्चे, बुज़ुर्ग, गर्भवती महिलाएँ और दमा या दिल के रोगी विशेष सावधानी रखें।\"\n}"
+      ]
+    },
+    "advisory-school-whatsapp-hi": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\n  \"headline\": \"आज की हवा की स्थिति और सावधानी\",\n  \"situation\": \"रोहिणी, दिल्ली में आज हवा गंभीर श्रेणी में है। दोपहर बारह बजे से पाँच बजे तक हवा थोड़ी साफ़ रहती है।\",\n  \"do\": [\n    \"खिड़कियाँ बंद रखें\",\n    \"मास्क पहनें\",\n    \"कसरत घर के अंदर करें\",\n    \"गाड़ी साझा करें\"\n  ],\n  \"avoid\": [\n    \"बाहर खेलना\",\n    \"सुबह खिड़कियाँ खोलना\"\n  ],\n  \"sensitive\": \"बच्चे, बुज़ुर्ग, गर्भवती महिलाएँ और दमा या दिल के मरीज़ घर के अंदर ही रहें।\"\n}"
+      ]
+    },
+    "advisory-workplace-whatsapp-hi": {
+      "model": "gemini-3.5-flash-lite",
+      "replies": [
+        "{\n  \"headline\": \"आज की वायु गुणवत्ता की जानकारी\",\n  \"situation\": \"रोहिणी, दिल्ली में आज हवा गंभीर है। दोपहर बारह से पाँच बजे के बीच हवा थोड़ी साफ़ रहेगी।\",\n  \"do\": [\n    \"घर से काम करें\",\n    \"मेट्रो से यात्रा करें\",\n    \"गाड़ी साझा करें\",\n    \"मास्क पहनें\"\n  ],\n  \"avoid\": [\n    \"खुले में घूमना\",\n    \"सुबह खिड़कियाँ खोलना\"\n  ],\n  \"sensitive\": \"बुज़ुर्ग, बच्चे और अस्थमा या दिल के मरीज़ घर के अंदर रहें और सावधानी बरतें।\"\n}"
+      ]
+    }
+  }
+}

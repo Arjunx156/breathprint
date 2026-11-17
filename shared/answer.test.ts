@@ -31,6 +31,20 @@ describe("chat answers", () => {
     ]);
   });
 
+  test("reads a known id cited without its K: or A:", () => {
+    const answer = readAnswer("Call 112 now [see-a-doctor]. Keep them in [play-indoors].");
+    expect(answer.blocks).toEqual([{ kind: "p", text: "Call 112 now. Keep them in." }]);
+    expect(answer.cards).toEqual(["see-a-doctor"]);
+    expect(answer.actions).toEqual(["play-indoors"]);
+    expect(cleanText("See note [1] and [made-up-id].")).toBe("See note [1] and [made-up-id].");
+  });
+
+  test("drops a bullet that held only a marker", () => {
+    expect(
+      readAnswer("Exercise indoors today [K:exercise].\n\n- [A:exercise-indoors]").blocks,
+    ).toEqual([{ kind: "p", text: "Exercise indoors today." }]);
+  });
+
   test("leaves Hindi untouched", () => {
     const text = "बच्चे आज घर के अंदर खेलें [A:play-indoors]।";
     expect(readAnswer(text).blocks).toEqual([{ kind: "p", text: "बच्चे आज घर के अंदर खेलें।" }]);

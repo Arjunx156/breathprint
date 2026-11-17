@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { today } from "../../shared/engine";
+import { t } from "../../shared/i18n";
 import { MEERA } from "../../shared/profile";
 import type { ChatEvent } from "../../shared/replies";
 import { severeDay } from "../../shared/testing";
@@ -51,6 +52,16 @@ function goodPlan(reason = "The air is kindest then.") {
 }
 
 const planBody = { profile: MEERA, lang: "en", demo: true };
+/** Outside the demo nothing is saved to fall back on. */
+const livePlan = { ...planBody, demo: false };
+
+const offlineApp = () =>
+  createApp({
+    env: loadEnv({}),
+    air: fixtureSource(),
+    geocode: places,
+    llm: createLlm({ provider: null, models: [], timeoutMs: 1000 }),
+  });
 
 describe("personal plan", () => {
   test("returns the model's plan once it passes the checks", async () => {
@@ -88,15 +99,19 @@ describe("personal plan", () => {
       steps: [{ actionId: "seal-gaps", time: "25:00", who: [], reason: "x" }],
     });
     const { app } = withModel([unsafe, unsafe]);
-    const res = await post(app, "/api/plan", planBody);
+    const res = await post(app, "/api/plan", livePlan);
     expect(res.status).toBe(503);
     expect(await res.json()).toMatchObject({ error: { code: "model_unavailable" } });
   });
 
   test("answers 503 at once when no model is configured", async () => {
-    const llm = createLlm({ provider: null, models: [], timeoutMs: 1000 });
-    const app = createApp({ env: loadEnv({}), air: fixtureSource(), geocode: places, llm });
-    expect((await post(app, "/api/plan", planBody)).status).toBe(503);
+    expect((await post(offlineApp(), "/api/plan", livePlan)).status).toBe(503);
+  });
+
+  test("in the demo, shows the saved plan, labelled, when the model is out", async () => {
+    const res = await post(offlineApp(), "/api/plan", planBody);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ model: "recorded", recorded: true });
   });
 
   test("rejects a profile that does not parse", async () => {
@@ -145,6 +160,13 @@ describe("chat", () => {
     const { app } = withModel([new Error("down"), new Error("down")]);
     expect((await post(app, "/api/chat", ask("Can the kids play outside?"))).status).toBe(503);
   });
+
+  test("in the demo, streams the saved answer to a suggested question", async () => {
+    const res = await post(offlineApp(), "/api/chat", { ...ask(t("hi", "ask.q1")), lang: "hi" });
+    expect(res.status).toBe(200);
+    const done = (await events(res)).at(-1);
+    expect(done).toEqual({ type: "done", model: "recorded", recorded: true, flags: [] });
+  });
 });
 
 describe("community advisory", () => {
@@ -175,6 +197,13 @@ describe("community advisory", () => {
     const reply = (await res.json()) as { advisory: unknown; collective: { households: number } };
     expect(reply.advisory).toEqual(advisory);
     expect(reply.collective.households).toBe(120);
+  });
+
+  test("in the demo, shows the saved advisory, labelled, when the model is out", async () => {
+    const hindiNotice = { ...body, lang: "hi", audience: "society", channel: "notice" };
+    const res = await post(offlineApp(), "/api/advisory", hindiNotice);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ model: "recorded", recorded: true });
   });
 
   test("model routes have their own, tighter limit", async () => {

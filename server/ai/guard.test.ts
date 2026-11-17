@@ -14,6 +14,12 @@ describe("figures", () => {
     expect(figures("लगभग ३६ प्रतिशत कम, ₹४ रोज़").map((f) => f.value)).toEqual([36, 4]);
   });
 
+  test("checks room and airflow volumes too", () => {
+    expect(figures("A 30 m³ room needs 250 m³ of clean air an hour.").map((f) => f.value)).toEqual([
+      30, 250,
+    ]);
+  });
+
   test("leaves clock times and PM2.5's own name alone", () => {
     expect(figures("Open the windows 13:00 to 16:00 when PM2.5 dips.")).toEqual([]);
   });

@@ -41,7 +41,7 @@ export const CARDS: readonly Card[] = [
     id: "purifier-sizing",
     title: "How big a purifier a room needs",
     titleHi: "कमरे के लिए कितना बड़ा प्यूरीफ़ायर चाहिए",
-    body: "What matters is the clean air delivery rate (CADR) against the room's volume. In a shut 30 m³ bedroom, a purifier delivering 250 to 300 m³ of clean air an hour replaces the air about eight times an hour and keeps indoor PM2.5 a small fraction of outdoors. Keep the door shut and run it on medium all night.",
+    body: "What matters is the clean air delivery rate (CADR) against the room's volume. In a shut 30 m³ bedroom, a purifier delivering 250 to 300 m³ of clean air an hour replaces the air about eight times an hour. That keeps indoor PM2.5 a small fraction of outdoors. Keep the door shut and run it on medium all night.",
     sources: ["ncceh2023", "chenZhao2011"],
     aliases: [
       "air purifier",

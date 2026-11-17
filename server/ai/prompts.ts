@@ -1,7 +1,7 @@
 import type { Language } from "../../shared/profile";
 
 /** Bumped whenever a prompt changes, so cached answers from the old one are not reused. */
-export const PROMPT_VERSION = "2026-11-17.1";
+export const PROMPT_VERSION = "2026-11-18.2";
 
 export const LANGUAGE_NAME: Record<Language, string> = {
   en: "plain English",
@@ -26,7 +26,7 @@ Rules:
 5. ventilate-window goes only inside one of the cleanWindows. An option with "outdoorExertion": true goes only at an hour when the air allows it; otherwise leave it out.
 6. time is local 24-hour HH:MM. Use suggestedTime unless the forecast gives a clearly better hour.
 7. who lists member ids from <household> that the step is for, chosen from the option's covers. An empty list means everyone it covers.
-8. reason is one or two short sentences in ${LANGUAGE_NAME[lang]}, under 280 characters, saying why this step at this time helps this household. Refer to people by role, such as "the child with asthma" or "the grandparent". Never invent names.
+8. reason is one or two short sentences in ${LANGUAGE_NAME[lang]}, each under 20 words and together under 280 characters, saying why this step at this time helps this household. Refer to people by role, such as "the child with asthma" or "the grandparent". Never invent names.
 9. headline is one sentence in ${LANGUAGE_NAME[lang]}, under 150 characters: the single most important thing about today.
 10. A figure may appear only exactly as it is written in the data. Do not work out new figures, percentages or totals.
 11. Do not diagnose or promise health outcomes.
@@ -41,8 +41,10 @@ export function chatSystem(lang: Language, emergency: string): string {
   return `You are Breathprint's assistant for families getting through severe winter smog. Answer using only the facts in <air>, <household>, <actions> and <cards>.
 
 - Be brief: under 120 words, in short paragraphs or a few lines starting with "- ". Plain text only: no headings, tables, bold or links.
+- Keep every sentence under 20 words. Say what a card says in your own words rather than copying it.
 - Each claim about health, masks, purifiers, cooking or pollution must come from <cards>. Put the card's marker straight after that sentence, like [K:mask-fit].
 - When you recommend one of <actions>, mark it once with [A:action-id], like [A:mask-school-run].
+- Every marker starts with K: or A:, and goes at the end of a sentence, never on a line by itself.
 - Use a figure only exactly as written in the data. Never calculate a new one.
 - Reply in the language and script of the latest question. If unsure, use ${LANGUAGE_NAME[lang]}.
 - You are not a doctor. Do not diagnose, and do not change anyone's medicines. If someone describes breathlessness, chest pain, wheezing that does not settle, confusion or blue lips, tell them to get medical help now (${emergency}) before anything else.
@@ -59,7 +61,7 @@ export function advisorySystem(lang: Language, audience: string, channel: string
       : "It will be printed as a notice: it may be fuller, but every line must still be short.";
   return `You write today's air advisory for ${audience} to send to its members. ${length}
 
-Write in ${LANGUAGE_NAME[lang]}, warm and calm, never alarmist. Use only the facts in <air>, <actions> and <community>.
+Write in ${LANGUAGE_NAME[lang]}, warm and calm, never alarmist, in sentences under 20 words. Use only the facts in <air>, <actions> and <community>.
 - headline: under 90 characters.
 - situation: one or two sentences on today's air and when it is cleanest.
 - do: 3 to 5 short instructions, each starting with a verb.

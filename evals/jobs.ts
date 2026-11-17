@@ -21,6 +21,7 @@ import {
   languageMatches,
   noLeak,
   readable,
+  tidy,
   withinLength,
 } from "./scorers";
 
@@ -81,6 +82,7 @@ async function chat(llm: Llm, c: ChatCase): Promise<Scored> {
       ...(c.anyScript ? [] : [languageMatches(plain, c.lang)]),
       ...(c.expect.includes("cites") ? [] : [knownIds(text)]),
       grounded(ungrounded(text, call.allowed)),
+      tidy(text),
       ...(c.expect.includes("brief") ? [] : [withinLength(text), readable(plain)]),
       ...c.expect.map((e) => EXPECT[e](text)),
     ],

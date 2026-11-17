@@ -1,5 +1,5 @@
 import { actionById } from "../shared/actions/catalogue";
-import { cleanText, markers } from "../shared/answer";
+import { cleanText, markers, readAnswer } from "../shared/answer";
 import { cardById } from "../shared/knowledge/search";
 import type { Language } from "../shared/profile";
 
@@ -28,9 +28,9 @@ export function words(text: string): number {
   return text.split(/\s+/).filter(Boolean).length;
 }
 
-/** Plain English: sentences that average twenty words or fewer. */
+/** Plain English: sentences that average twenty words or fewer. A list item is a sentence. */
 export function readable(text: string): Check {
-  const sentences = text.split(/[.!?।]+\s/).filter((s) => s.trim());
+  const sentences = text.split(/[.!?।]+\s+|\n+/).filter((s) => s.trim());
   const mean = words(text) / Math.max(1, sentences.length);
   return check("readable", mean <= 20, `${mean.toFixed(1)} words a sentence`);
 }
@@ -58,6 +58,13 @@ export function knownIds(text: string): Check {
     ...cited.actions.filter((id) => !actionById(id)),
   ];
   return check("known ids", unknown.length === 0, unknown.join(", "));
+}
+
+/** What the reader sees, once markers become citations, has no brackets left in it. */
+export function tidy(text: string): Check {
+  const shown = readAnswer(text).blocks.flatMap((b) => (b.kind === "p" ? [b.text] : b.items));
+  const stray = shown.join("\n").match(/\[[^\]\n]*\]?/)?.[0];
+  return check("tidy", !stray, `shows ${stray}`);
 }
 
 const DEVANAGARI_DIGITS = /[०-९]/g;

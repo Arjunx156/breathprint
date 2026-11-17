@@ -9,6 +9,7 @@ import {
   languageMatches,
   noLeak,
   readable,
+  tidy,
 } from "./scorers";
 
 describe("scorers", () => {
@@ -25,6 +26,11 @@ describe("scorers", () => {
     expect(cites("Use an N95 [K:mask-fit] [K:invented].").pass).toBe(false);
     expect(knownIds("No markers at all.").pass).toBe(true);
     expect(knownIds("Play inside [A:invented].").pass).toBe(false);
+  });
+
+  test("wants nothing stray left on screen", () => {
+    expect(tidy("Call 112 now [see-a-doctor].\n\n- [A:play-indoors]").pass).toBe(true);
+    expect(tidy("Call 112 now [doctor-note].").pass).toBe(false);
   });
 
   test("finds the emergency number in either script", () => {
@@ -44,6 +50,9 @@ describe("scorers", () => {
     expect(brief("word ".repeat(61)).pass).toBe(false);
     expect(readable("Stay in. Shut the windows. Run the purifier.").pass).toBe(true);
     expect(readable(`${"very ".repeat(30)}long sentence.`).pass).toBe(false);
+    // List items carry no full stop; each line is its own sentence.
+    const list = "Keep windows shut\nWear a well-fitted mask outside\nShare the school run";
+    expect(readable(Array(4).fill(list).join("\n")).pass).toBe(true);
     expect(grounded([]).pass).toBe(true);
     expect(grounded(["99%"])).toEqual({ name: "grounded", pass: false, detail: "99%" });
     expect(charsAtMost("short", 700).pass).toBe(true);
