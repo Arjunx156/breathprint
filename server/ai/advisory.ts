@@ -10,11 +10,12 @@ import {
 } from "../../shared/community";
 import { short } from "../../shared/format";
 import { isMessageKey, t } from "../../shared/i18n";
+import { inScript } from "../../shared/i18n/script";
 import type { Language } from "../../shared/profile";
 import type { LlmRequest } from "../llm/types";
 import { airFacts, numbersIn } from "./grounding";
 import { ungrounded } from "./guard";
-import { advisorySystem, block } from "./prompts";
+import { advisorySystem, block, wrongLanguage } from "./prompts";
 import { type Parsed, parseJson } from "./structured";
 
 const ADVISORY_JSON_SCHEMA = {
@@ -37,11 +38,13 @@ const AUDIENCE_NAME: Record<Audience, string> = {
 
 const text = (lang: Language, key: string) => (isMessageKey(key) ? t(lang, key) : key);
 
+export type AdvisoryCall = { req: LlmRequest; allowed: number[]; lang: Language };
+
 export function advisoryRequest(
   ctx: Context,
   input: { audience: Audience; channel: Channel; lang: Language },
   together: Collective | null,
-): { req: LlmRequest; allowed: number[] } {
+): AdvisoryCall {
   const { audience, channel, lang } = input;
   const packet = {
     air: airFacts(ctx),
@@ -75,10 +78,12 @@ export function advisoryRequest(
       temperature: 0.5,
     },
     allowed: numbersIn(packet),
+    lang,
   };
 }
 
-export function readAdvisory(allowed: readonly number[]) {
+/** Reads a reply as an advisory, rejecting any figure not in the data or words in the wrong language. */
+export function readAdvisory({ allowed, lang }: Omit<AdvisoryCall, "req">) {
   return (reply: string): Parsed<Advisory> => {
     const json = parseJson(reply);
     if (!json.ok) return json;
@@ -94,6 +99,7 @@ export function readAdvisory(allowed: readonly number[]) {
     const issues = ungrounded(words, allowed).map(
       (f) => `"${f}" is not in the data; use only figures written there.`,
     );
+    if (!inScript(words, lang)) issues.push(wrongLanguage(lang));
     return issues.length > 0 ? { ok: false, issues } : { ok: true, value: a };
   };
 }

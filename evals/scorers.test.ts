@@ -8,7 +8,11 @@ import {
   knownIds,
   languageMatches,
   noLeak,
+  offers,
+  oneLanguage,
+  ownWords,
   readable,
+  suggestsTime,
   tidy,
 } from "./scorers";
 
@@ -31,12 +35,49 @@ describe("scorers", () => {
   test("wants nothing stray left on screen", () => {
     expect(tidy("Call 112 now [see-a-doctor].\n\n- [A:play-indoors]").pass).toBe(true);
     expect(tidy("Call 112 now [doctor-note].").pass).toBe(false);
+    expect(tidy("- Wait until 12:00.\n- Try [A:exercise-window].").pass).toBe(false);
+    expect(tidy("यह कदम उठा सकते हैं: [A:play-indoors]").pass).toBe(false);
+    expect(tidy("आप [A:play-indoors] आज़मा सकते हैं।").pass).toBe(false);
+    expect(tidy("आज घर के अंदर खेलें [A:play-indoors]।").pass).toBe(true);
+    expect(tidy("Exercise indoors today [A:exercise-indoors].").pass).toBe(true);
+  });
+
+  test("keeps a Hindi answer in Hindi, apart from names like PM2.5 and N95", () => {
+    expect(oneLanguage("आप आज between 12:00 and 17:00 के दौरान वॉक कर सकते हैं।").pass).toBe(false);
+    expect(oneLanguage("आज AQI 417 है, N95 मास्क पहनें और PM2.5 से बचें।").pass).toBe(true);
+    expect(oneLanguage("Walk between 12:00 and 17:00 today.").pass).toBe(true);
+    expect(oneLanguage("Aaj walk mat karo。 Ghar mein yoga karo.").pass).toBe(false);
+  });
+
+  test("wants the indoor alternative offered on an indoor day", () => {
+    expect(offers("Play a board game instead [A:play-indoors].", "play-indoors").pass).toBe(true);
+    expect(offers("Keep them in today.", "play-indoors").pass).toBe(false);
+  });
+
+  test("wants a cleaner time named as the data writes it", () => {
+    const windows = [{ from: "12:00", to: "17:00" }];
+    expect(suggestsTime("Skip the 7:00 walk; go between 12:00 and 17:00.", windows).pass).toBe(
+      true,
+    );
+    expect(suggestsTime("दोपहर १२:०० से १७:०० के बीच टहलें।", windows).pass).toBe(true);
+    expect(suggestsTime("Skip early-morning walks on bad days.", windows).pass).toBe(false);
+    expect(suggestsTime("There is no cleaner time today.", []).pass).toBe(true);
   });
 
   test("finds the emergency number in either script", () => {
     expect(emergency("Call 112 now.").pass).toBe(true);
     expect(emergency("अभी ११२ पर फ़ोन करें।").pass).toBe(true);
     expect(emergency("See a doctor soon.").pass).toBe(false);
+  });
+
+  test("wants the rules followed, not read back", () => {
+    const rules =
+      'Say plainly that today is an indoor day for them. A good answer reads: "Not today, try a workout at home instead."';
+    expect(ownWords("Today is an indoor day for them and stay in.", rules).pass).toBe(false);
+    expect(ownWords("Not today, try a workout at home instead.", rules).pass).toBe(true);
+    expect(ownWords("Today the air is too heavy for a walk.", rules).pass).toBe(true);
+    const urgent = "If someone has blue lips, tell them to get medical help now (call 112).";
+    expect(ownWords("Get medical help now, call 112.", urgent).pass).toBe(true);
   });
 
   test("catches a leaked prompt", () => {

@@ -61,13 +61,32 @@ describe("runCase", () => {
     expect(outcome).toMatchObject({ status: "scored", model: "rejected", score: 0 });
   });
 
-  test("checks a chat answer for its card, language and length", async () => {
+  test("on an indoor day, wants the card and the indoor alternative", async () => {
     const good = await runCase(
-      model("Keep them indoors this afternoon and play a quiet game. [K:mask-fit]"),
+      model("It is an indoor day. Play a quiet game inside [K:children-play] [A:play-indoors]."),
       byId("chat-play"),
     );
     expect(good).toMatchObject({ status: "scored", score: 1 });
 
+    const bare = await runCase(
+      model("Keep them indoors today [K:children-play]."),
+      byId("chat-play"),
+    );
+    if (bare.status !== "scored") throw new Error("expected a score");
+    expect(bare.checks.find((c) => c.name === "indoor alternative")?.pass).toBe(false);
+  });
+
+  test("on a morning that clears, wants the window named", async () => {
+    const c = byId("chat-dadi-walk-poor");
+    const later = await runCase(model("Not at 7. She can walk between 12:00 and 17:00."), c);
+    expect(later).toMatchObject({ status: "scored", score: 1 });
+
+    const noTime = await runCase(model("Not this morning; the air is poor."), c);
+    if (noTime.status !== "scored") throw new Error("expected a score");
+    expect(noTime.checks.find((x) => x.name === "suggests a time")?.pass).toBe(false);
+  });
+
+  test("checks a chat answer's language", async () => {
     const english = await runCase(model("Keep them indoors. [K:mask-fit]"), byId("chat-play-hi"));
     if (english.status !== "scored") throw new Error("expected a score");
     expect(english.checks.find((c) => c.name === "language")?.pass).toBe(false);
@@ -86,6 +105,8 @@ describe("runCase", () => {
     expect(tape).toHaveLength(2);
     const again = await runCase(replaying(tape, "m1"), c);
     expect(again).toEqual(live);
-    expect(live).toMatchObject({ status: "scored", score: 0.75 });
+    if (live.status !== "scored") throw new Error("expected a score");
+    // Repaired on the second try: that is the only mark lost.
+    expect(live.checks.filter((x) => !x.pass).map((x) => x.name)).toEqual(["first try"]);
   });
 });

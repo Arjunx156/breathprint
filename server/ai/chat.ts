@@ -8,6 +8,7 @@ import {
   numbersIn,
   optionFacts,
   optionsFor,
+  outdoorCalls,
 } from "./grounding";
 import { block, chatSystem } from "./prompts";
 
@@ -38,8 +39,9 @@ export function chatRequest(
     cards: cardFacts(asked.slice(-2).join(" "), options),
   };
   const emergency = EMERGENCY[ctx.profile.place.country] ?? "call the local emergency number";
+  const calls = new Set(Object.values(outdoorCalls(ctx)).map((call) => call.kind));
   const system = [
-    chatSystem(lang, emergency),
+    chatSystem(lang, emergency, calls),
     block("air", packet.air),
     block("household", packet.household),
     block("actions", packet.actions),

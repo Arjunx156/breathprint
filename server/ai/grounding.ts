@@ -1,6 +1,8 @@
+import { exertionCeiling } from "../../shared/actions/activity";
 import { type Candidate, rankActions } from "../../shared/actions/catalogue";
 import type { Context } from "../../shared/actions/types";
-import { summarize } from "../../shared/air";
+import { dayOf, summarize } from "../../shared/air";
+import { healthLevel } from "../../shared/aqi";
 import { THRESHOLDS } from "../../shared/factors";
 import { DEMO_DAY, delhiMorning, delhiSevereSnapshot } from "../../shared/fixtures";
 import { clock } from "../../shared/format";
@@ -33,12 +35,68 @@ export async function contextFor(
 
 const round = (x: number) => Math.round(x);
 
+/** The forecast runs past midnight, so a window's hours alone don't say which day it is. */
+function dayName(time: string, now: string): string {
+  const days = (Date.parse(dayOf(time)) - Date.parse(dayOf(now))) / 86_400_000;
+  return ["today", "tomorrow"][days] ?? dayOf(time);
+}
+
+type Members = Context["profile"]["members"];
+type Hours = { from: string; to: string };
+
+/** The engine's call on exercise outside for one group: go now, wait for a window, or stay in. */
+export type Outdoors =
+  | { kind: "now" }
+  | { kind: "wait"; hours: Hours }
+  | { kind: "indoors"; tomorrow: Hours | null };
+
+/**
+ * The engine's call on walks, play and sport outdoors for each group. It is
+ * the ceiling the plan checker enforces, so a chat answer and the day's plan
+ * never disagree, and the model never judges a level itself.
+ */
+export function outdoorCalls(ctx: Context): Record<string, Outdoors> {
+  const a = ctx.air;
+  const call = (people: Members): Outdoors => {
+    const ok = (pm25: number) => healthLevel(pm25) <= exertionCeiling(people);
+    if (ok(a.current.pm25)) return { kind: "now" };
+    const on = (day: string) => {
+      const w = a.windows.find((x) => dayName(x.start, a.now) === day && ok(x.meanPm25));
+      return w ? { from: clock(w.start), to: clock(w.end) } : null;
+    };
+    const today = on("today");
+    return today ? { kind: "wait", hours: today } : { kind: "indoors", tomorrow: on("tomorrow") };
+  };
+  const members = ctx.profile.members;
+  const sensitive = members.filter(isSensitive);
+  const rest = members.filter((m) => !isSensitive(m));
+  if (sensitive.length === 0) return { everyone: call(members) };
+  return rest.length === 0
+    ? { sensitive: call(sensitive) }
+    : { sensitive: call(sensitive), everyoneElse: call(rest) };
+}
+
+/** A call in words the model passes on. */
+function said(o: Outdoors): string {
+  switch (o.kind) {
+    case "now":
+      return "fine now";
+    case "wait":
+      return `wait until ${o.hours.from} to ${o.hours.to} today`;
+    case "indoors":
+      return o.tomorrow
+        ? `indoors all day today; tomorrow from ${o.tomorrow.from} to ${o.tomorrow.to}`
+        : "indoors all day today";
+  }
+}
+
 /** Today's air in the terms the app shows: the chosen AQI scale, PM2.5 and the clean windows. */
 export function airFacts(ctx: Context) {
   const a = ctx.air;
   const scale = ctx.profile.scale;
   const reading = a.current.aqi[scale];
   const span = (w: (typeof a.windows)[number]) => ({
+    day: dayName(w.start, a.now),
     from: clock(w.start),
     to: clock(w.end),
     meanPm25: round(w.meanPm25),
@@ -56,6 +114,9 @@ export function airFacts(ctx: Context) {
     whoDailyGuideline: THRESHOLDS.whoDaily,
     today: { meanPm25: round(a.today.mean), maxPm25: round(a.today.max) },
     tomorrowMeanPm25: a.tomorrow ? round(a.tomorrow.mean) : null,
+    outdoorExercise: Object.fromEntries(
+      Object.entries(outdoorCalls(ctx)).map(([who, call]) => [who, said(call)]),
+    ),
     cleanWindows: a.windows.map(span),
     peaks: a.peaks.map(span),
     flatDay: a.flat,

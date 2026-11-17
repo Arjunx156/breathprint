@@ -73,7 +73,7 @@ for (const lang of LANGUAGES) {
         const ctx = await contextFor(air, typicalHousehold(MEERA.place, audience), true);
         const together = collective(ctx.air, ctx.profile.place, audience, HOUSEHOLDS);
         const call = advisoryRequest(ctx, { audience, channel, lang }, together);
-        const { value } = await structured(llm, call.req, readAdvisory(call.allowed));
+        const { value } = await structured(llm, call.req, readAdvisory(call));
         return JSON.stringify(value);
       });
     }

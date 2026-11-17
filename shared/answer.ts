@@ -7,18 +7,31 @@ import { cardById } from "./knowledge/search";
  * citations and action titles, and drop any id that doesn't exist.
  */
 
-const MARKER = /\s*\[(?:([KA]):)?([a-z][a-z0-9-]{0,39})\]/g;
+const MARKER = /\s*\[(?:([KA])?:)?([a-z][a-z0-9-]{0,39})\]/g;
 /** A marker cut off by the end of the stream so far, like "[K:mas". */
-const PARTIAL = /\s*\[(?:[KA](?::[a-z0-9-]*)?|[a-z][a-z0-9-]*)?$/;
+const PARTIAL = /\s*\[(?:[KA]?(?::[a-z0-9-]*)?|[a-z][a-z0-9-]*)?$/;
 const ITEM = /^[-*•]\s+(.+)$/;
 const BARE_BULLET = /^[-*•]$/;
+
+/** The tagged blocks a chat prompt hands the model its data in. */
+export const DATA_TAGS = [
+  "air",
+  "household",
+  "options",
+  "actions",
+  "cards",
+  "community",
+  "question",
+] as const;
+const DATA_TAG = new Set<string>(DATA_TAGS);
 
 export type Block = { kind: "p"; text: string } | { kind: "list"; items: string[] };
 export type Answer = { blocks: Block[]; cards: string[]; actions: string[] };
 
 /**
- * What one bracket cites. The model sometimes drops the K: or A:, so a bare
- * id counts when it names a real card or action; any other bracket is text.
+ * What one bracket cites. The model sometimes drops the K or A, or the colon
+ * too, so a bare id counts when it names a real card or action; any other
+ * bracket is text.
  */
 function cited(kind: string | undefined, id: string): "K" | "A" | null {
   if (kind === "K" || kind === "A") return kind;
@@ -39,12 +52,21 @@ export function markers(text: string): { cards: string[]; actions: string[] } {
   return { cards: [...cards], actions: [...actions] };
 }
 
-/** The words alone: markers, half-streamed markers and stray emphasis removed. */
+/**
+ * The words alone: markers, half-streamed markers and stray emphasis removed,
+ * along with any data block the model cites by name, like "[air]".
+ */
 export function cleanText(text: string): string {
-  return text
-    .replace(MARKER, (whole, kind?: string, id = "") => (cited(kind, id) ? "" : whole))
-    .replace(PARTIAL, "")
-    .replace(/\*\*|__/g, "");
+  const drop = (kind: string | undefined, id: string) =>
+    cited(kind, id) !== null || (!kind && DATA_TAG.has(id));
+  return (
+    text
+      .replace(MARKER, (whole, kind?: string, id = "") => (drop(kind, id) ? "" : whole))
+      // "[K:a], [A:b]." would leave a comma stranded before the full stop.
+      .replace(/\s*,\s*([.!?।])/g, "$1")
+      .replace(PARTIAL, "")
+      .replace(/\*\*|__/g, "")
+  );
 }
 
 /** Paragraphs and "- " lists, the only shapes the prompt allows. */

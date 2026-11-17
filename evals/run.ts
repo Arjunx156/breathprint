@@ -43,7 +43,8 @@ function report(outcomes: readonly Outcome[]) {
     }
   }
   console.info("\nBy check");
-  for (const [name, t] of tally) console.info(`  ${name.padEnd(18)}${t.pass}/${t.of}`);
+  const label = Math.max(...[...tally.keys()].map((n) => n.length)) + 2;
+  for (const [name, t] of tally) console.info(`  ${name.padEnd(label)}${t.pass}/${t.of}`);
   const skipped = outcomes.filter((o) => o.status === "skipped").length;
   const score = overall(outcomes);
   console.info(

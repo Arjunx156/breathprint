@@ -32,11 +32,17 @@ describe("chat answers", () => {
   });
 
   test("reads a known id cited without its K: or A:", () => {
-    const answer = readAnswer("Call 112 now [see-a-doctor]. Keep them in [play-indoors].");
-    expect(answer.blocks).toEqual([{ kind: "p", text: "Call 112 now. Keep them in." }]);
-    expect(answer.cards).toEqual(["see-a-doctor"]);
+    const answer = readAnswer(
+      "Call 112 now [see-a-doctor]. Keep them in [play-indoors]. Air at 14:00 [:airing].",
+    );
+    expect(answer.blocks).toEqual([
+      { kind: "p", text: "Call 112 now. Keep them in. Air at 14:00." },
+    ]);
+    expect(answer.cards).toEqual(["see-a-doctor", "airing"]);
     expect(answer.actions).toEqual(["play-indoors"]);
     expect(cleanText("See note [1] and [made-up-id].")).toBe("See note [1] and [made-up-id].");
+    expect(cleanText("Not a day for play outside [air].")).toBe("Not a day for play outside.");
+    expect(cleanText("घर में खेलें [K:children-play], [A:play-indoors]।")).toBe("घर में खेलें।");
   });
 
   test("drops a bullet that held only a marker", () => {

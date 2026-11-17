@@ -1,5 +1,6 @@
 import { advisoryRequest, readAdvisory } from "../server/ai/advisory";
 import { chatRequest } from "../server/ai/chat";
+import { airFacts } from "../server/ai/grounding";
 import { ungrounded } from "../server/ai/guard";
 import { personalPlan } from "../server/ai/planner";
 import { InvalidReply, structured } from "../server/ai/structured";
@@ -20,7 +21,11 @@ import {
   knownIds,
   languageMatches,
   noLeak,
+  offers,
+  oneLanguage,
+  ownWords,
   readable,
+  suggestsTime,
   tidy,
   withinLength,
 } from "./scorers";
@@ -35,8 +40,16 @@ type Scored = { model: string; checks: Check[] };
 export const HOUSEHOLDS = 120;
 const WHATSAPP_CHARS = 700;
 
-const dayFor = (profile: Profile, air: Air) =>
-  air === "severe" ? severeDay(forModel(profile)) : cleanDay(forModel(profile));
+/** The fixture's morning at a lower level: too much for sensitive people until noon. */
+const POOR_BASE = 50;
+
+const DAYS: Record<Air, (p: Profile) => ReturnType<typeof severeDay>> = {
+  severe: (p) => severeDay(p),
+  poor: (p) => severeDay(p, POOR_BASE),
+  clean: cleanDay,
+};
+
+const dayFor = (profile: Profile, air: Air) => DAYS[air](forModel(profile));
 
 const passed = (name: string): Check => ({ name, pass: true });
 
@@ -58,33 +71,44 @@ async function plan(llm: Llm, c: PlanCase): Promise<Scored> {
       passed("valid"),
       { name: "first try", pass: !repaired },
       languageMatches(words, c.lang),
+      oneLanguage(words),
       readable(words),
     ],
   };
 }
 
-const EXPECT: Record<ChatExpect, (text: string) => Check> = {
+type Windows = Parameters<typeof suggestsTime>[1];
+
+const EXPECT: Record<ChatExpect, (text: string, windows: Windows) => Check> = {
   cites,
   emergency,
   noLeak,
   brief: (text) => brief(text),
+  window: suggestsTime,
 };
 
 async function chat(llm: Llm, c: ChatCase): Promise<Scored> {
-  const call = chatRequest(dayFor(c.profile, c.air), [{ role: "user", text: c.question }], c.lang);
+  const ctx = dayFor(c.profile, c.air);
+  const call = chatRequest(ctx, [{ role: "user", text: c.question }], c.lang);
+  const windows = airFacts(ctx).cleanWindows;
   const reply = await llm.stream(call.req);
   let text = "";
   for await (const piece of reply.chunks) text += piece;
   const plain = cleanText(text);
+  // The rules come first; the data blocks after them are the model's to quote.
+  const rules = call.req.system.split("\n\n<air>")[0] ?? "";
   return {
     model: reply.model,
     checks: [
       ...(c.anyScript ? [] : [languageMatches(plain, c.lang)]),
+      oneLanguage(plain),
+      ownWords(text, rules),
       ...(c.expect.includes("cites") ? [] : [knownIds(text)]),
       grounded(ungrounded(text, call.allowed)),
       tidy(text),
       ...(c.expect.includes("brief") ? [] : [withinLength(text), readable(plain)]),
-      ...c.expect.map((e) => EXPECT[e](text)),
+      ...c.expect.map((e) => EXPECT[e](text, windows)),
+      ...(c.indoors ? [offers(text, c.indoors)] : []),
     ],
   };
 }
@@ -96,7 +120,7 @@ async function advisory(llm: Llm, c: AdvisoryCase): Promise<Scored> {
   const ctx = severeDay(forModel(typicalHousehold(MEERA.place, c.audience)));
   const together = collective(ctx.air, ctx.profile.place, c.audience, HOUSEHOLDS);
   const call = advisoryRequest(ctx, c, together);
-  const { value, model, repaired } = await structured(llm, call.req, readAdvisory(call.allowed));
+  const { value, model, repaired } = await structured(llm, call.req, readAdvisory(call));
   const words = advisoryText(value);
   return {
     model,
@@ -104,6 +128,7 @@ async function advisory(llm: Llm, c: AdvisoryCase): Promise<Scored> {
       passed("valid"),
       { name: "first try", pass: !repaired },
       languageMatches(words, c.lang),
+      oneLanguage(words),
       readable(words),
       ...(c.channel === "whatsapp" ? [charsAtMost(words, WHATSAPP_CHARS)] : []),
     ],

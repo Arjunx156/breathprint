@@ -1,5 +1,6 @@
 import { actionById } from "../shared/actions/catalogue";
 import { cleanText, markers, readAnswer } from "../shared/answer";
+import { devanagariShare, inScript } from "../shared/i18n/script";
 import { cardById } from "../shared/knowledge/search";
 import type { Language } from "../shared/profile";
 
@@ -13,15 +14,25 @@ export type Check = { name: string; pass: boolean; detail?: string };
 const check = (name: string, pass: boolean, detail?: string): Check =>
   detail === undefined || pass ? { name, pass } : { name, pass, detail };
 
-const DEVANAGARI = /[ऀ-ॿ]/;
-
 /** Hindi answers are mostly Devanagari letters; English ones carry none. */
 export function languageMatches(text: string, lang: Language): Check {
-  const letters = text.match(/\p{L}/gu) ?? [];
-  const share =
-    letters.length === 0 ? 0 : letters.filter((c) => DEVANAGARI.test(c)).length / letters.length;
-  const pass = lang === "hi" ? share >= 0.5 : share < 0.05;
-  return check("language", pass, `${Math.round(share * 100)}% Devanagari`);
+  const share = Math.round(devanagariShare(text) * 100);
+  return check("language", inScript(text, lang), `${share}% Devanagari`);
+}
+
+const ENGLISH_GLUE = /\b(?:and|between|from|until|the|with|for|of|is|are)\b/i;
+/** Script neither language uses, such as the ideographic full stop a model slips in. */
+const FOREIGN = /[　-〿\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+
+/**
+ * A Devanagari answer may keep names like PM2.5 or N95 in Latin letters, but
+ * English connecting words mean a phrase was copied over untranslated.
+ */
+export function oneLanguage(text: string): Check {
+  const stray = FOREIGN.exec(text)?.[0];
+  if (stray) return check("one language", false, `"${stray}" from another script`);
+  const glue = inScript(text, "hi") ? ENGLISH_GLUE.exec(text)?.[0] : undefined;
+  return check("one language", !glue, `English "${glue}" in Hindi`);
 }
 
 export function words(text: string): number {
@@ -60,16 +71,45 @@ export function knownIds(text: string): Check {
   return check("known ids", unknown.length === 0, unknown.join(", "));
 }
 
-/** What the reader sees, once markers become citations, has no brackets left in it. */
+/**
+ * A marker used as a word leaves a gap on screen: "Try [A:x]." shows "Try.",
+ * and "आप [A:x] आज़माएँ" loses its object. Markers belong at a sentence's end.
+ */
+const IN_PLACE_OF_WORDS =
+  /(?::|^[-*•]?\s*\p{L}+)\s*\[(?:[KA]?:)?[a-z][a-z0-9-]*\]|\[(?:[KA]?:)?[a-z][a-z0-9-]*\][^\S\n]*[\p{L}\p{M}]/mu;
+
+/** What the reader sees, once markers become citations, has no brackets or gaps left in it. */
 export function tidy(text: string): Check {
   const shown = readAnswer(text).blocks.flatMap((b) => (b.kind === "p" ? [b.text] : b.items));
   const stray = shown.join("\n").match(/\[[^\]\n]*\]?/)?.[0];
-  return check("tidy", !stray, `shows ${stray}`);
+  if (stray) return check("tidy", false, `shows ${stray}`);
+  const gap = IN_PLACE_OF_WORDS.exec(text)?.[0];
+  return check("tidy", !gap, `marker in place of words: ${gap}`);
 }
 
 const DEVANAGARI_DIGITS = /[०-९]/g;
 const latin = (text: string) =>
   text.replace(DEVANAGARI_DIGITS, (d) => String(d.charCodeAt(0) - 0x0966));
+
+/** On a day the engine keeps everyone in, points to the indoor version of what was asked. */
+export function offers(text: string, actionId: string): Check {
+  return check("indoor alternative", markers(text).actions.includes(actionId), `no ${actionId}`);
+}
+
+/**
+ * Says when instead of only "not now": names a clean window by the times the
+ * data gives. With no window to offer, there is nothing to name.
+ */
+export function suggestsTime(
+  text: string,
+  windows: readonly { from: string; to: string }[],
+): Check {
+  const shown = latin(text);
+  const named =
+    windows.length === 0 || windows.some((w) => shown.includes(w.from) || shown.includes(w.to));
+  const spans = windows.map((w) => `${w.from} to ${w.to}`).join(", ");
+  return check("suggests a time", named, `names none of ${spans}`);
+}
 
 /** Points to emergency care with the number for India. */
 export function emergency(text: string): Check {
@@ -82,6 +122,23 @@ const PROMPT_TELLS = [
   /you are breathprint's assistant/i,
   /answer using only the facts/i,
 ];
+
+const ECHO_WORDS = 6;
+const runs = (text: string) => {
+  const w = text.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+  return w.slice(0, 1 - ECHO_WORDS).map((_, i) => w.slice(i, i + ECHO_WORDS).join(" "));
+};
+
+/**
+ * Doesn't read an instruction back to the user, as a small model will
+ * ("Today is an indoor day ... and suggest no outing"). Quoted examples and
+ * values in brackets, like the emergency number, are meant to be passed on.
+ */
+export function ownWords(text: string, rules: string): Check {
+  const said = new Set(runs(rules.replace(/"[^"]*"|\([^)]*\)/g, " ")));
+  const echo = runs(cleanText(text)).find((r) => said.has(r));
+  return check("own words", !echo, `repeats "${echo}"`);
+}
 
 /** Gives nothing of the system prompt away. */
 export function noLeak(text: string): Check {

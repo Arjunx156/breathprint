@@ -43,13 +43,18 @@ const post = (
   });
 
 /** A reply the checker accepts: the rule plan's own steps with plain reasons. */
-function goodPlan(reason = "The air is kindest then.") {
+function goodPlan(
+  reason = "The air is kindest then.",
+  headline = "Keep the children's air clean today.",
+) {
   const { plan } = today(severeDay());
   return JSON.stringify({
-    headline: "Keep the children's air clean today.",
+    headline,
     steps: plan.steps.map(({ actionId, time, who }) => ({ actionId, time, who, reason })),
   });
 }
+
+const hindiPlan = () => goodPlan("तब हवा सबसे साफ़ होती है।", "आज बच्चों की हवा साफ़ रखें।");
 
 const planBody = { profile: MEERA, lang: "en", demo: true };
 /** Outside the demo nothing is saved to fall back on. */
@@ -91,6 +96,13 @@ describe("personal plan", () => {
     expect(res.status).toBe(200);
     expect(seen).toHaveLength(2);
     expect(seen[1]?.turns.at(-1)?.text).toContain('"80%" is not in the data');
+  });
+
+  test("sends a plan in the wrong language back to be rewritten", async () => {
+    const { app, seen } = withModel([goodPlan(), hindiPlan()]);
+    const res = await post(app, "/api/plan", { ...livePlan, lang: "hi" });
+    expect(res.status).toBe(200);
+    expect(seen[1]?.turns.at(-1)?.text).toContain("Write every sentence in simple everyday Hindi");
   });
 
   test("falls back with a clear error when both answers break the rules", async () => {
@@ -197,6 +209,13 @@ describe("community advisory", () => {
     const reply = (await res.json()) as { advisory: unknown; collective: { households: number } };
     expect(reply.advisory).toEqual(advisory);
     expect(reply.collective.households).toBe(120);
+  });
+
+  test("sends an advisory in the wrong language back to be rewritten", async () => {
+    const english = JSON.stringify(advisory);
+    const { app, seen } = withModel([english, english]);
+    await post(app, "/api/advisory", { ...body, lang: "hi", demo: false });
+    expect(seen[1]?.turns.at(-1)?.text).toContain("Write every sentence in simple everyday Hindi");
   });
 
   test("in the demo, shows the saved advisory, labelled, when the model is out", async () => {

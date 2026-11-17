@@ -39,7 +39,7 @@ export function advisoryRoutes({ llm, air }: { llm: Llm; air: AirSource }) {
       const ctx = await contextFor(air, typicalHousehold(body.place, audience), demo, now);
       const together = collective(ctx.air, ctx.profile.place, audience, households);
       const call = advisoryRequest(ctx, { audience, channel, lang }, together);
-      const read = readAdvisory(call.allowed);
+      const read = readAdvisory(call);
       try {
         const { value, model } = await structured(llm, call.req, read);
         return { advisory: value, collective: together, model, recorded: false };

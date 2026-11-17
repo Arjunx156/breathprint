@@ -1,5 +1,6 @@
 import type { Candidate } from "../../shared/actions/catalogue";
 import type { Context } from "../../shared/actions/types";
+import { inScript } from "../../shared/i18n/script";
 import {
   checkPlan,
   DayPlanSchema,
@@ -12,7 +13,7 @@ import type { Llm } from "../llm/llm";
 import type { LlmRequest } from "../llm/types";
 import { airFacts, householdFacts, numbersIn, optionFacts, optionsFor } from "./grounding";
 import { ungrounded } from "./guard";
-import { block, plannerSystem } from "./prompts";
+import { block, plannerSystem, wrongLanguage } from "./prompts";
 import { type Parsed, parseJson, structured } from "./structured";
 
 /** The reply's shape, with ids limited to today's options and this household. */
@@ -41,7 +42,12 @@ export function planSchema(actionIds: readonly string[], memberIds: readonly str
   };
 }
 
-export type PlannerCall = { req: LlmRequest; options: Candidate[]; allowed: number[] };
+export type PlannerCall = {
+  req: LlmRequest;
+  options: Candidate[];
+  allowed: number[];
+  lang: Language;
+};
 
 export function plannerRequest(ctx: Context, lang: Language): PlannerCall {
   const options = optionsFor(ctx);
@@ -71,6 +77,7 @@ export function plannerRequest(ctx: Context, lang: Language): PlannerCall {
     },
     options,
     allowed: numbersIn(packet),
+    lang,
   };
 }
 
@@ -88,10 +95,10 @@ function normalize(steps: readonly PlanStep[], options: readonly Candidate[]): P
 
 /**
  * Reads a reply as a plan and returns every way it breaks the rules: its
- * shape, the safety and coverage checks in shared/plan, and any figure that
- * was not in the data.
+ * shape, the safety and coverage checks in shared/plan, any figure that was
+ * not in the data, and words in the wrong language.
  */
-export function readPlan(ctx: Context, { options, allowed }: Omit<PlannerCall, "req">) {
+export function readPlan(ctx: Context, { options, allowed, lang }: Omit<PlannerCall, "req">) {
   return (text: string): Parsed<PlanReply["plan"]> => {
     const json = parseJson(text);
     if (!json.ok) return json;
@@ -108,6 +115,7 @@ export function readPlan(ctx: Context, { options, allowed }: Omit<PlannerCall, "
     for (const figure of ungrounded(words, allowed)) {
       issues.push(`"${figure}" is not in the data; use only figures written there.`);
     }
+    if (!inScript(words, lang)) issues.push(wrongLanguage(lang));
     return issues.length > 0
       ? { ok: false, issues }
       : { ok: true, value: { ...plan, source: "ai" } };

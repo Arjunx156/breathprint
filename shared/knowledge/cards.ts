@@ -203,7 +203,7 @@ export const CARDS: readonly Card[] = [
     id: "children-play",
     title: "Children playing outside",
     titleHi: "बच्चों का बाहर खेलना",
-    body: "Children breathe more air for their size and spend more time running. When the air is unhealthy for sensitive groups, shorten outdoor play and keep it gentle; when it is unhealthy for everyone, play indoors. The early afternoon is usually the cleanest time for a short outing.",
+    body: "Children breathe more air for their size and spend more time running. When the air is unhealthy for sensitive groups, shorten outdoor play and keep it gentle; when it is unhealthy for everyone, play indoors. On a day that allows play outside, the early afternoon is usually the cleanest time.",
     sources: ["epaSchools"],
     aliases: ["kids", "park", "playground", "bacche", "बच्चे", "khelna", "खेलना", "school", "recess"],
     actions: ["play-indoors"],
