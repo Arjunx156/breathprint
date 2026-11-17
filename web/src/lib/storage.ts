@@ -35,5 +35,6 @@ export function remove(key: string): void {
 export const KEYS = {
   profile: "bp.profile.v1",
   done: "bp.done.v1",
+  aiPlan: "bp.aiplan.v1",
   air: (cell: string) => `bp.air.v1.${cell}`,
 } as const;

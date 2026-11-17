@@ -6,13 +6,14 @@ import { createApp, JSON_LIMIT } from "./app";
 import { loadEnv } from "./env";
 import type { Geocoder } from "./geocode";
 import { CONTENT_SECURITY_POLICY } from "./headers";
+import { createLlm } from "./llm/llm";
 
 const env = loadEnv({ RATE_LIMIT_PER_MIN: "5" });
 const places: Geocoder = async (q) => [
   { name: `${q}, Delhi, India`, lat: 28.7, lon: 77.1, country: "IN" },
 ];
 const app = (air: AirSource = fixtureSource(), geocode = places) =>
-  createApp({ env, air, geocode });
+  createApp({ env, air, geocode, llm: createLlm({ provider: null, models: [], timeoutMs: 1000 }) });
 const get = (path: string, a = app(), headers: Record<string, string> = {}) =>
   a.request(path, { headers: { "x-real-ip": crypto.randomUUID(), ...headers } });
 
@@ -20,7 +21,7 @@ describe("health", () => {
   test("answers with the provider and air source, and security headers", async () => {
     const res = await get("/api/health");
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ status: "ok", provider: "fake", air: "fixture" });
+    expect(await res.json()).toEqual({ status: "ok", provider: "fake", ai: false, air: "fixture" });
     expect(res.headers.get("content-security-policy")).toBe(CONTENT_SECURITY_POLICY);
     expect(res.headers.get("x-content-type-options")).toBe("nosniff");
     expect(res.headers.get("cache-control")).toBe("no-store");

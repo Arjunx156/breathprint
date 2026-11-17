@@ -1,8 +1,8 @@
-import { forModel, LANGUAGES } from "@shared/profile";
+import { forModel, GRID_KM, LANGUAGES } from "@shared/profile";
 import { useState } from "react";
 import { Link, Redirect, useLocation } from "wouter";
 import { useApp } from "../../app/state";
-import { Choice } from "../../components/fields";
+import { Choice, Toggle } from "../../components/fields";
 
 const SCALES = ["IN", "US"] as const;
 
@@ -60,6 +60,12 @@ export default function SettingsPage() {
           value={profile.scale}
           label={(v) => t(`scale.${v}`)}
           onChange={(scale) => saveProfile({ ...profile, scale })}
+        />
+        <Toggle
+          label={t("settings.ai")}
+          checked={profile.ai}
+          onChange={(ai) => saveProfile({ ...profile, ai })}
+          hint={t("ai.privacy", { km: GRID_KM })}
         />
         <Link href="/setup" className="btn btn-quiet">
           {t("settings.edit")}

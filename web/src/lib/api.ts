@@ -16,7 +16,10 @@ export class ApiError extends Error {
   }
 }
 
-async function failure(res: { status: number; json(): Promise<unknown> }): Promise<ApiError> {
+export async function failure(res: {
+  status: number;
+  json(): Promise<unknown>;
+}): Promise<ApiError> {
   const body = (await res.json().catch(() => null)) as { error?: { code?: string } } | null;
   return new ApiError(res.status, body?.error?.code ?? "network");
 }

@@ -2,7 +2,9 @@ import type { Context, ErrorHandler, NotFoundHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { $ZodError } from "zod/v4/core";
+import { InvalidReply } from "../ai/structured";
 import { UpstreamError } from "../air/source";
+import { LlmUnavailable } from "../llm/llm";
 
 export type ErrorCode =
   | "bad_request"
@@ -41,6 +43,16 @@ export const onError: ErrorHandler = (err, c) => {
   if (err instanceof $ZodError) {
     const detail = err.issues.map((i) => `${i.path.join(".") || "body"}: ${i.message}`).join("; ");
     return apiError(c, 400, "bad_request", `Invalid request. ${detail}`.slice(0, 300));
+  }
+  if (err instanceof LlmUnavailable || err instanceof InvalidReply) {
+    const why = err instanceof LlmUnavailable ? err.reason : "invalid";
+    console.warn(JSON.stringify({ level: "warn", id: c.get("requestId"), model: why }));
+    return apiError(
+      c,
+      503,
+      "model_unavailable",
+      "The assistant can't answer right now. Breathprint's own plan still stands.",
+    );
   }
   if (err instanceof UpstreamError) {
     console.warn(JSON.stringify({ level: "warn", id: c.get("requestId"), upstream: err.message }));

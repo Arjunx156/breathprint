@@ -72,6 +72,8 @@ export const ProfileSchema = z.object({
   budget: z.enum(BUDGETS),
   language: z.enum(LANGUAGES),
   scale: z.enum(["IN", "US"]),
+  /** Consent to send the household, without names, to Gemini for a personal plan. */
+  ai: z._default(z.boolean(), false),
 });
 
 export type Member = z.infer<typeof MemberSchema>;
@@ -106,6 +108,9 @@ export function hasCombustionIndoors(profile: Profile): boolean {
   );
 }
 
+/** How far 0.1 degree of latitude spans, for telling people how coarse their location is. */
+export const GRID_KM = 11;
+
 /** Rounds to 0.1 degree (about 11 km) so the server never learns a precise address. */
 export function coarse(value: number): number {
   return Math.round(value * 10) / 10;
@@ -134,6 +139,7 @@ export function defaultProfile(place: Place): Profile {
     budget: "moderate",
     language: "en",
     scale: place.country === "IN" ? "IN" : "US",
+    ai: false,
   };
 }
 
@@ -171,6 +177,7 @@ export const MEERA: Profile = {
   budget: "moderate",
   language: "en",
   scale: "IN",
+  ai: true,
 };
 
 /**

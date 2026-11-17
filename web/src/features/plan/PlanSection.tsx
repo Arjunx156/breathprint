@@ -3,12 +3,18 @@ import type { Context } from "@shared/actions/types";
 import { names } from "@shared/i18n";
 import { ruleReason } from "@shared/i18n/reason";
 import { alternativesFor, type DayPlan, type PlanStep, timeFor } from "@shared/plan";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { lazy, type ReactNode, Suspense, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useApp } from "../../app/state";
-import { ImpactPanel } from "./ImpactPanel";
 import { Ledger } from "./Ledger";
 
+// The working and the sources behind a step load when someone reaches for them.
+const loadPanel = () => import("./ImpactPanel");
+const ImpactPanel = lazy(() => loadPanel().then((m) => ({ default: m.ImpactPanel })));
+
 type Step = PlanStep & { origin: string; candidate: Candidate };
+/** Which alternative replaced which step, by the step's original action id. */
+type Swaps = Readonly<Record<string, string>>;
+const NO_SWAPS: Swaps = {};
 
 type ItemProps = {
   ctx: Context;
@@ -64,6 +70,8 @@ function StepItem({ ctx, step, alternatives, onSwap }: ItemProps) {
             className="link min-h-11 font-medium"
             aria-expanded={open}
             aria-controls={panelId}
+            onPointerEnter={loadPanel}
+            onFocus={loadPanel}
             onClick={() => setOpen((v) => !v)}
           >
             {open ? t("plan.hideNumbers") : t("plan.numbers")}
@@ -87,22 +95,38 @@ function StepItem({ ctx, step, alternatives, onSwap }: ItemProps) {
         )}
 
         <div id={panelId} hidden={!open} className="text-ink">
-          {open && <ImpactPanel ctx={ctx} candidate={step.candidate} time={step.time} />}
+          {open && (
+            <Suspense
+              fallback={<p className="mt-4 text-sm text-muted">{t("plan.loadingNumbers")}</p>}
+            >
+              <ImpactPanel ctx={ctx} candidate={step.candidate} time={step.time} />
+            </Suspense>
+          )}
         </div>
       </div>
     </li>
   );
 }
 
-type Props = { ctx: Context; ranked: readonly Candidate[]; plan: DayPlan };
+type Props = {
+  ctx: Context;
+  ranked: readonly Candidate[];
+  plan: DayPlan;
+  /** Where a personalised plan is offered, under the title. */
+  notice?: ReactNode;
+};
 
 /**
  * The plan as a timeline, beside the running breathprint. Swapping in an
  * alternative re-times and re-explains the step from the engine's numbers.
  */
-export function PlanSection({ ctx, ranked, plan }: Props) {
+export function PlanSection({ ctx, ranked, plan, notice }: Props) {
   const { t, lang, done } = useApp();
-  const [swaps, setSwaps] = useState<Record<string, string>>({});
+  // Swaps belong to the plan they were made on, so a new plan starts clean
+  // without remounting the section and losing focus inside it.
+  const planId = `${plan.source}:${plan.steps.map((s) => s.actionId).join()}`;
+  const [made, setMade] = useState<{ planId: string; swaps: Swaps }>({ planId, swaps: NO_SWAPS });
+  const swaps = made.planId === planId ? made.swaps : NO_SWAPS;
   const byId = useMemo(() => new Map(ranked.map((c) => [c.action.id, c])), [ranked]);
 
   const steps = useMemo<Step[]>(() => {
@@ -128,8 +152,10 @@ export function PlanSection({ ctx, ranked, plan }: Props) {
       .sort((a, b) => a.time.localeCompare(b.time));
   }, [plan, swaps, byId, ctx, lang]);
 
-  const swap = (origin: string, next: string) =>
-    setSwaps(({ [origin]: _, ...rest }) => (next === origin ? rest : { ...rest, [origin]: next }));
+  const swap = (origin: string, next: string) => {
+    const { [origin]: _, ...rest } = swaps;
+    setMade({ planId, swaps: next === origin ? rest : { ...rest, [origin]: next } });
+  };
 
   return (
     <div className="mt-20 grid gap-14 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-20">
@@ -137,7 +163,8 @@ export function PlanSection({ ctx, ranked, plan }: Props) {
         <h2 id="plan-title" className="num text-4xl leading-tight sm:text-5xl">
           {t("plan.title")}
         </h2>
-        <p className="mt-2 text-muted">{t("plan.rules")}</p>
+        {plan.source === "rules" && <p className="mt-2 text-muted">{t("plan.rules")}</p>}
+        {notice}
         {steps.length === 0 ? (
           <p className="mt-8 text-lg">{t("plan.empty")}</p>
         ) : (

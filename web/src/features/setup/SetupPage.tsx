@@ -5,6 +5,7 @@ import {
   COOKING_FUELS,
   defaultProfile,
   EXERCISE,
+  GRID_KM,
   HEATING,
   LANGUAGES,
   type Member,
@@ -348,6 +349,12 @@ function Preferences({ draft, update }: { draft: Profile; update: Patch }) {
         value={draft.scale}
         label={(v) => t(`scale.${v}`)}
         onChange={(scale) => update({ ...draft, scale })}
+      />
+      <Toggle
+        label={t("setup.ai")}
+        checked={draft.ai}
+        onChange={(ai) => update({ ...draft, ai })}
+        hint={t("ai.privacy", { km: GRID_KM })}
       />
     </div>
   );

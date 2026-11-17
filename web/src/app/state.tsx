@@ -78,6 +78,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const forget = useCallback(() => {
     remove(KEYS.profile);
     remove(KEYS.done);
+    remove(KEYS.aiPlan);
     setStored(null);
     setDoneIds([]);
   }, []);

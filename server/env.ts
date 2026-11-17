@@ -16,18 +16,32 @@ const list = z
 
 const positiveInt = (fallback: number) => z.coerce.number().int().positive().default(fallback);
 
-export const EnvSchema = z.object({
-  LLM_PROVIDER: z.enum(["gemini", "ollama", "fake"]).default("fake"),
-  LLM_MODELS: list,
-  GEMINI_API_KEY: optional(z.string().min(20)),
-  OLLAMA_HOST: z.url().default("http://127.0.0.1:11434"),
-  LLM_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60_000).default(12_000),
-  RATE_LIMIT_AI_PER_MIN: positiveInt(8),
-  RATE_LIMIT_PER_MIN: positiveInt(60),
-  ALLOWED_ORIGINS: list,
-  AIR_SOURCE: z.enum(["open-meteo", "fixture"]).default("open-meteo"),
-  PORT: positiveInt(8787),
-});
+/** "0.10,0.40": dollars per million input and output tokens. */
+const price = z
+  .string()
+  .default("0,0")
+  .transform((s) => s.split(",").map(Number))
+  .pipe(z.tuple([z.number().min(0), z.number().min(0)]));
+
+export const EnvSchema = z
+  .object({
+    LLM_PROVIDER: optional(z.enum(["gemini", "ollama", "fake"])),
+    LLM_MODELS: list,
+    GEMINI_API_KEY: optional(z.string().min(20)),
+    OLLAMA_HOST: z.url().default("http://127.0.0.1:11434"),
+    LLM_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60_000).default(12_000),
+    LLM_PRICE_PER_MTOK: price,
+    RATE_LIMIT_AI_PER_MIN: positiveInt(8),
+    RATE_LIMIT_PER_MIN: positiveInt(60),
+    ALLOWED_ORIGINS: list,
+    AIR_SOURCE: z.enum(["open-meteo", "fixture"]).default("open-meteo"),
+    PORT: positiveInt(8787),
+  })
+  // Setting a key is enough to turn Gemini on; without one the model routes stay offline.
+  .transform((env) => ({
+    ...env,
+    LLM_PROVIDER: env.LLM_PROVIDER ?? (env.GEMINI_API_KEY ? "gemini" : "fake"),
+  }));
 
 export type Env = z.infer<typeof EnvSchema>;
 

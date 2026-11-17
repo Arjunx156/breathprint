@@ -27,6 +27,15 @@ export type PlanStep = z.infer<typeof PlanStepSchema>;
 export type DayPlanBody = z.infer<typeof DayPlanSchema>;
 export type DayPlan = DayPlanBody & { source: "rules" | "ai" };
 
+/** What /api/plan answers: a plan the model chose, already checked by the server. */
+export const PlanReplySchema = z.object({
+  plan: z.extend(DayPlanSchema, { source: z.literal("ai") }),
+  model: z.string(),
+  recorded: z.boolean(),
+});
+
+export type PlanReply = z.infer<typeof PlanReplySchema>;
+
 export const MAX_STEPS = 8;
 const MAX_PROTECT = 6;
 const MAX_PREVENT = 2;

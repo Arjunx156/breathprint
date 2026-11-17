@@ -85,16 +85,31 @@ export function Toggle({
   label,
   checked,
   onChange,
+  hint,
 }: {
   label: ReactNode;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  hint?: string;
 }) {
+  const hintId = useId();
   return (
-    <label className="flex min-h-11 cursor-pointer items-center gap-3">
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-      <span>{label}</span>
-    </label>
+    <div>
+      <label className="flex min-h-11 cursor-pointer items-center gap-3">
+        <input
+          type="checkbox"
+          checked={checked}
+          aria-describedby={hint ? hintId : undefined}
+          onChange={(e) => onChange(e.target.checked)}
+        />
+        <span>{label}</span>
+      </label>
+      {hint && (
+        <p id={hintId} className="ml-[1.875rem] max-w-prose text-sm text-muted">
+          {hint}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -104,7 +119,9 @@ type TextProps = {
   onChange: (value: string) => void;
   type?: "text" | "time" | "number" | "search";
   hint?: string;
-  inputMode?: "decimal" | "text" | "search";
+  /** Shown under the field and announced; marks the field invalid. */
+  error?: string | null;
+  inputMode?: "decimal" | "numeric" | "text" | "search";
   min?: number;
   max?: number;
   step?: number;
@@ -112,9 +129,11 @@ type TextProps = {
   autoComplete?: string;
 };
 
-export function TextField({ label, hint, onChange, type = "text", ...rest }: TextProps) {
+export function TextField({ label, hint, error, onChange, type = "text", ...rest }: TextProps) {
   const id = useId();
   const hintId = `${id}-hint`;
+  const errorId = `${id}-error`;
+  const describedBy = [hint && hintId, error && errorId].filter(Boolean).join(" ") || undefined;
   return (
     <div>
       <label htmlFor={id} className="mb-1.5 block font-medium">
@@ -129,10 +148,20 @@ export function TextField({ label, hint, onChange, type = "text", ...rest }: Tex
         id={id}
         type={type}
         className="field"
-        aria-describedby={hint ? hintId : undefined}
+        aria-describedby={describedBy}
+        aria-invalid={error ? true : undefined}
         onChange={(e) => onChange(e.target.value)}
         {...rest}
       />
+      {error && (
+        <p
+          id={errorId}
+          role="alert"
+          className="mt-1.5 border-l-2 border-[var(--lvl-4)] pl-3 text-sm"
+        >
+          {error}
+        </p>
+      )}
     </div>
   );
 }

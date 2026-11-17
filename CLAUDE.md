@@ -5,15 +5,18 @@ A smog-season assistant for families and communities, built for PromptWars 6 (se
 ## Commands
 
 - `just dev`: API on :8787, app on :5173
-- `just check`: biome, tsc, unit tests, build and JS budget (must pass before any commit)
+- `just check`: biome, tsc, unit tests, build, JS budget and eval replay (must pass before any commit)
 - `just fmt`: fix formatting and autofixable lint
-- `just e2e`: Playwright with axe; `just eval`: model evals (needs `GEMINI_API_KEY`)
+- `just e2e`: Playwright with axe
+- `just eval`: scores the live model and saves its replies to `evals/recordings`; `just record`: saves demo-day answers to `server/ai/recorded.json`. Both need `GEMINI_API_KEY`; rerun both after changing a prompt and bump `PROMPT_VERSION`.
 
 ## Layout
 
 - `shared/`: pure TypeScript engine, imported by both sides. AQI, air summary, exposure, factors with sources, action catalogue, planner and checker, knowledge cards, i18n. No I/O.
 - `server/`: Hono API. `app.ts` composes middleware and routes; `main.ts` wires real upstreams; `serve.ts` (Bun) and `vercel.ts` (Vercel) are entries.
+- `server/ai/`: the three Gemini jobs (plan, chat, advisory), their prompts, grounding packets and the figure guard.
 - `web/`: React app built by Vite into `dist/public`.
+- `evals/`: cases, pure scorers, the runner and the demo recorder.
 - `scripts/build.ts`: writes `.vercel/output` (static, one function, routes and headers), plus robots and sitemap from `scripts/site.ts`.
 - `scripts/assets.ts`: renders the favicons and `og.png` into `web/public`; rerun after changing the mark.
 

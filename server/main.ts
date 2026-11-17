@@ -7,6 +7,7 @@ import { TtlCache } from "./cache";
 import { type Env, loadEnv } from "./env";
 import type { Geocoder } from "./geocode";
 import { openMeteoGeocoder } from "./geocode";
+import { llmFromEnv } from "./llm/config";
 
 const DAY_MS = 86_400_000;
 
@@ -22,6 +23,7 @@ export function productionDeps(env: Env): Deps {
     env,
     air: cached(env.AIR_SOURCE === "fixture" ? fixtureSource() : openMeteo()),
     geocode: cachedGeocoder(openMeteoGeocoder()),
+    llm: llmFromEnv(env),
   };
 }
 

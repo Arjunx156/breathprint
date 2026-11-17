@@ -10,6 +10,8 @@ describe("format", () => {
 
   test("short drops decimals once a number is big enough to read whole", () => {
     expect(short(12.6)).toBe("13");
+    expect(short(1176.4)).toBe("1,176");
+    expect(short(123456)).toBe("1,23,456");
     expect(short(4.25)).toBe("4.3");
     expect(short(0.0461)).toBe("0.046");
   });

@@ -4,10 +4,10 @@ export function sig(n: number, digits = 2): number {
   return Number(n.toPrecision(digits));
 }
 
-/** A short human number for method lines: whole numbers above 10, one decimal below. */
+/** A short human number: whole and grouped above 10, so 1176 reads 1,176; one decimal below. */
 export function short(n: number): string {
   const abs = Math.abs(n);
-  if (abs >= 10) return String(Math.round(n));
+  if (abs >= 10) return Math.round(n).toLocaleString("en-IN");
   if (abs >= 1) return n.toFixed(1);
   return sig(n, 2).toString();
 }

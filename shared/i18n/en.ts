@@ -199,6 +199,7 @@ export const en = {
   "method.errands": "Car kilometres avoided",
 
   "ui.skip": "Skip to content",
+  "ui.loading": "Loading the page",
   "nav.label": "Main",
   "nav.today": "Today",
   "nav.ask": "Ask",
@@ -234,6 +235,7 @@ export const en = {
   "plan.for": "For {who}",
   "plan.numbers": "See the numbers",
   "plan.hideNumbers": "Hide the numbers",
+  "plan.loadingNumbers": "Fetching the working",
   "plan.swaps": "Or instead",
   "plan.how": "How to do it",
   "plan.empty": "Nothing to change today. Enjoy the air.",
@@ -384,6 +386,103 @@ export const en = {
   "settings.forgetConfirm": "This clears your household, plan and progress from this device.",
   "settings.forgetYes": "Yes, forget it",
   "settings.cancel": "Keep it",
+
+  "ai.invite": "Gemini can fit this plan to your household: which steps, when, and why.",
+  "ai.enable": "Personalise with Gemini",
+  "ai.privacy":
+    "This sends your household without names, and your area to within about {km} km, to Google's Gemini. Settings shows exactly what.",
+  "ai.loading": "Gemini is fitting the plan to your household.",
+  "ai.ready": "Gemini has fitted a plan to your household.",
+  "ai.show": "Show Gemini's plan",
+  "ai.showing":
+    "Chosen and timed by Gemini, then checked against Breathprint's safety rules. Every figure still comes from Breathprint.",
+  "ai.recorded": "A saved Gemini answer for this demo, checked the same way.",
+  "ai.back": "Back to the rules plan",
+  "ai.failed": "Gemini couldn't answer just now, so this plan comes from Breathprint's rules.",
+  "ai.retry": "Try Gemini again",
+  "settings.ai": "Personalise with Gemini",
+  "setup.ai": "Personalise my plan with Gemini",
+
+  "ask.title": "Ask about today's air",
+  "ask.lead":
+    "Answers draw on today's forecast for {place}, your household and Breathprint's cited notes.",
+  "ask.label": "Your question",
+  "ask.placeholder": "Can the children play outside after school?",
+  "ask.submit": "Ask",
+  "ask.asking": "Asking",
+  "ask.suggest": "Or try one of these",
+  "ask.q1": "Can the children play outside today?",
+  "ask.q2": "Which mask works for the school run?",
+  "ask.q3": "When should I open the windows?",
+  "ask.privacy": "Your question and your household, without names, go to Google's Gemini.",
+  "ask.medical":
+    "Breathprint is not a doctor. If anyone is struggling to breathe, get medical help now.",
+  "ask.you": "You asked",
+  "ask.sources": "Sources",
+  "ask.actions": "Steps for today",
+  "ask.flagged": "Breathprint couldn't match {figures} to its own numbers. Treat it with care.",
+  "ask.offline":
+    "The assistant can't answer right now. These notes from Breathprint's library cover questions like yours.",
+  "ask.nothing":
+    "The assistant can't answer right now, and no note in Breathprint's library matches this question.",
+  "ask.broken": "The answer stopped partway. Ask again in a moment.",
+  "ask.recorded": "A saved Gemini answer for this demo.",
+
+  "community.title": "An air advisory for your community",
+  "community.lead":
+    "For a housing society, school or workplace near {place}: today's air and what helps, ready to paste into WhatsApp or pin on a board.",
+  "community.audience": "Who is it for?",
+  "audience.society": "Housing society",
+  "audience.school": "School",
+  "audience.workplace": "Workplace",
+  "community.channel": "Where will it go?",
+  "channel.whatsapp": "WhatsApp",
+  "channel.notice": "Printed notice",
+  "community.households": "Households, families or staff",
+  "community.householdsHint": "For the shared-air figure",
+  "community.language": "Language",
+  "community.submit": "Rewrite it with Gemini",
+  "community.draft":
+    "Breathprint's own advisory, from today's forecast. Gemini can rewrite it in your community's voice.",
+  "community.written":
+    "Written by Gemini from today's forecast. Every figure in it comes from Breathprint.",
+  "community.writing": "Gemini is writing the advisory.",
+  "community.do": "Do",
+  "community.avoid": "Avoid",
+  "community.sensitive": "If you are more at risk",
+  "community.togetherTitle": "Together",
+  "community.together":
+    "If {n} households {how}, about {co2} kg of CO2 and {pm} g of PM2.5 stay out of the air we share each day.",
+  "community.togetherCo2":
+    "If {n} households {how}, about {co2} kg of CO2 stays out of the air we share each day.",
+  "community.togetherPm":
+    "If {n} households {how}, about {pm} g of PM2.5 stays out of the air we share each day.",
+  "community.how.society": "stop burning leaves and rubbish",
+  "community.how.school": "share the school run by car",
+  "community.how.workplace": "share their drive to work",
+  "community.basis.society": "Worked out for a household that burns its waste.",
+  "community.basis.school": "Worked out for a child driven {km} km to school.",
+  "community.basis.workplace": "Worked out for one person driving {km} km to work.",
+  "community.honest": "It is what stays out of the air, not a promise about the city's AQI.",
+  "community.source":
+    "Forecast: Copernicus CAMS via Open-Meteo. Worked out by Breathprint for {date}.",
+  "community.copy": "Copy the text",
+  "community.copied": "Copied",
+  "community.copyFailed": "Couldn't copy. Select the text and copy it yourself.",
+  "community.print": "Print",
+  "community.fallback": "Gemini couldn't write it just now, so this is Breathprint's own advisory.",
+  "community.recorded": "A saved Gemini answer for this demo.",
+  "advisory.headline": "Air in {place} today: {category}",
+  "community.householdsInvalid": "Enter a whole number from 1 to 10,000.",
+  "community.privacy": "This sends your area, to within about {km} km, to Google's Gemini.",
+  "advisory.situation":
+    "The air is {category} today, AQI {aqi}. It is cleanest from {from} to {to}.",
+  "advisory.situationFlat":
+    "The air is {category} today, AQI {aqi}, and no part of the day is clearly cleaner.",
+  "advisory.avoid.burning": "Burning leaves, rubbish or wood.",
+  "advisory.avoid.exercise": "Hard exercise outdoors.",
+  "advisory.sensitive":
+    "Children, older people, pregnant women and anyone with asthma or heart disease should stay in the cleanest room and keep their medicines close.",
 
   "notFound.title": "This page drifted off in the smog",
   "notFound.body": "Nothing lives at this address.",
