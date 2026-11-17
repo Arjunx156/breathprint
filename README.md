@@ -30,7 +30,7 @@ Gemini has three jobs, and each one sits behind an answer the engine already gav
 
 The model only sees what it needs: your household without names, its place rounded to about 11 km, and figures the engine has already worked out. Any figure it writes that isn't in that data is caught, and the reply is either fixed or flagged on screen.
 
-`just eval` scores the model on 32 cases across four households, clean and severe days, both languages, a medical emergency and a prompt injection, and saves its replies. `just check` scores those saved replies again, so a change that lowers the score fails the build. To run the AI yourself, put a free key from [AI Studio](https://aistudio.google.com/apikey) in `.env` as `GEMINI_API_KEY`; without one, everything else still works.
+`just eval` scores the model on 32 cases across four households, clean and severe days, both languages, a medical emergency and a prompt injection, and saves its replies. The latest run, on gemini-3.5-flash-lite, passed all 32 cases and every check. `just check` scores those saved replies again, so a change that lowers the score fails the build. To run the AI yourself, put a free key from [AI Studio](https://aistudio.google.com/apikey) in `.env` as `GEMINI_API_KEY`; without one, everything else still works.
 
 Air quality data: Copernicus Atmosphere Monitoring Service forecasts through [Open-Meteo](https://open-meteo.com/), CC BY 4.0.
 
