@@ -2,18 +2,17 @@ import { describe, expect, test } from "bun:test";
 import { AirSnapshotSchema } from "../shared/air";
 import { fixtureSource } from "./air/fixture";
 import { type AirSource, UpstreamError } from "./air/source";
-import { createApp, JSON_LIMIT } from "./app";
+import { JSON_LIMIT } from "./app";
 import { loadEnv } from "./env";
 import type { Geocoder } from "./geocode";
 import { CONTENT_SECURITY_POLICY } from "./headers";
-import { createLlm } from "./llm/llm";
+import { testApp } from "./testing";
 
 const env = loadEnv({ RATE_LIMIT_PER_MIN: "5" });
 const places: Geocoder = async (q) => [
   { name: `${q}, Delhi, India`, lat: 28.7, lon: 77.1, country: "IN" },
 ];
-const app = (air: AirSource = fixtureSource(), geocode = places) =>
-  createApp({ env, air, geocode, llm: createLlm({ provider: null, models: [], timeoutMs: 1000 }) });
+const app = (air: AirSource = fixtureSource(), geocode = places) => testApp({ env, air, geocode });
 const get = (path: string, a = app(), headers: Record<string, string> = {}) =>
   a.request(path, { headers: { "x-real-ip": crypto.randomUUID(), ...headers } });
 
@@ -126,7 +125,7 @@ describe("guards", () => {
   test("limits each visitor per minute and says when to come back", async () => {
     const a = app();
     const visitor = { "x-real-ip": "203.0.113.9" };
-    const statuses = [];
+    const statuses: number[] = [];
     for (let i = 0; i < 6; i++) statuses.push((await get("/api/health", a, visitor)).status);
     expect(statuses).toEqual([200, 200, 200, 200, 200, 429]);
     const blocked = await get("/api/health", a, visitor);

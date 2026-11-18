@@ -23,6 +23,14 @@ function countryAt(lat: number, lon: number): string {
   }
 }
 
+/** What the status line says about the search; nothing while idle or showing places. */
+function statusKey(search: Search) {
+  if (search.status === "searching") return "setup.searching";
+  if (search.status === "error") return "setup.searchError";
+  if (search.status === "done" && search.places.length === 0) return "setup.noResults";
+  return null;
+}
+
 export function PlaceStep({
   place,
   onPlace,
@@ -69,14 +77,7 @@ export function PlaceStep({
     );
   };
 
-  const status =
-    search.status === "searching"
-      ? t("setup.searching")
-      : search.status === "error"
-        ? t("setup.searchError")
-        : search.status === "done" && search.places.length === 0
-          ? t("setup.noResults")
-          : "";
+  const status = statusKey(search);
 
   return (
     <div className="space-y-6">
@@ -91,7 +92,7 @@ export function PlaceStep({
           autoComplete="off"
         />
         <p role="status" className="mt-2 text-sm text-muted">
-          {status}
+          {status && t(status)}
         </p>
         {search.status === "done" && search.places.length > 0 && (
           <ul className="mt-2 divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">

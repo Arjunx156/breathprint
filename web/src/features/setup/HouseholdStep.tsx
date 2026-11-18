@@ -1,4 +1,5 @@
 import { AGE_GROUPS, CONDITIONS, type Member, memberId, type Trip } from "@shared/profile";
+import { type RefObject, useEffect, useRef, useState } from "react";
 import { useApp } from "../../app/state";
 import { Select, TextField, Toggle } from "../../components/fields";
 import { type StepProps, useMemberLabel } from "./steps";
@@ -63,10 +64,29 @@ function MemberFields({
   );
 }
 
+const ADD = "add";
+
+/**
+ * Where focus goes once the list has changed: a new person's name field, or
+ * the add button after the one pressed has gone with its person.
+ */
+function useFocusAfterChange(list: RefObject<HTMLDivElement | null>) {
+  const [target, setTarget] = useState<string | null>(null);
+  useEffect(() => {
+    if (target === null) return;
+    const selector = target === ADD ? `[data-add]` : `[data-member="${target}"] input`;
+    list.current?.querySelector<HTMLElement>(selector)?.focus();
+    setTarget(null);
+  }, [target, list]);
+  return setTarget;
+}
+
 /** Who lives here: age group, health conditions and outdoor work, per person. */
 export function HouseholdStep({ draft, update }: StepProps) {
   const { t } = useApp();
   const label = useMemberLabel();
+  const list = useRef<HTMLDivElement>(null);
+  const focusAfter = useFocusAfterChange(list);
   const setMember = (id: string, next: Member) =>
     update({ ...draft, members: draft.members.map((m) => (m.id === id ? next : m)) });
   // Someone who leaves the household leaves the trips too.
@@ -79,25 +99,25 @@ export function HouseholdStep({ draft, update }: StepProps) {
       commute: without(draft.commute),
       schoolRun: without(draft.schoolRun),
     });
+    focusAfter(ADD);
   };
-  const add = () =>
+  const add = () => {
+    const id = memberId(draft.members.map((m) => m.id));
     update({
       ...draft,
-      members: [
-        ...draft.members,
-        {
-          id: memberId(draft.members.map((m) => m.id)),
-          group: "adult",
-          conditions: [],
-          outdoorWork: false,
-        },
-      ],
+      members: [...draft.members, { id, group: "adult", conditions: [], outdoorWork: false }],
     });
+    focusAfter(id);
+  };
 
   return (
-    <div>
+    <div ref={list}>
       {draft.members.map((m, i) => (
-        <fieldset key={m.id} className="border-t border-line py-6 first:border-t-0 first:pt-0">
+        <fieldset
+          key={m.id}
+          data-member={m.id}
+          className="border-t border-line py-6 first:border-t-0 first:pt-0"
+        >
           <legend className="sr-only">{label(m, i)}</legend>
           <p className="mb-4 font-semibold" aria-hidden="true">
             {label(m, i)}
@@ -111,7 +131,7 @@ export function HouseholdStep({ draft, update }: StepProps) {
         </fieldset>
       ))}
       {draft.members.length < MAX_MEMBERS && (
-        <button type="button" className="btn btn-quiet mt-2" onClick={add}>
+        <button type="button" data-add className="btn btn-quiet mt-2" onClick={add}>
           {t("setup.add")}
         </button>
       )}

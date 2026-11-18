@@ -49,7 +49,7 @@ describe("rankActions on Meera's severe day", () => {
   });
 
   test("every quantified action explains its method", () => {
-    for (const c of ranked.filter((c) => c.action.quantified))
+    for (const c of ranked.filter((r) => r.action.quantified))
       expect(c.impact.method.length).toBeGreaterThan(0);
   });
 });

@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { loadEnv } from "../env";
 import { DEFAULT_MODELS, llmFromEnv } from "./config";
 import { scripted } from "./fake";
-import { createLlm, LlmUnavailable, type LogLine } from "./llm";
+import { createLlm, LlmUnavailable, type LogLine, SILENT } from "./llm";
 import { type LlmRequest, type Provider, ProviderError } from "./types";
 
 const req: LlmRequest = {
@@ -20,7 +20,7 @@ function harness(provider: Provider | null, models = ["a", "b"], timeoutMs = 100
     models,
     timeoutMs,
     log: (l) => lines.push(l),
-    sleep: async () => {},
+    sleep: SILENT.sleep,
   });
   return { llm, lines };
 }

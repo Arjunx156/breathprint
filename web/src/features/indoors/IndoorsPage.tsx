@@ -42,7 +42,8 @@ function Indoors({ profile, summary }: { profile: Profile; summary: AirSummary }
     const controller = new AbortController();
     active.current = controller;
     setStage({ kind: "scanning", photo: p });
-    scanPhoto(p, lang, demo, controller.signal)
+    // Settles into a stage either way, so nothing is left to await.
+    void scanPhoto(p, lang, demo, controller.signal)
       .then(
         (reply): Stage => ({ kind: "found", photo: p, scan: reply.scan, recorded: reply.recorded }),
       )

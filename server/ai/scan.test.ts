@@ -1,11 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { fixtureSource } from "../air/fixture";
-import { createApp, PHOTO_LIMIT } from "../app";
-import { loadEnv } from "../env";
-import { type Script, scripted } from "../llm/fake";
-import { createLlm } from "../llm/llm";
+import { PHOTO_LIMIT } from "../app";
+import { inTurn, scriptedLlm } from "../llm/fake";
 import type { LlmRequest } from "../llm/types";
 import { photoId } from "../routes/scan";
+import { testApp } from "../testing";
 import { recorded } from "./recorded";
 
 /** Enough of a JPEG for the route: its start-of-image marker and a little more. */
@@ -15,22 +13,10 @@ const b64 = (b: Buffer) => b.toString("base64");
 
 function withModel(replies: Array<string | Error>) {
   const seen: LlmRequest[] = [];
-  const script: Script = (req) => {
-    seen.push(req);
-    return replies.shift() ?? new Error("no more replies");
-  };
-  const llm = createLlm({
-    provider: scripted(script),
-    models: ["m1"],
-    timeoutMs: 1000,
-    log: () => {},
-    sleep: async () => {},
-  });
-  const app = createApp({ env: loadEnv({}), air: fixtureSource(), geocode: async () => [], llm });
-  return { app, seen };
+  return { app: testApp({ llm: scriptedLlm(inTurn(replies, seen)) }), seen };
 }
 
-const scanPost = (app: ReturnType<typeof createApp>, body: unknown) =>
+const scanPost = (app: ReturnType<typeof testApp>, body: unknown) =>
   app.request("/api/scan", {
     method: "POST",
     headers: {

@@ -1,18 +1,37 @@
 import { forModel, GRID_KM, LANGUAGES } from "@shared/profile";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Redirect, useLocation } from "wouter";
 import { useApp } from "../../app/state";
 import { Choice, Toggle } from "../../components/fields";
 
 const SCALES = ["IN", "US"] as const;
 
+/**
+ * Forgetting asks first. The question takes focus on its safe answer, so a
+ * second press of Enter keeps the household; backing out returns focus to
+ * the button that asked.
+ */
 function Forget() {
   const { t, forget } = useApp();
   const [, navigate] = useLocation();
   const [asking, setAsking] = useState(false);
+  const ask = useRef<HTMLButtonElement>(null);
+  const keep = useRef<HTMLButtonElement>(null);
+  const changed = useRef(false);
+
+  useEffect(() => {
+    if (!changed.current) return;
+    (asking ? keep : ask).current?.focus();
+  }, [asking]);
+
+  const choose = (next: boolean) => {
+    changed.current = true;
+    setAsking(next);
+  };
+
   if (!asking)
     return (
-      <button type="button" className="btn btn-quiet" onClick={() => setAsking(true)}>
+      <button ref={ask} type="button" className="btn btn-quiet" onClick={() => choose(true)}>
         {t("settings.forget")}
       </button>
     );
@@ -30,7 +49,7 @@ function Forget() {
         >
           {t("settings.forgetYes")}
         </button>
-        <button type="button" className="btn btn-quiet" onClick={() => setAsking(false)}>
+        <button ref={keep} type="button" className="btn btn-quiet" onClick={() => choose(false)}>
           {t("settings.cancel")}
         </button>
       </div>

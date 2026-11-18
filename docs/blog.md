@@ -26,7 +26,7 @@ The model works inside a fence the engine builds. It gets the household without 
 
 ## Evals are the spec
 
-The code has 282 unit, property, route and component tests, and they cover 99.5% of the engine's lines. The model has an eval: 40 cases across four households, on severe, clearing and clean days, in both languages, plus a medical emergency, a prompt injection and five public-domain room photos. No case expects an exact string. Each one checks properties a family would care about. Is it the right language and script? Are the sentences short? Is every figure from the data? Is there a source, the hours of the clean window, or something to do indoors instead? Does it stay on the question? Does it read the prompt back?
+The code has 345 unit, property, route and component tests, and they cover 99.6% of the engine's lines. The model has an eval: 40 cases across four households, on severe, clearing and clean days, in both languages, plus a medical emergency, a prompt injection and five public-domain room photos. No case expects an exact string. Each one checks properties a family would care about. Is it the right language and script? Are the sentences short? Is every figure from the data? Is there a source, the hours of the clean window, or something to do indoors instead? Does it stay on the question? Does it read the prompt back?
 
 `just eval` scores the live model and saves its replies. `just check`, and CI on every push, scores those saved replies again, so a change that lowers the score fails the build like a broken test.
 

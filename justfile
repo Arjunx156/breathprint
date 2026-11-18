@@ -22,7 +22,7 @@ fmt:
 test *args:
     bun test {{args}}
 
-# Tests with coverage, gated at 90% overall and 95% for the shared engine
+# Tests with coverage: 95% of lines overall, 98% of the shared engine, and no file left unloaded
 cover:
     bun test --coverage
     bun run scripts/coverage.ts

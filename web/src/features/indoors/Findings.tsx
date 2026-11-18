@@ -15,9 +15,35 @@ type Props = {
   headingRef: RefObject<HTMLHeadingElement | null>;
 };
 
+/** The sources found, each with where the scan saw it, or why there are none to list. */
+function Sightings({ kinds, scan }: Pick<Props, "kinds" | "scan">) {
+  const { t, lang } = useApp();
+  if (scan?.room === "notRoom") {
+    return <p className="mt-4 max-w-prose text-lg">{t("indoors.notRoom")}</p>;
+  }
+  if (kinds.length === 0) {
+    return <p className="mt-4 max-w-prose text-lg">{t("indoors.nothing")}</p>;
+  }
+  const notes = new Map(scan?.sightings.map((s) => [s.kind, s.where]));
+  return (
+    <ul className="mt-4 space-y-2">
+      {kinds.map((k) => (
+        <li key={k} className="flex flex-wrap items-baseline gap-x-3">
+          <span className="font-semibold">{t(`scan.kind.${k}`)}</span>
+          {notes.get(k) && (
+            <span lang={lang} className="text-muted">
+              {notes.get(k)}
+            </span>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /** What the scan or the checklist found, the fixes ranked for it, and an offer to save it. */
 export function Findings({ profile, summary, kinds, scan, headingRef }: Props) {
-  const { t, tx, lang } = useApp();
+  const { t, tx } = useApp();
   // Fixed at first sight: once saved, the household already matches and the list would empty.
   const [changes] = useState(() => homeChanges(profile.home, kinds));
   const scanned = useMemo(() => withSightings(profile, kinds), [profile, kinds]);
@@ -26,8 +52,6 @@ export function Findings({ profile, summary, kinds, scan, headingRef }: Props) {
     () => scanFixes({ profile, air: summary }, kinds),
     [profile, summary, kinds],
   );
-  const notes = new Map(scan?.sightings.map((s) => [s.kind, s.where]));
-
   return (
     <div className="mt-12 space-y-12">
       <section aria-labelledby="seen-title">
@@ -44,24 +68,7 @@ export function Findings({ profile, summary, kinds, scan, headingRef }: Props) {
             {t("indoors.room", { room: tx(`scan.room.${scan.room}`) })}
           </p>
         )}
-        {scan?.room === "notRoom" ? (
-          <p className="mt-4 max-w-prose text-lg">{t("indoors.notRoom")}</p>
-        ) : kinds.length === 0 ? (
-          <p className="mt-4 max-w-prose text-lg">{t("indoors.nothing")}</p>
-        ) : (
-          <ul className="mt-4 space-y-2">
-            {kinds.map((k) => (
-              <li key={k} className="flex flex-wrap items-baseline gap-x-3">
-                <span className="font-semibold">{t(`scan.kind.${k}`)}</span>
-                {notes.get(k) && (
-                  <span lang={lang} className="text-muted">
-                    {notes.get(k)}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
+        <Sightings kinds={kinds} scan={scan} />
       </section>
 
       {kinds.length > 0 && <Fixes ctx={ctx} fixes={fixes} />}

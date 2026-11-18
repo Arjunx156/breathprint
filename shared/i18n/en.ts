@@ -5,6 +5,7 @@
 export const en = {
   "app.name": "Breathprint",
   "app.tagline": "Every choice leaves a breathprint.",
+  "app.title": "Breathprint: a smog-season plan for your family",
 
   "ledger.protect": "Protect",
   "ledger.prevent": "Prevent",

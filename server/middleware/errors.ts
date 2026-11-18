@@ -5,6 +5,7 @@ import { $ZodError } from "zod/v4/core";
 import { InvalidReply } from "../ai/structured";
 import { UpstreamError } from "../air/source";
 import { LlmUnavailable } from "../llm/llm";
+import { logger } from "../log";
 
 export type ErrorCode =
   | "bad_request"
@@ -47,7 +48,7 @@ export const onError: ErrorHandler = (err, c) => {
   }
   if (err instanceof LlmUnavailable || err instanceof InvalidReply) {
     const why = err instanceof LlmUnavailable ? err.reason : "invalid";
-    console.warn(JSON.stringify({ level: "warn", id: c.get("requestId"), model: why }));
+    logger.warn({ id: c.get("requestId"), model: why });
     return apiError(
       c,
       503,
@@ -56,7 +57,7 @@ export const onError: ErrorHandler = (err, c) => {
     );
   }
   if (err instanceof UpstreamError) {
-    console.warn(JSON.stringify({ level: "warn", id: c.get("requestId"), upstream: err.message }));
+    logger.warn({ id: c.get("requestId"), upstream: err.message });
     return apiError(
       c,
       502,
@@ -73,14 +74,7 @@ export const onError: ErrorHandler = (err, c) => {
       err.message || "Request refused.",
     );
   }
-  console.error(
-    JSON.stringify({
-      level: "error",
-      id: c.get("requestId"),
-      error: err.name,
-      message: err.message,
-    }),
-  );
+  logger.error({ id: c.get("requestId"), error: err.name, message: err.message });
   return apiError(c, 500, "internal", "Something went wrong on our side.");
 };
 

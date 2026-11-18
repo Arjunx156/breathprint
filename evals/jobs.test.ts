@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { scripted } from "../server/llm/fake";
-import { createLlm } from "../server/llm/llm";
+import { inTurn, scriptedLlm } from "../server/llm/fake";
+import { offlineLlm } from "../server/testing";
 import { today } from "../shared/engine";
 import { forModel, MEERA } from "../shared/profile";
 import { severeDay } from "../shared/testing";
@@ -8,17 +8,9 @@ import { CASES, type Case } from "./cases";
 import { overall, replaying, runCase, taped } from "./jobs";
 
 /** A model that gives these replies in turn. */
-function model(...replies: string[]) {
-  return createLlm({
-    provider: scripted(() => replies.shift() ?? new Error("no more replies")),
-    models: ["m1"],
-    timeoutMs: 1000,
-    log: () => {},
-    sleep: async () => {},
-  });
-}
+const model = (...replies: string[]) => scriptedLlm(inTurn(replies));
 
-const offline = createLlm({ provider: null, models: [], timeoutMs: 1000, log: () => {} });
+const offline = offlineLlm();
 
 function byId(id: string): Case {
   const c = CASES.find((x) => x.id === id);

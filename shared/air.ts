@@ -112,12 +112,17 @@ function nextHour(time: string): string {
   return `${d.toISOString().slice(0, 13)}:00`;
 }
 
+/** A cleaner run is "clean" only when it is safe for the most sensitive; otherwise just "better". */
+function resolveQuality(quality: Window["quality"], meanPm25: number): Window["quality"] {
+  if (quality === "peak") return "peak";
+  return meanPm25 <= THRESHOLDS.sensitiveCaution ? "clean" : "better";
+}
+
 function toWindow(run: readonly Hour[], quality: Window["quality"]): Window {
   const first = run[0] as Hour;
   const last = run[run.length - 1] as Hour;
   const meanPm25 = round1(mean(pm25Of(run)));
-  const resolved =
-    quality === "peak" ? "peak" : meanPm25 <= THRESHOLDS.sensitiveCaution ? "clean" : "better";
+  const resolved = resolveQuality(quality, meanPm25);
   return {
     start: first.time,
     end: nextHour(last.time),
@@ -211,8 +216,8 @@ export function summarize(snapshot: AirSnapshot, nowMs: number): AirSummary {
     current: currentReading(snapshot.hours, index),
     today: {
       mean: round1(mean(todayValues)),
-      min: round1(todayValues.length ? Math.min(...todayValues) : 0),
-      max: round1(todayValues.length ? Math.max(...todayValues) : 0),
+      min: round1(todayValues.length > 0 ? Math.min(...todayValues) : 0),
+      max: round1(todayValues.length > 0 ? Math.max(...todayValues) : 0),
     },
     tomorrow:
       tomorrowValues.length >= 12

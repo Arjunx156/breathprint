@@ -4,49 +4,12 @@ import type { Language } from "@shared/profile";
 import { act, fireEvent, render } from "@testing-library/react";
 import { useState } from "react";
 import { withPage } from "../../test/dom";
+import { clearSpeech, FakeRecognizer, fakeRecognition, fakeSynthesis } from "../../test/speech";
 import { useDictation, useReadAloud } from "./speech";
 
 withPage();
 
-type Handlers = {
-  lang: string;
-  onresult: ((e: unknown) => void) | null;
-  onerror: ((e: unknown) => void) | null;
-  onend: (() => void) | null;
-};
-
-/** Stands in for the browser's recogniser; the test speaks through it. */
-class FakeRecognizer implements Handlers {
-  static last: FakeRecognizer | null = null;
-  lang = "";
-  interimResults = false;
-  continuous = true;
-  onresult: ((e: unknown) => void) | null = null;
-  onerror: ((e: unknown) => void) | null = null;
-  onend: (() => void) | null = null;
-  started = false;
-  constructor() {
-    FakeRecognizer.last = this;
-  }
-  start() {
-    this.started = true;
-  }
-  stop() {
-    this.onend?.();
-  }
-  abort() {
-    this.onend?.();
-  }
-}
-
-const g = globalThis as Record<string, unknown>;
-
-afterEach(() => {
-  delete g.webkitSpeechRecognition;
-  delete g.speechSynthesis;
-  delete g.SpeechSynthesisUtterance;
-  FakeRecognizer.last = null;
-});
+afterEach(clearSpeech);
 
 function Dictation({ lang }: { lang: Language }) {
   const [text, setText] = useState("");
@@ -70,7 +33,7 @@ describe("useDictation", () => {
   });
 
   test("listens in Indian Hindi and fills the box as words arrive", () => {
-    g.webkitSpeechRecognition = FakeRecognizer;
+    fakeRecognition();
     const view = render(<Dictation lang="hi" />);
     fireEvent.click(view.getByRole("button", { name: "speak" }));
     const r = FakeRecognizer.last;
@@ -85,7 +48,7 @@ describe("useDictation", () => {
   });
 
   test("a blocked microphone and silence get their own messages", () => {
-    g.webkitSpeechRecognition = FakeRecognizer;
+    fakeRecognition();
     const view = render(<Dictation lang="en" />);
     fireEvent.click(view.getByRole("button", { name: "speak" }));
     act(() => {
@@ -103,28 +66,6 @@ describe("useDictation", () => {
     expect(view.getByText("silence")).toBeTruthy();
   });
 });
-
-class FakeUtterance {
-  lang = "";
-  voice: unknown = null;
-  onend: (() => void) | null = null;
-  onerror: (() => void) | null = null;
-  constructor(readonly text: string) {}
-}
-
-function fakeSynthesis() {
-  const spoken: FakeUtterance[] = [];
-  const synth = {
-    speak: (u: FakeUtterance) => spoken.push(u),
-    cancel: () => {
-      spoken.length = 0;
-    },
-    getVoices: () => [{ lang: "hi-IN", name: "Hindi" }],
-  };
-  g.speechSynthesis = synth;
-  g.SpeechSynthesisUtterance = FakeUtterance;
-  return spoken;
-}
 
 function Reader({ pieces }: { pieces: string[] }) {
   const voice = useReadAloud("hi");

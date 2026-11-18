@@ -1,3 +1,4 @@
+import { logger } from "../log";
 import { type Chunk, type LlmRequest, type Provider, ProviderError, type Usage } from "./types";
 
 export type Failure = "offline" | "quota" | "timeout" | "unavailable" | "refused";
@@ -27,6 +28,12 @@ export type LlmOptions = {
   sleep?: (ms: number) => Promise<void>;
 };
 
+/** For scripted runs and recorders: log nowhere and never wait between retries. */
+export const SILENT = {
+  log: () => undefined,
+  sleep: () => Promise.resolve(),
+} as const satisfies Pick<LlmOptions, "log" | "sleep">;
+
 export type Llm = {
   ready: boolean;
   generate(req: LlmRequest, signal?: AbortSignal): Promise<{ text: string; model: string }>;
@@ -51,7 +58,7 @@ export function classify(err: unknown, timedOut: boolean): Failure {
 }
 
 const defaultLog = (line: LogLine) =>
-  console.info(JSON.stringify({ level: line.outcome === "ok" ? "info" : "warn", ...line }));
+  line.outcome === "ok" ? logger.info(line) : logger.warn(line);
 
 /** Aborts one attempt when its time is up or the caller hangs up, and knows which it was. */
 function attemptSignal(ms: number, outer?: AbortSignal) {

@@ -9,6 +9,16 @@ export type RateLimitStore = {
   hit(key: string, windowMs: number, now: number): Window;
 };
 
+/** Drops finished windows, then the oldest live ones, until the map fits again. */
+function prune(windows: Map<string, Window>, maxKeys: number, now: number) {
+  for (const [k, w] of windows) if (w.resetAt <= now) windows.delete(k);
+  for (const k of windows.keys()) {
+    if (windows.size <= maxKeys) return;
+    windows.delete(k);
+  }
+}
+
+/** Counters in this instance's memory, never more than `maxKeys` of them however many visit. */
 export function memoryStore(maxKeys = 10_000): RateLimitStore {
   const windows = new Map<string, Window>();
   return {
@@ -18,18 +28,21 @@ export function memoryStore(maxKeys = 10_000): RateLimitStore {
         current && current.resetAt > now ? current : { count: 0, resetAt: now + windowMs };
       window.count += 1;
       windows.set(key, window);
-      if (windows.size > maxKeys) {
-        for (const [k, w] of windows) if (w.resetAt <= now) windows.delete(k);
-      }
+      if (windows.size > maxKeys) prune(windows, maxKeys, now);
       return window;
     },
   };
 }
 
-/** The client address as the platform reports it; the first hop is the visitor. */
-export function clientIp(c: Context): string {
-  const forwarded = c.req.header("x-forwarded-for")?.split(",")[0]?.trim();
-  return c.req.header("x-real-ip") ?? forwarded ?? "local";
+/**
+ * Where a visitor's address comes from. Only a source the deployment controls
+ * counts: a client that could name its own address could dodge every limit.
+ */
+export type ClientIp = (c: Context) => string | undefined;
+
+/** A header the platform in front writes over whatever the client sent; on Vercel, x-real-ip. */
+export function fromHeader(name: string): ClientIp {
+  return (c) => c.req.header(name)?.split(",")[0]?.trim() || undefined;
 }
 
 /**
@@ -52,22 +65,28 @@ export function ipHasher(now: () => number = Date.now): (ip: string) => string {
 type Options = {
   name: string;
   perMinute: number;
+  ip: ClientIp;
   store?: RateLimitStore;
   hash?: (ip: string) => string;
   now?: () => number;
 };
 
-/** A per-visitor fixed-window limit that answers with the standard RateLimit headers. */
+/**
+ * A per-visitor fixed-window limit that answers with the standard RateLimit
+ * headers. Visitors whose address is unknown share one window, so a missing
+ * address can only ever mean less, never more.
+ */
 export function rateLimit({
   name,
   perMinute,
+  ip,
   store = memoryStore(),
   hash = ipHasher(),
   now = Date.now,
 }: Options): MiddlewareHandler {
   return async (c, next) => {
     const t = now();
-    const window = store.hit(`${name}:${hash(clientIp(c))}`, 60_000, t);
+    const window = store.hit(`${name}:${hash(ip(c) ?? "unknown")}`, 60_000, t);
     const resetSeconds = Math.max(1, Math.ceil((window.resetAt - t) / 1000));
     c.header("RateLimit-Limit", String(perMinute));
     c.header("RateLimit-Remaining", String(Math.max(0, perMinute - window.count)));

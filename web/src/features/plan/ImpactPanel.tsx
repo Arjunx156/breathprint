@@ -92,15 +92,17 @@ export function ImpactPanel({
       {action.quantified ? (
         <div className="mt-6 grid gap-6 sm:grid-cols-3">
           <Column title={t("impact.protect")}>
-            {protect.length ? protect.map(line) : none}
+            {protect.length > 0 ? protect.map(line) : none}
             {impact.doseShare !== null && protect.length > 0 && (
               <p className="text-sm text-muted">
                 {t("impact.share", { pct: vars.pct ?? 0, who: vars.who ?? "" })}
               </p>
             )}
           </Column>
-          <Column title={t("impact.prevent")}>{prevent.length ? prevent.map(line) : none}</Column>
-          <Column title={t("impact.wallet")}>{wallet.length ? wallet.map(line) : none}</Column>
+          <Column title={t("impact.prevent")}>
+            {prevent.length > 0 ? prevent.map(line) : none}
+          </Column>
+          <Column title={t("impact.wallet")}>{wallet.length > 0 ? wallet.map(line) : none}</Column>
         </div>
       ) : (
         <p className="mt-4 max-w-prose text-muted">{t("impact.qualitative")}</p>

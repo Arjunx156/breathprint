@@ -18,6 +18,10 @@ export const CONTENT_SECURITY_POLICY = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
+  // No string reaches a script sink unless the page's one policy vouches for it
+  // (web/src/lib/trusted.ts), and no other policy may be created.
+  "require-trusted-types-for 'script'",
+  "trusted-types breathprint",
   "upgrade-insecure-requests",
 ].join("; ");
 
@@ -28,8 +32,13 @@ export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
   "X-Frame-Options": "DENY",
   "Referrer-Policy": "strict-origin-when-cross-origin",
   "Permissions-Policy": "camera=(self), microphone=(self), geolocation=(self), payment=(), usb=()",
+  // Isolated from every other origin: nothing cross-origin loads, and nothing may embed or open it.
   "Cross-Origin-Opener-Policy": "same-origin",
+  "Cross-Origin-Embedder-Policy": "require-corp",
   "Cross-Origin-Resource-Policy": "same-origin",
+  "Origin-Agent-Cluster": "?1",
+  "X-Permitted-Cross-Domain-Policies": "none",
+  "X-DNS-Prefetch-Control": "off",
 };
 
 /** Hashed build assets never change, so browsers and the CDN may keep them for a year. */

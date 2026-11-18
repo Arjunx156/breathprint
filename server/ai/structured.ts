@@ -1,5 +1,6 @@
 import type { Llm } from "../llm/llm";
 import type { LlmRequest } from "../llm/types";
+import { logger } from "../log";
 import { REPAIR_PROMPT } from "./prompts";
 
 export type Parsed<T> = { ok: true; value: T } | { ok: false; issues: string[] };
@@ -49,6 +50,6 @@ export async function structured<T>(
   const second = await llm.generate(retry, signal);
   const rechecked = parse(second.text);
   if (rechecked.ok) return { value: rechecked.value, model: second.model, repaired: true };
-  console.warn(JSON.stringify({ level: "warn", llm: req.job, invalid: rechecked.issues.length }));
+  logger.warn({ llm: req.job, invalid: rechecked.issues.length });
   throw new InvalidReply(req.job, rechecked.issues);
 }

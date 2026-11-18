@@ -8,6 +8,7 @@ import { structured } from "../server/ai/structured";
 import { fixtureSource } from "../server/air/fixture";
 import { loadEnv } from "../server/env";
 import { llmFromEnv } from "../server/llm/config";
+import { SILENT } from "../server/llm/llm";
 import { photoId } from "../server/routes/scan";
 import { AUDIENCES, CHANNELS, collective, typicalHousehold } from "../shared/community";
 import { t } from "../shared/i18n";
@@ -31,7 +32,7 @@ if (env.LLM_PROVIDER === "fake") {
   console.error("No model is configured. Set GEMINI_API_KEY in .env, or LLM_PROVIDER=ollama.");
   process.exit(1);
 }
-const llm = llmFromEnv(env, () => {});
+const llm = llmFromEnv(env, SILENT.log);
 const air = fixtureSource();
 const delayMs = Number(process.env.EVAL_DELAY_MS ?? 4_000);
 // Merged into what is there, so a run cut short by the quota loses nothing.

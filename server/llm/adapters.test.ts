@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { gemini } from "./gemini";
 import { ollama } from "./ollama";
-import { type LlmRequest, ProviderError } from "./types";
+import { type Chunk, type LlmRequest, ProviderError } from "./types";
 
 const real = globalThis.fetch;
 afterEach(() => {
@@ -11,13 +11,13 @@ afterEach(() => {
 type Sent = { url: string; body: Record<string, unknown> };
 
 /** Answers every request with `reply` and keeps what was sent. */
-function serve(reply: () => Response): Sent[] {
+function serve(respond: () => Response): Sent[] {
   const sent: Sent[] = [];
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = input instanceof Request ? input.url : String(input);
     const raw = input instanceof Request ? await input.text() : String(init?.body ?? "{}");
     sent.push({ url, body: JSON.parse(raw) });
-    return reply();
+    return respond();
   }) as typeof fetch;
   return sent;
 }
@@ -148,7 +148,7 @@ describe("ollama", () => {
           }),
         ),
     );
-    const chunks = [];
+    const chunks: Chunk[] = [];
     for await (const c of ollama("http://localhost:11434").stream("m", PHOTO, signal())) {
       chunks.push(c);
     }

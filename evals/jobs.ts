@@ -6,8 +6,8 @@ import { personalPlan } from "../server/ai/planner";
 import { DANGER_SIGNS } from "../server/ai/prompts";
 import { readScan, scanRequest } from "../server/ai/scan";
 import { InvalidReply, structured } from "../server/ai/structured";
-import { scripted } from "../server/llm/fake";
-import { createLlm, type Llm, LlmUnavailable } from "../server/llm/llm";
+import { scriptedLlm } from "../server/llm/fake";
+import { type Llm, LlmUnavailable } from "../server/llm/llm";
 import { cleanText } from "../shared/answer";
 import { type Advisory, collective, typicalHousehold } from "../shared/community";
 import { forModel, MEERA, type Profile } from "../shared/profile";
@@ -228,11 +228,5 @@ export function taped(llm: Llm, tape: string[]): Llm {
 /** A model that gives back a recorded run's replies in order. */
 export function replaying(tape: readonly string[], model: string): Llm {
   let next = 0;
-  return createLlm({
-    provider: scripted(() => tape[next++] ?? new Error("the recording ran out")),
-    models: [model],
-    timeoutMs: 5_000,
-    log: () => {},
-    sleep: async () => {},
-  });
+  return scriptedLlm(() => tape[next++] ?? new Error("the recording ran out"), [model]);
 }

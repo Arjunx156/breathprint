@@ -1,4 +1,5 @@
 import type { Env } from "../env";
+import { logger } from "../log";
 import { gemini } from "./gemini";
 import { createLlm, type Llm, type LlmOptions } from "./llm";
 import { ollama } from "./ollama";
@@ -22,9 +23,7 @@ function provider(env: Env) {
 /** The model chain this deployment is configured for; offline when nothing is. */
 export function llmFromEnv(env: Env, log?: LlmOptions["log"]): Llm {
   if (env.LLM_PROVIDER === "gemini" && !env.GEMINI_API_KEY) {
-    console.warn(
-      JSON.stringify({ level: "warn", message: "GEMINI_API_KEY is not set; AI is off" }),
-    );
+    logger.warn({ message: "GEMINI_API_KEY is not set; AI is off" });
   }
   return createLlm({
     provider: provider(env),

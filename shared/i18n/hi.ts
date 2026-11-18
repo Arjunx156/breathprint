@@ -4,6 +4,7 @@ import type { en } from "./en";
 export const hi: Record<keyof typeof en, string> = {
   "app.name": "Breathprint",
   "app.tagline": "हर चुनाव हवा पर अपनी छाप छोड़ता है।",
+  "app.title": "Breathprint: स्मॉग के मौसम में आपके परिवार की योजना",
 
   "ledger.protect": "बचाव",
   "ledger.prevent": "रोकथाम",

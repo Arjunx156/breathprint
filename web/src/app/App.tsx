@@ -1,9 +1,10 @@
 import type { MessageKey } from "@shared/i18n";
-import { Component, lazy, type ReactNode, Suspense } from "react";
+import { Component, lazy, type ReactNode, Suspense, useRef } from "react";
 import { Link, Route, Switch, useLocation } from "wouter";
 import { NotFound } from "../features/NotFound";
 import { TodayPage } from "../features/today/TodayPage";
 import { useApp } from "./state";
+import { usePageChange } from "./usePageChange";
 
 // Today loads alone; every other page, and the knowledge library Ask carries, comes when visited.
 const SetupPage = lazy(() => import("../features/setup/SetupPage"));
@@ -138,6 +139,8 @@ function Footer() {
 export function App() {
   const { t, demo } = useApp();
   const [path] = useLocation();
+  const main = useRef<HTMLElement>(null);
+  usePageChange(path, t, main);
   return (
     <div className="flex min-h-dvh flex-col">
       <a
@@ -154,6 +157,7 @@ export function App() {
         <Nav />
       </header>
       <main
+        ref={main}
         id="main"
         tabIndex={-1}
         className="mx-auto w-full max-w-6xl flex-1 px-5 pt-6 pb-24 outline-none sm:px-8 sm:pt-10"

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { percent, totals } from "./coverage";
+import { ENTRY_POINTS, percent, totals, unloaded } from "./coverage";
 
 const LCOV = `TN:
 SF:shared\\aqi.ts
@@ -29,5 +29,23 @@ describe("coverage totals", () => {
   test("a part with nothing to cover counts as covered", () => {
     expect(percent([0, 0])).toBe(100);
     expect(percent([49, 50])).toBe(98);
+  });
+});
+
+describe("unloaded files", () => {
+  test("a source file no test loaded is named, whichever slash either side uses", () => {
+    const sources = ["shared/aqi.ts", "web\\src\\app\\App.tsx", "web/src/features/Setup.tsx"];
+    expect(unloaded(LCOV, sources)).toEqual(["web/src/features/Setup.tsx"]);
+  });
+
+  test("tests, type declarations and entry points are never asked for", () => {
+    const sources = [
+      "shared/aqi.test.ts",
+      "tests/e2e/a.e2e.ts",
+      "web/src/env.d.ts",
+      "server/serve.ts",
+    ];
+    expect(ENTRY_POINTS.has("server/serve.ts")).toBe(true);
+    expect(unloaded(LCOV, sources)).toEqual([]);
   });
 });

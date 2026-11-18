@@ -65,8 +65,8 @@ export function ollama(host: string): Provider {
 }
 
 /** One parsed object per line of a newline-delimited JSON stream. */
-async function* ndjson(body: ReadableStream<Uint8Array>): AsyncGenerator<Line> {
-  const reader = body.getReader();
+async function* ndjson(source: ReadableStream<Uint8Array>): AsyncGenerator<Line> {
+  const reader = source.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
   for (;;) {

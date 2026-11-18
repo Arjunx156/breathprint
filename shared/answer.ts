@@ -121,10 +121,10 @@ export function textsOf(blocks: readonly Block[]): string[] {
 
 /** An answer, whole or still streaming, ready to show. */
 export function readAnswer(text: string): Answer {
-  const cited = markers(text);
+  const found = markers(text);
   return {
     blocks: blocksOf(cleanText(text)),
-    cards: cited.cards.filter((id) => cardById(id)),
-    actions: cited.actions.filter((id) => actionById(id)),
+    cards: found.cards.filter((id) => cardById(id)),
+    actions: found.actions.filter((id) => actionById(id)),
   };
 }

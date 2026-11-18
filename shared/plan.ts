@@ -101,42 +101,60 @@ function stepIssues(ctx: Context, step: PlanStep, candidate: Candidate | undefin
   return issues;
 }
 
+/** Each value that appears more than once. */
+function repeated<T>(values: readonly T[]): T[] {
+  return [...new Set(values.filter((v, i) => values.indexOf(v) !== i))];
+}
+
+/** Sensitive members some protect option could cover, but no chosen step does. */
+function uncoveredSensitive(
+  ctx: Context,
+  steps: readonly PlanStep[],
+  chosen: readonly (Candidate | undefined)[],
+  candidates: readonly Candidate[],
+) {
+  if (healthLevel(ctx.air.today.mean) < 2) return [];
+  const covered = new Set(
+    steps.flatMap((step, i) => {
+      const candidate = chosen[i];
+      return candidate && protects(candidate) ? coverage(step, candidate) : [];
+    }),
+  );
+  const coverable = new Set(candidates.filter(protects).flatMap((c) => c.who));
+  return ctx.profile.members.filter(
+    (m) => isSensitive(m) && coverable.has(m.id) && !covered.has(m.id),
+  );
+}
+
 function planIssues(
   ctx: Context,
   steps: readonly PlanStep[],
   candidates: readonly Candidate[],
 ): PlanIssue[] {
-  const issues: PlanIssue[] = [];
   const chosen = steps.map((s) => candidates.find((c) => c.action.id === s.actionId));
   const ids = steps.map((s) => s.actionId);
-  for (const id of new Set(ids.filter((id, i) => ids.indexOf(id) !== i))) {
-    issues.push({ code: "duplicate", detail: `${id} appears twice.` });
-  }
-  const groups = chosen.map((c) => c?.action.group).filter((g): g is string => g !== undefined);
-  for (const g of new Set(groups.filter((g, i) => groups.indexOf(g) !== i))) {
-    issues.push({
-      code: "groupConflict",
-      detail: `Pick one ${g} option and offer the rest as swaps.`,
-    });
-  }
-  for (const c of candidates.filter((c) => c.action.safety && !ids.includes(c.action.id))) {
-    issues.push({ code: "safetyMissing", detail: `${c.action.id} must be in the plan.` });
-  }
-  if (healthLevel(ctx.air.today.mean) >= 2) {
-    const covered = new Set(
-      steps.flatMap((s, i) => (chosen[i] && protects(chosen[i]) ? coverage(s, chosen[i]) : [])),
-    );
-    const coverable = new Set(candidates.filter(protects).flatMap((c) => c.who));
-    for (const m of ctx.profile.members.filter(
-      (m) => isSensitive(m) && coverable.has(m.id) && !covered.has(m.id),
-    )) {
-      issues.push({
+  const groups = chosen.flatMap((c) => (c?.action.group ? [c.action.group] : []));
+  const missing = candidates.filter((c) => c.action.safety && !ids.includes(c.action.id));
+  return [
+    ...repeated(ids).map(
+      (id): PlanIssue => ({ code: "duplicate", detail: `${id} appears twice.` }),
+    ),
+    ...repeated(groups).map(
+      (group): PlanIssue => ({
+        code: "groupConflict",
+        detail: `Pick one ${group} option and offer the rest as swaps.`,
+      }),
+    ),
+    ...missing.map(
+      (c): PlanIssue => ({ code: "safetyMissing", detail: `${c.action.id} must be in the plan.` }),
+    ),
+    ...uncoveredSensitive(ctx, steps, chosen, candidates).map(
+      (m): PlanIssue => ({
         code: "sensitiveUncovered",
         detail: `Nothing in the plan protects ${m.name ?? m.id}.`,
-      });
-    }
-  }
-  return issues;
+      }),
+    ),
+  ];
 }
 
 /**

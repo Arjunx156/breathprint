@@ -61,7 +61,11 @@ describe("windowsForDay", () => {
   });
 
   test("ignores night hours when looking for a window", () => {
-    const pm = (h: number) => (h < 5 ? 10 : h >= 13 && h < 15 ? 60 : 120);
+    // Cleanest before dawn, but the only daytime window is 13:00 to 15:00.
+    const pm = (h: number) => {
+      if (h < 5) return 10;
+      return h >= 13 && h < 15 ? 60 : 120;
+    };
     const day = Array.from({ length: 24 }, (_, h) => hour(h, pm(h)));
     const [w] = windowsForDay(day).windows;
     expect(w?.start).toBe("2026-11-18T13:00");

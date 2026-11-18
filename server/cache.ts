@@ -38,7 +38,7 @@ export class TtlCache<T> {
     const hit = this.get(key);
     if (hit !== undefined) return hit;
     const pending = this.#pending.get(key);
-    if (pending) return pending;
+    if (pending !== undefined) return pending;
     const work = load()
       .then((value) => {
         this.set(key, value);

@@ -5,7 +5,7 @@ import { GlobalRegistrator } from "@happy-dom/global-registrator";
 // would decide as it loads that there's no DOM, and send typing down an
 // old-IE path where onChange never fires. Load it here with a page up, then
 // close the page so the API tests get the real fetch and Response back.
-// Component tests open their own page with usePage() from ./dom.
+// Component tests open their own page with withPage() from ./dom.
 const runtime = {
   setTimeout,
   clearTimeout,

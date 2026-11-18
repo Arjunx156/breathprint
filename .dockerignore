@@ -2,9 +2,12 @@ node_modules
 dist
 .vercel
 .git
+.github
+.claude
 .env
 .env.*
 coverage
 test-results
 playwright-report
 evals/results
+*.log

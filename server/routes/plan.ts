@@ -5,7 +5,7 @@ import { forModel, LANGUAGES, ProfileSchema } from "../../shared/profile";
 import { contextFor } from "../ai/grounding";
 import { personalPlan, plannerRequest, readPlan } from "../ai/planner";
 import { PROMPT_VERSION } from "../ai/prompts";
-import { keyOf, recorded } from "../ai/recorded";
+import { keyOf, liveOrRecorded } from "../ai/recorded";
 import type { AirSource } from "../air/source";
 import { TtlCache } from "../cache";
 import type { Llm } from "../llm/llm";
@@ -32,15 +32,12 @@ export function planRoutes({ llm, air }: { llm: Llm; air: AirSource }) {
     // hanging up must not cancel it for the rest.
     const reply = await cache.getOrLoad(key, async (): Promise<PlanReply> => {
       const ctx = await contextFor(air, profile, demo, now);
-      try {
-        const { value, model } = await personalPlan(llm, ctx, lang);
-        return { plan: value, model, recorded: false };
-      } catch (err) {
-        const saved = demo ? recorded(`plan:${lang}`) : undefined;
-        const checked = saved ? readPlan(ctx, plannerRequest(ctx, lang))(saved) : null;
-        if (checked?.ok) return { plan: checked.value, model: "recorded", recorded: true };
-        throw err;
-      }
+      const { value, ...from } = await liveOrRecorded(() => personalPlan(llm, ctx, lang), {
+        demo,
+        key: `plan:${lang}`,
+        read: readPlan(ctx, plannerRequest(ctx, lang)),
+      });
+      return { plan: value, ...from };
     });
     return c.json(reply);
   });

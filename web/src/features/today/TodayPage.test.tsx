@@ -9,7 +9,7 @@ withPage();
 const en = (key: Parameters<typeof t>[1]) => t("en", key);
 
 // Gemini is down for every test here: the engine's plan has to carry the page alone.
-let restore = () => {};
+let restore: () => void = () => undefined;
 beforeEach(() => {
   restore = stubFetch(async () =>
     Response.json(
@@ -55,6 +55,21 @@ describe("Today", () => {
     fireEvent.click(step);
     expect(step.checked).toBe(false);
     expect(soFar?.textContent).toBe(before);
+  });
+
+  test("the forecast chart reads as a table, hour by hour, and back again", async () => {
+    const view = renderDemo("/");
+    const toggle = await view.findByRole("button", { name: en("today.asTable") });
+    fireEvent.click(toggle);
+    const table = view.getByRole("table");
+    const rows = within(table).getAllByRole("row");
+    // A header row, then one row per forecast hour, each led by its time.
+    expect(rows.length).toBeGreaterThan(24);
+    expect(within(table).getAllByRole("rowheader")).toHaveLength(rows.length - 1);
+    // The same button changes its words, so focus never has to move.
+    expect(toggle.textContent).toBe(en("today.asChart"));
+    fireEvent.click(toggle);
+    expect(view.queryByRole("table")).toBeNull();
   });
 
   test("an unknown address has a way home", async () => {

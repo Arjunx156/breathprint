@@ -4,7 +4,6 @@ import { cached, UpstreamError } from "./air/source";
 import { TtlCache } from "./cache";
 import { loadEnv } from "./env";
 import { openMeteoGeocoder } from "./geocode";
-import { ipHasher, memoryStore } from "./middleware/rateLimit";
 
 const json = (body: unknown, status = 200) =>
   (async () => new Response(JSON.stringify(body), { status })) as unknown as typeof fetch;
@@ -135,24 +134,5 @@ describe("env", () => {
   test("names the bad variable and never echoes a value", () => {
     expect(() => loadEnv({ LLM_PROVIDER: "openai" })).toThrow(/LLM_PROVIDER/);
     expect(() => loadEnv({ GEMINI_API_KEY: "short-secret" })).not.toThrow(/short-secret/);
-  });
-});
-
-describe("rate limit internals", () => {
-  test("hashes addresses with a salt that turns over daily", () => {
-    let now = 0;
-    const hash = ipHasher(() => now);
-    const first = hash("203.0.113.9");
-    expect(first).not.toContain("203");
-    expect(hash("203.0.113.9")).toBe(first);
-    now = 86_400_000;
-    expect(hash("203.0.113.9")).not.toBe(first);
-  });
-
-  test("windows reset after a minute", () => {
-    const store = memoryStore();
-    store.hit("k", 60_000, 0);
-    expect(store.hit("k", 60_000, 1).count).toBe(2);
-    expect(store.hit("k", 60_000, 60_001).count).toBe(1);
   });
 });

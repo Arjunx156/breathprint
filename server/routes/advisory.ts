@@ -6,7 +6,7 @@ import type { AdvisoryReply } from "../../shared/replies";
 import { advisoryRequest, readAdvisory } from "../ai/advisory";
 import { contextFor } from "../ai/grounding";
 import { PROMPT_VERSION } from "../ai/prompts";
-import { keyOf, recorded } from "../ai/recorded";
+import { keyOf, liveOrRecorded } from "../ai/recorded";
 import { structured } from "../ai/structured";
 import type { AirSource } from "../air/source";
 import { TtlCache } from "../cache";
@@ -40,22 +40,12 @@ export function advisoryRoutes({ llm, air }: { llm: Llm; air: AirSource }) {
       const together = collective(ctx.air, ctx.profile.place, audience, households);
       const call = advisoryRequest(ctx, { audience, channel, lang }, together);
       const read = readAdvisory(call);
-      try {
-        const { value, model } = await structured(llm, call.req, read);
-        return { advisory: value, collective: together, model, recorded: false };
-      } catch (err) {
-        const saved = demo ? recorded(`advisory:${lang}:${audience}:${channel}`) : undefined;
-        const checked = saved ? read(saved) : null;
-        if (checked?.ok) {
-          return {
-            advisory: checked.value,
-            collective: together,
-            model: "recorded",
-            recorded: true,
-          };
-        }
-        throw err;
-      }
+      const { value, ...from } = await liveOrRecorded(() => structured(llm, call.req, read), {
+        demo,
+        key: `advisory:${lang}:${audience}:${channel}`,
+        read,
+      });
+      return { advisory: value, collective: together, ...from };
     });
     return c.json(reply);
   });

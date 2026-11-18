@@ -4,7 +4,7 @@ import { z } from "zod";
 import { LANGUAGES } from "../../shared/profile";
 import type { ScanReply } from "../../shared/scan";
 import { PROMPT_VERSION } from "../ai/prompts";
-import { keyOf, recorded } from "../ai/recorded";
+import { keyOf, liveOrRecorded } from "../ai/recorded";
 import { readScan, scanRequest } from "../ai/scan";
 import { structured } from "../ai/structured";
 import { TtlCache } from "../cache";
@@ -52,19 +52,13 @@ export function scanRoutes({ llm }: { llm: Llm }) {
     const id = photoId(bytes);
     const reply = await cache.getOrLoad(keyOf([PROMPT_VERSION, lang, id]), async () => {
       const read = readScan(lang);
-      try {
-        const { value, model } = await structured(
-          llm,
-          scanRequest({ mime: "image/jpeg", data: image }, lang),
-          read,
-        );
-        return { scan: value, model, recorded: false };
-      } catch (err) {
-        const saved = demo ? recorded(`scan:${lang}:${id}`) : undefined;
-        const checked = saved ? read(saved) : null;
-        if (checked?.ok) return { scan: checked.value, model: "recorded", recorded: true };
-        throw err;
-      }
+      const photo = scanRequest({ mime: "image/jpeg", data: image }, lang);
+      const { value, ...from } = await liveOrRecorded(() => structured(llm, photo, read), {
+        demo,
+        key: `scan:${lang}:${id}`,
+        read,
+      });
+      return { scan: value, ...from };
     });
     return c.json(reply);
   });

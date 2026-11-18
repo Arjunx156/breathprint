@@ -4,38 +4,18 @@ import { t } from "../../shared/i18n";
 import { MEERA } from "../../shared/profile";
 import type { ChatEvent } from "../../shared/replies";
 import { severeDay } from "../../shared/testing";
-import { fixtureSource } from "../air/fixture";
-import { createApp } from "../app";
 import { loadEnv } from "../env";
-import { type Script, scripted } from "../llm/fake";
-import { createLlm } from "../llm/llm";
+import { inTurn, scriptedLlm } from "../llm/fake";
 import type { LlmRequest } from "../llm/types";
-
-const places = async () => [];
+import { testApp } from "../testing";
 
 /** An app whose model answers from `replies` in turn, recording every request. */
 function withModel(replies: Array<string | Error>, env = loadEnv({})) {
   const seen: LlmRequest[] = [];
-  const script: Script = (req) => {
-    seen.push(req);
-    return replies.shift() ?? new Error("no more replies");
-  };
-  const llm = createLlm({
-    provider: scripted(script),
-    models: ["m1"],
-    timeoutMs: 1000,
-    log: () => {},
-    sleep: async () => {},
-  });
-  return { app: createApp({ env, air: fixtureSource(), geocode: places, llm }), seen };
+  return { app: testApp({ env, llm: scriptedLlm(inTurn(replies, seen)) }), seen };
 }
 
-const post = (
-  app: ReturnType<typeof createApp>,
-  path: string,
-  body: unknown,
-  ip = "198.51.100.1",
-) =>
+const post = (app: ReturnType<typeof testApp>, path: string, body: unknown, ip = "198.51.100.1") =>
   app.request(path, {
     method: "POST",
     headers: { origin: "http://localhost", "content-type": "application/json", "x-real-ip": ip },
@@ -60,13 +40,7 @@ const planBody = { profile: MEERA, lang: "en", demo: true };
 /** Outside the demo nothing is saved to fall back on. */
 const livePlan = { ...planBody, demo: false };
 
-const offlineApp = () =>
-  createApp({
-    env: loadEnv({}),
-    air: fixtureSource(),
-    geocode: places,
-    llm: createLlm({ provider: null, models: [], timeoutMs: 1000 }),
-  });
+const offlineApp = () => testApp();
 
 describe("personal plan", () => {
   test("returns the model's plan once it passes the checks", async () => {
@@ -236,7 +210,7 @@ describe("community advisory", () => {
   test("model routes have their own, tighter limit", async () => {
     const env = loadEnv({ RATE_LIMIT_AI_PER_MIN: "2" });
     const { app } = withModel([JSON.stringify(advisory)], env);
-    const statuses = [];
+    const statuses: number[] = [];
     for (let i = 0; i < 3; i++)
       statuses.push((await post(app, "/api/advisory", body, "198.51.100.7")).status);
     expect(statuses).toEqual([200, 200, 429]);

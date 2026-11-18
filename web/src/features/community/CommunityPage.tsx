@@ -69,7 +69,8 @@ function Community({ profile, summary }: { profile: Profile; summary: AirSummary
     active.current = controller;
     const inputs: Inputs = { audience, channel, households, lang };
     setWriting(true);
-    fetchAdvisory({ ...inputs, place: profile.place, demo }, controller.signal)
+    // Settles into an advisory either way, so nothing is left to await.
+    void fetchAdvisory({ ...inputs, place: profile.place, demo }, controller.signal)
       .then(
         (reply): Written => ({
           ...inputs,

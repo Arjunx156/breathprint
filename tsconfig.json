@@ -33,7 +33,6 @@
     "evals",
     "scripts",
     "tests",
-    "api",
     "vite.config.ts",
     "playwright.config.ts"
   ]

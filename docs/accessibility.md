@@ -8,7 +8,8 @@ The bar is WCAG 2.2 AA. The people Breathprint is for include a grandparent on a
 - **Charts have a table.** The 48-hour forecast is a captioned figure whose chart is read out as one summary sentence, and one button turns it into a data table.
 - **Landmarks and order.** A skip link is the first Tab stop. Every page has a banner, one main navigation with the same five places in the same order, a main region with one level-1 heading, and a footer.
 - **Live updates are announced, not sprung.** Streamed answers, plan progress and save confirmations go through `aria-live` regions. The personalised plan only replaces the instant one when the user asks for it.
-- **Focus is always visible and always placed.** Focus rings are 2 px outlines, which high contrast redraws in the system colour. After a room scan, focus moves to the results heading; after saving, it stays on the button.
+- **Every page names itself.** The tab title follows the page, in the reader's language, so a screen reader announces where a link went and a list of tabs tells them apart.
+- **Focus is always visible and always placed.** Focus rings are 2 px outlines, which high contrast redraws in the system colour. A move between pages puts focus at the top of the new page. A button that goes away when pressed never strands focus: removing a person moves it to "Add a person", adding one moves it to their name field, and turning on Gemini keeps it on the notice that replaces the button. Forgetting the household asks first with focus on "Keep it", so a second Enter is safe, and backing out returns focus to the button that asked. After a room scan, focus moves to the results heading; after saving, it stays on the button.
 - **Targets are at least 44 px tall**, and the layout holds at 320 px wide without sideways scrolling.
 - **Language is real.** English and Hindi throughout, and the page's `lang` attribute follows the choice so a screen reader switches voice.
 - **Voice both ways.** Questions can be dictated where the browser supports speech recognition, and every answer can be read aloud in English or Hindi. Neither is required to use any feature.
@@ -32,7 +33,7 @@ Every push runs these in a real browser (`tests/e2e/`), and any failure blocks t
 | Switching to Hindi changes the words and the page's `lang`           | Settings                           |
 | Pages open offline after one visit                                   | Today, Ask, Indoors, Community     |
 
-Component tests (`bun test`) cover the live regions, focus after saving a room's fixes, and the voice controls with a scripted recogniser.
+Component tests (`bun test`) cover the live regions, page titles in both languages, focus after moving between pages, adding and removing a person, turning on Gemini, the forget question and saving a room's fixes, the forecast table, and the voice controls with a scripted recogniser.
 
 ## What hasn't been checked
 

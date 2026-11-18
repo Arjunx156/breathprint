@@ -1,9 +1,10 @@
 import "../../../test/page";
 import { describe, expect, test } from "bun:test";
 import { t } from "@shared/i18n";
-import { fireEvent } from "@testing-library/react";
+import { act, cleanup, fireEvent } from "@testing-library/react";
 import { withPage } from "../../../test/dom";
 import { renderDemo, stubFetch } from "../../../test/render";
+import { clearSpeech, FakeRecognizer, fakeRecognition, fakeSynthesis } from "../../../test/speech";
 
 withPage();
 const en = (key: Parameters<typeof t>[1]) => t("en", key);
@@ -74,6 +75,44 @@ describe("Ask", () => {
       expect(calls).toBe(1);
     } finally {
       restore();
+    }
+  });
+
+  test("a spoken question fills the box, a blocked microphone says why, and the answer reads aloud", async () => {
+    fakeRecognition();
+    const spoken = fakeSynthesis();
+    const restore = stubFetch(async () =>
+      stream(
+        line({ type: "text", text: "Keep the children in until two." }),
+        line({ type: "done", model: "gemini-test", recorded: false, flags: [] }),
+      ),
+    );
+    try {
+      const view = renderDemo("/ask");
+      fireEvent.click(await view.findByRole("button", { name: en("ask.speak") }));
+      expect(view.getByText(en("ask.listening"))).toBeTruthy();
+      act(() =>
+        FakeRecognizer.last?.onresult?.({ results: [[{ transcript: "Can they play outside?" }]] }),
+      );
+      const box = view.getByRole("textbox", { name: en("ask.label") }) as HTMLTextAreaElement;
+      expect(box.value).toBe("Can they play outside?");
+      act(() => {
+        FakeRecognizer.last?.onerror?.({ error: "not-allowed" });
+        FakeRecognizer.last?.onend?.();
+      });
+      expect(view.getByText(en("ask.voice.blocked"))).toBeTruthy();
+      expect(view.getByRole("button", { name: en("ask.speak") })).toBeTruthy();
+
+      fireEvent.click(view.getByRole("button", { name: en("ask.submit") }));
+      fireEvent.click(await view.findByRole("button", { name: en("ask.read") }));
+      expect(spoken.map((u) => u.text)).toEqual(["Keep the children in until two."]);
+      fireEvent.click(view.getByRole("button", { name: en("ask.stopReading") }));
+      expect(spoken).toEqual([]);
+    } finally {
+      restore();
+      // Unmount while the fakes still exist; the page cancels speech as it goes.
+      cleanup();
+      clearSpeech();
     }
   });
 

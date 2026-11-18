@@ -16,6 +16,15 @@ const list = z
 
 const positiveInt = (fallback: number) => z.coerce.number().int().positive().default(fallback);
 
+/** A header the proxy in front overwrites with the visitor's address, such as fly-client-ip. */
+const ipHeader = z
+  .string()
+  .regex(/^[A-Za-z0-9-]{1,64}$/, "a header name")
+  .refine(
+    (h) => h.toLowerCase() !== "x-forwarded-for",
+    "x-forwarded-for starts with whatever the client sent; name a header the proxy overwrites",
+  );
+
 /** "0.10,0.40": dollars per million input and output tokens. */
 const price = z
   .string()
@@ -34,6 +43,7 @@ export const EnvSchema = z
     RATE_LIMIT_AI_PER_MIN: positiveInt(8),
     RATE_LIMIT_PER_MIN: positiveInt(60),
     ALLOWED_ORIGINS: list,
+    TRUSTED_IP_HEADER: optional(ipHeader),
     AIR_SOURCE: z.enum(["open-meteo", "fixture"]).default("open-meteo"),
     PORT: positiveInt(8787),
   })
