@@ -5,6 +5,8 @@ coverage/
 test-results/
 playwright-report/
 evals/results/
+# demo videos and their working files; far over the repo's size limit
+submission/
 .env
 .env.*
 !.env.example
