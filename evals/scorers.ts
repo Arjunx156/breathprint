@@ -1,5 +1,5 @@
 import { actionById } from "../shared/actions/catalogue";
-import { cleanText, markers, readAnswer } from "../shared/answer";
+import { cleanText, markers, readAnswer, textsOf } from "../shared/answer";
 import { devanagariShare, inScript } from "../shared/i18n/script";
 import { cardById } from "../shared/knowledge/search";
 import type { Language } from "../shared/profile";
@@ -80,7 +80,7 @@ const IN_PLACE_OF_WORDS =
 
 /** What the reader sees, once markers become citations, has no brackets or gaps left in it. */
 export function tidy(text: string): Check {
-  const shown = readAnswer(text).blocks.flatMap((b) => (b.kind === "p" ? [b.text] : b.items));
+  const shown = textsOf(readAnswer(text).blocks);
   const stray = shown.join("\n").match(/\[[^\]\n]*\]?/)?.[0];
   if (stray) return check("tidy", false, `shows ${stray}`);
   const gap = IN_PLACE_OF_WORDS.exec(text)?.[0];

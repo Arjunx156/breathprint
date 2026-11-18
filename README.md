@@ -41,7 +41,7 @@ The Gemini key lives only in the host's environment. A Vercel firewall rule turn
 
 The app aims at WCAG 2.2 AA. CI runs axe on every page in light and dark themes, and again in Windows high contrast, and fails on any violation. Every AQI level carries a word and a number as well as a colour, the forecast chart has a table view, streamed answers are announced through a live region, the page's `lang` follows the chosen language, nothing moves when the system asks for less motion, and the layout holds at 320 px with a skip link and full keyboard use. [docs/accessibility.md](docs/accessibility.md) lists what's tested and what still needs a person with a screen reader.
 
-`bun test` runs 270 unit, property, route and component tests against a fixture forecast and a scripted model, with no network. They cover 94.8% of lines, and 99.5% of the engine that produces every number; the build fails below 90% and 95%. `just e2e` runs 36 browser tests: the demo path, offline, Hindi, keyboard, the accessibility tree and the axe scans. GitHub Actions runs all of it, plus lint, types, the build's JavaScript budget and the eval replay, on every push.
+`bun test` runs 282 unit, property, route and component tests against a fixture forecast and a scripted model, with no network. They cover 95.7% of lines, and 99.5% of the engine that produces every number; the build fails below 90% and 95%. `just e2e` runs 36 browser tests: the demo path, offline, Hindi, keyboard, the accessibility tree and the axe scans. GitHub Actions runs all of it, plus lint, types, the build's JavaScript budget and the eval replay, on every push.
 
 ## Run it
 

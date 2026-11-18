@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { blocksOf, cleanText, markers, readAnswer } from "./answer";
+import { blocksOf, cleanText, markers, readAnswer, textsOf } from "./answer";
 
 describe("chat answers", () => {
   test("turns markers into citations and keeps only ids that exist", () => {
@@ -9,7 +9,7 @@ describe("chat answers", () => {
     expect(answer.cards).toEqual(["mask-fit"]);
     expect(answer.actions).toEqual(["mask-school-run"]);
     expect(answer.blocks).toEqual([
-      { kind: "p", text: "Use a fitted N95. Walk at 14:00. Fit matters." },
+      { kind: "p", line: 0, text: "Use a fitted N95. Walk at 14:00. Fit matters." },
     ]);
   });
 
@@ -25,9 +25,35 @@ describe("chat answers", () => {
 
   test("groups dash lines into a list between paragraphs", () => {
     expect(blocksOf("Today:\n- Mask up\n- Shut windows\n\nOpen them at 14:00.")).toEqual([
-      { kind: "p", text: "Today:" },
-      { kind: "list", items: ["Mask up", "Shut windows"] },
-      { kind: "p", text: "Open them at 14:00." },
+      { kind: "p", line: 0, text: "Today:" },
+      {
+        kind: "list",
+        line: 1,
+        items: [
+          { line: 1, text: "Mask up" },
+          { line: 2, text: "Shut windows" },
+        ],
+      },
+      { kind: "p", line: 4, text: "Open them at 14:00." },
+    ]);
+  });
+
+  test("keeps each block's line as the answer streams in", () => {
+    const whole = "Stay in today [K:exercise].\n\n- Mask up\n- Shut windows\n\nAir at 14:00.";
+    const lines = (text: string) => readAnswer(text).blocks.map((b) => b.line);
+    const final = lines(whole);
+    for (let end = 1; end <= whole.length; end++) {
+      const sofar = lines(whole.slice(0, end));
+      expect(sofar).toEqual(final.slice(0, sofar.length));
+    }
+  });
+
+  test("lays every block's text flat, lists included", () => {
+    expect(textsOf(blocksOf("Today:\n- Mask up\n- Shut windows\n\nOpen them at 14:00."))).toEqual([
+      "Today:",
+      "Mask up",
+      "Shut windows",
+      "Open them at 14:00.",
     ]);
   });
 
@@ -36,7 +62,7 @@ describe("chat answers", () => {
       "Call 112 now [see-a-doctor]. Keep them in [play-indoors]. Air at 14:00 [:airing].",
     );
     expect(answer.blocks).toEqual([
-      { kind: "p", text: "Call 112 now. Keep them in. Air at 14:00." },
+      { kind: "p", line: 0, text: "Call 112 now. Keep them in. Air at 14:00." },
     ]);
     expect(answer.cards).toEqual(["see-a-doctor", "airing"]);
     expect(answer.actions).toEqual(["play-indoors"]);
@@ -48,7 +74,7 @@ describe("chat answers", () => {
   test("drops a bullet that held only a marker", () => {
     expect(
       readAnswer("Exercise indoors today [K:exercise].\n\n- [A:exercise-indoors]").blocks,
-    ).toEqual([{ kind: "p", text: "Exercise indoors today." }]);
+    ).toEqual([{ kind: "p", line: 0, text: "Exercise indoors today." }]);
   });
 
   test("turns a stray ideographic full stop into the script's own", () => {
@@ -58,6 +84,6 @@ describe("chat answers", () => {
 
   test("leaves Hindi untouched", () => {
     const text = "बच्चे आज घर के अंदर खेलें [A:play-indoors]।";
-    expect(readAnswer(text).blocks).toEqual([{ kind: "p", text: "बच्चे आज घर के अंदर खेलें।" }]);
+    expect(readAnswer(text).blocks).toEqual([{ kind: "p", line: 0, text: "बच्चे आज घर के अंदर खेलें।" }]);
   });
 });

@@ -1,190 +1,35 @@
-import { readAnswer } from "@shared/answer";
-import { cardById, search } from "@shared/knowledge/search";
 import type { Profile } from "@shared/profile";
-import { type ChatEvent, MAX_CHARS } from "@shared/replies";
-import { type SourceId, sourceOf } from "@shared/sources";
-import { type KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from "react";
-import { Link, Redirect } from "wouter";
+import { MAX_CHARS } from "@shared/replies";
+import { useEffect, useRef, useState } from "react";
+import { Redirect } from "wouter";
 import { useApp } from "../../app/state";
 import { useDictation, useReadAloud } from "../../lib/speech";
-import { chat, type Turn } from "./chat";
+import { chat } from "./chat";
+import { ExchangeView } from "./ExchangeView";
+import { asked, type Exchange, history, step } from "./exchange";
+import { QuestionForm } from "./QuestionForm";
 
-type Exchange = {
-  id: number;
-  question: string;
-  answer: string;
-  state: "streaming" | "done" | "broken" | "offline";
-  flags: string[];
-  recorded: boolean;
-};
+const SUGGESTIONS = ["ask.q1", "ask.q2", "ask.q3"] as const;
 
-function step(x: Exchange, event: ChatEvent): Exchange {
-  switch (event.type) {
-    case "text":
-      return { ...x, answer: x.answer + event.text };
-    case "done":
-      return { ...x, state: "done", flags: event.flags, recorded: event.recorded };
-    case "error":
-      return { ...x, state: "broken" };
-  }
-}
-
-/** Earlier exchanges that got an answer, then the new question. */
-function history(exchanges: readonly Exchange[], question: string): Turn[] {
-  const earlier = exchanges.flatMap((x): Turn[] =>
-    x.answer.trim()
-      ? [
-          { role: "user", text: x.question },
-          { role: "model", text: x.answer },
-        ]
-      : [],
-  );
-  return [...earlier, { role: "user", text: question }];
-}
-
-function SourceLinks({ ids }: { ids: readonly SourceId[] }) {
-  return ids.map((id, i) => {
-    const source = sourceOf(id);
-    return (
-      <span key={id}>
-        {i > 0 && <span aria-hidden="true"> · </span>}
-        <a className="link" href={source.url} target="_blank" rel="noopener noreferrer">
-          {source.publisher}, {source.year}
-        </a>
-      </span>
-    );
-  });
-}
-
-function Cited({ cards, actions }: { cards: readonly string[]; actions: readonly string[] }) {
-  const { t, tx, lang } = useApp();
+function Suggestions({ onAsk }: { onAsk: (question: string) => void }) {
+  const { t } = useApp();
   return (
-    <div className="mt-6 grid gap-6 text-sm sm:grid-cols-2">
-      {cards.length > 0 && (
-        <div>
-          <h3 className="font-semibold">{t("ask.sources")}</h3>
-          <ul className="mt-2 space-y-2">
-            {cards.map((id) => {
-              const card = cardById(id);
-              if (!card) return null;
-              return (
-                <li key={id}>
-                  <span className="block">{lang === "hi" ? card.titleHi : card.title}</span>
-                  <SourceLinks ids={card.sources} />
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
-      {actions.length > 0 && (
-        <div>
-          <h3 className="font-semibold">{t("ask.actions")}</h3>
-          <ul className="mt-2 space-y-2">
-            {actions.map((id) => (
-              <li key={id}>
-                <Link href="/" className="link">
-                  {tx(`action.${id}.title`)}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** Breathprint's own notes, when the model can't answer. */
-function Library({ question }: { question: string }) {
-  const { t, lang } = useApp();
-  const hits = useMemo(() => search(question, 3), [question]);
-  if (hits.length === 0) return <p className="mt-4 max-w-prose">{t("ask.nothing")}</p>;
-  return (
-    <div className="mt-4">
-      <p className="max-w-prose text-muted">{t("ask.offline")}</p>
-      <ul className="mt-6 space-y-7">
-        {hits.map(({ card }) => (
-          <li key={card.id} className="max-w-prose">
-            <h3 className="font-semibold">{lang === "hi" ? card.titleHi : card.title}</h3>
-            <p className="mt-1" lang="en">
-              {card.body}
-            </p>
-            <p className="mt-1.5 text-sm">
-              <SourceLinks ids={card.sources} />
-            </p>
+    <div className="mt-10">
+      <h2 className="text-sm font-medium text-muted">{t("ask.suggest")}</h2>
+      <ul className="mt-3 flex flex-wrap gap-2">
+        {SUGGESTIONS.map((key) => (
+          <li key={key}>
+            <button
+              type="button"
+              className="btn btn-quiet h-auto py-2 text-left text-sm font-medium"
+              onClick={() => onAsk(t(key))}
+            >
+              {t(key)}
+            </button>
           </li>
         ))}
       </ul>
     </div>
-  );
-}
-
-type Voice = ReturnType<typeof useReadAloud>;
-
-function ReadAloud({ x, voice }: { x: Exchange; voice: Voice }) {
-  const { t } = useApp();
-  const id = String(x.id);
-  const pieces = readAnswer(x.answer).blocks.flatMap((b) => (b.kind === "p" ? [b.text] : b.items));
-  if (!voice.supported || pieces.length === 0) return null;
-  const reading = voice.reading === id;
-  return (
-    <button
-      type="button"
-      className="link mt-4 min-h-11 text-sm font-medium"
-      onClick={() => (reading ? voice.stop() : voice.read(id, pieces))}
-    >
-      {reading ? t("ask.stopReading") : t("ask.read")}
-    </button>
-  );
-}
-
-function ExchangeView({ x, voice }: { x: Exchange; voice: Voice }) {
-  const { t } = useApp();
-  const answer = readAnswer(x.answer);
-  const streaming = x.state === "streaming";
-  return (
-    <article className="scroll-mt-6 border-t border-line py-8" data-exchange={x.id}>
-      <h2 className="text-xl font-semibold leading-snug">
-        <span className="sr-only">{t("ask.you")}: </span>
-        {x.question}
-      </h2>
-      <div aria-live="polite" aria-busy={streaming} className="mt-4 max-w-prose space-y-3">
-        {streaming && answer.blocks.length === 0 && (
-          <p className="flex items-center gap-3 text-muted">
-            <span
-              aria-hidden="true"
-              className="size-2 shrink-0 rounded-full bg-accent motion-safe:animate-pulse"
-            />
-            {t("ask.asking")}
-          </p>
-        )}
-        {answer.blocks.map((block, i) =>
-          block.kind === "p" ? (
-            // biome-ignore lint/suspicious/noArrayIndexKey: blocks only ever grow at the end.
-            <p key={i}>{block.text}</p>
-          ) : (
-            // biome-ignore lint/suspicious/noArrayIndexKey: blocks only ever grow at the end.
-            <ul key={i} className="list-disc space-y-1 pl-5 marker:text-muted">
-              {block.items.map((item, j) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: items only ever grow at the end.
-                <li key={j}>{item}</li>
-              ))}
-            </ul>
-          ),
-        )}
-        {x.state === "offline" && <Library question={x.question} />}
-      </div>
-      {x.state === "done" && <ReadAloud x={x} voice={voice} />}
-      {!streaming && <Cited cards={answer.cards} actions={answer.actions} />}
-      {x.flags.length > 0 && (
-        <p className="mt-6 max-w-prose border-l-2 border-[var(--lvl-3)] pl-3 text-sm">
-          {t("ask.flagged", { figures: x.flags.join(", ") })}
-        </p>
-      )}
-      {x.recorded && <p className="mt-4 text-sm text-muted">{t("ask.recorded")}</p>}
-      {x.state === "broken" && <p className="mt-4 text-sm">{t("ask.broken")}</p>}
-    </article>
   );
 }
 
@@ -194,7 +39,6 @@ function Ask({ profile }: { profile: Profile }) {
   const [draft, setDraft] = useState("");
   const active = useRef<AbortController | null>(null);
   const nextId = useRef(1);
-  const fieldId = useId();
   const busy = exchanges.at(-1)?.state === "streaming";
   const dictation = useDictation(lang, (text) => setDraft(text.slice(0, MAX_CHARS)));
   const voice = useReadAloud(lang);
@@ -217,10 +61,7 @@ function Ask({ profile }: { profile: Profile }) {
     const turns = history(exchanges, question);
     const patch = (change: (x: Exchange) => Exchange) =>
       setExchanges((xs) => xs.map((x) => (x.id === id ? change(x) : x)));
-    setExchanges((xs) => [
-      ...xs,
-      { id, question, answer: "", state: "streaming", flags: [], recorded: false },
-    ]);
+    setExchanges((xs) => [...xs, asked(id, question)]);
     setDraft("");
     const controller = new AbortController();
     active.current = controller;
@@ -234,13 +75,7 @@ function Ask({ profile }: { profile: Profile }) {
         patch((x) => ({ ...x, state: x.answer ? "broken" : "offline" }));
     }
   };
-
-  const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    // Enter asks, Shift+Enter adds a line; never mid-composition in a Hindi keyboard.
-    if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing) return;
-    e.preventDefault();
-    void ask(draft);
-  };
+  const onAsk = (question: string) => void ask(question);
 
   return (
     <div className="max-w-3xl">
@@ -255,76 +90,15 @@ function Ask({ profile }: { profile: Profile }) {
         </div>
       )}
 
-      <form
-        className="mt-10"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void ask(draft);
-        }}
-      >
-        <label htmlFor={fieldId} className="mb-1.5 block font-medium">
-          {t("ask.label")}
-        </label>
-        <textarea
-          id={fieldId}
-          className="field min-h-24 resize-y"
-          rows={3}
-          maxLength={MAX_CHARS}
-          value={draft}
-          placeholder={t("ask.placeholder")}
-          aria-describedby={`${fieldId}-note`}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={onKeyDown}
-        />
-        <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2">
-          <button type="submit" className="btn btn-primary" disabled={busy || !draft.trim()}>
-            {busy ? t("ask.asking") : t("ask.submit")}
-          </button>
-          {dictation.supported && (
-            <button
-              type="button"
-              className="btn btn-quiet"
-              aria-describedby={`${fieldId}-voice`}
-              onClick={dictation.listening ? dictation.stop : dictation.start}
-            >
-              {dictation.listening ? t("ask.stopListening") : t("ask.speak")}
-            </button>
-          )}
-          <p id={`${fieldId}-note`} className="text-sm text-muted">
-            {t("ask.privacy")}
-          </p>
-        </div>
-        {dictation.supported && (
-          <>
-            <p aria-live="polite" className="mt-3 min-h-5 text-sm">
-              {dictation.listening && t("ask.listening")}
-              {!dictation.listening && dictation.error && t(`ask.voice.${dictation.error}`)}
-            </p>
-            <p id={`${fieldId}-voice`} className="mt-1 max-w-prose text-sm text-muted">
-              {t("ask.voicePrivacy")}
-            </p>
-          </>
-        )}
-      </form>
+      <QuestionForm
+        draft={draft}
+        busy={busy}
+        dictation={dictation}
+        onDraft={setDraft}
+        onAsk={onAsk}
+      />
 
-      {exchanges.length === 0 && (
-        <div className="mt-10">
-          <h2 className="text-sm font-medium text-muted">{t("ask.suggest")}</h2>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {(["ask.q1", "ask.q2", "ask.q3"] as const).map((key) => (
-              <li key={key}>
-                <button
-                  type="button"
-                  className="btn btn-quiet h-auto py-2 text-left text-sm font-medium"
-                  onClick={() => void ask(t(key))}
-                >
-                  {t(key)}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {exchanges.length === 0 && <Suggestions onAsk={onAsk} />}
 
       <p className="mt-12 max-w-prose border-l-2 border-line pl-3 text-sm text-muted">
         {t("ask.medical")}

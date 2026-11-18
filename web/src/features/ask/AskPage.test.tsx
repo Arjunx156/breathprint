@@ -52,6 +52,31 @@ describe("Ask", () => {
     }
   });
 
+  test("Enter asks and Shift+Enter doesn't; a listed answer shows as a list", async () => {
+    let calls = 0;
+    const restore = stubFetch(async () => {
+      calls++;
+      return stream(
+        line({ type: "text", text: "Today:\n- Mask up\n- Shut the windows" }),
+        line({ type: "done", model: "gemini-test", recorded: false, flags: [] }),
+      );
+    });
+    try {
+      const view = renderDemo("/ask");
+      const box = await view.findByRole("textbox", { name: en("ask.label") });
+      fireEvent.change(box, { target: { value: "What should we do today?" } });
+      fireEvent.keyDown(box, { key: "Enter", shiftKey: true });
+      expect(calls).toBe(0);
+
+      fireEvent.keyDown(box, { key: "Enter" });
+      expect((await view.findByText("Shut the windows")).tagName).toBe("LI");
+      expect(view.getByText("Mask up").tagName).toBe("LI");
+      expect(calls).toBe(1);
+    } finally {
+      restore();
+    }
+  });
+
   test("with no model and no network, Breathprint's own notes answer", async () => {
     const restore = stubFetch(async () => {
       throw new TypeError("Failed to fetch");

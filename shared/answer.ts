@@ -25,7 +25,12 @@ export const DATA_TAGS = [
 ] as const;
 const DATA_TAG = new Set<string>(DATA_TAGS);
 
-export type Block = { kind: "p"; text: string } | { kind: "list"; items: string[] };
+/**
+ * Each block and list item keeps the line it starts on. A streamed answer only
+ * grows at the end, so these stay put and can key what's on screen.
+ */
+export type Line = { line: number; text: string };
+export type Block = ({ kind: "p" } & Line) | { kind: "list"; line: number; items: Line[] };
 export type Answer = { blocks: Block[]; cards: string[]; actions: string[] };
 
 /**
@@ -75,17 +80,20 @@ export function cleanText(text: string): string {
 /** Paragraphs and "- " lists, the only shapes the prompt allows. */
 export function blocksOf(text: string): Block[] {
   const blocks: Block[] = [];
-  let para: string[] = [];
-  let list: string[] = [];
+  let para: Line[] = [];
+  let list: Line[] = [];
   const endPara = () => {
-    if (para.length > 0) blocks.push({ kind: "p", text: para.join(" ") });
+    const [first] = para;
+    if (first)
+      blocks.push({ kind: "p", line: first.line, text: para.map((p) => p.text).join(" ") });
     para = [];
   };
   const endList = () => {
-    if (list.length > 0) blocks.push({ kind: "list", items: list });
+    const [first] = list;
+    if (first) blocks.push({ kind: "list", line: first.line, items: list });
     list = [];
   };
-  for (const raw of text.split("\n")) {
+  for (const [n, raw] of text.split("\n").entries()) {
     const line = raw.trim();
     // A bullet that held only a marker is empty once the marker is gone.
     if (BARE_BULLET.test(line)) continue;
@@ -95,15 +103,20 @@ export function blocksOf(text: string): Block[] {
       endList();
     } else if (item) {
       endPara();
-      list.push(item);
+      list.push({ line: n, text: item });
     } else {
       endList();
-      para.push(line);
+      para.push({ line: n, text: line });
     }
   }
   endPara();
   endList();
   return blocks;
+}
+
+/** Every sentence a reader sees, in order, with the list items laid flat. */
+export function textsOf(blocks: readonly Block[]): string[] {
+  return blocks.flatMap((b) => (b.kind === "p" ? [b.text] : b.items.map((i) => i.text)));
 }
 
 /** An answer, whole or still streaming, ready to show. */

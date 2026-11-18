@@ -1,0 +1,81 @@
+import type { Advisory, Audience, Channel, Collective } from "@shared/community";
+import { short } from "@shared/format";
+import { t as translate } from "@shared/i18n";
+import { coarse, type Language, type Profile } from "@shared/profile";
+import { type AdvisoryReply, AdvisoryReplySchema } from "@shared/replies";
+import { client, failure } from "../../lib/api";
+
+export type Inputs = { audience: Audience; channel: Channel; households: number; lang: Language };
+export type Written = Inputs & {
+  advisory: Advisory;
+  collective: Collective | null;
+  /** Gemini, a saved demo reply, Breathprint's own after Gemini failed, or the live draft. */
+  by: "model" | "recorded" | "fallback" | "template";
+};
+
+export const MAX_HOUSEHOLDS = 10_000;
+
+/** Sends only the area, rounded to the forecast grid; no household goes with it. */
+export async function fetchAdvisory(
+  input: Inputs & { place: Profile["place"]; demo: boolean },
+  signal: AbortSignal,
+): Promise<AdvisoryReply> {
+  const place = { ...input.place, lat: coarse(input.place.lat), lon: coarse(input.place.lon) };
+  const res = await client.api.advisory.$post({ json: { ...input, place } }, { init: { signal } });
+  if (!res.ok) throw await failure(res);
+  return AdvisoryReplySchema.parse(await res.json());
+}
+
+/** A whole number of households in range, or null for anything else typed. */
+export function householdsOf(raw: string): number | null {
+  const n = Number(raw);
+  return Number.isInteger(n) && n >= 1 && n <= MAX_HOUSEHOLDS ? n : null;
+}
+
+/** Whether a written advisory still answers what the form asks for. */
+export const sameInputs = (a: Inputs, b: Inputs) =>
+  a.audience === b.audience &&
+  a.channel === b.channel &&
+  a.households === b.households &&
+  a.lang === b.lang;
+
+/** What the households keep out of the shared air together, in whichever figures exist. */
+export function togetherLine(lang: Language, c: Collective, audience: Audience): string | null {
+  const vars = {
+    n: c.households.toLocaleString("en-IN"),
+    how: translate(lang, `community.how.${audience}`),
+  };
+  if (c.co2kg && c.pm25g)
+    return translate(lang, "community.together", {
+      ...vars,
+      co2: short(c.co2kg.mid),
+      pm: short(c.pm25g.mid),
+    });
+  if (c.co2kg)
+    return translate(lang, "community.togetherCo2", { ...vars, co2: short(c.co2kg.mid) });
+  if (c.pm25g) return translate(lang, "community.togetherPm", { ...vars, pm: short(c.pm25g.mid) });
+  return null;
+}
+
+/** The advisory as plain text, laid out to survive a paste into WhatsApp or an email. */
+export function plainText(w: Written, together: string | null, source: string): string {
+  const say = (key: "community.do" | "community.avoid" | "community.sensitive") =>
+    translate(w.lang, key);
+  const a = w.advisory;
+  return [
+    a.headline,
+    "",
+    a.situation,
+    "",
+    `${say("community.do")}:`,
+    ...a.do.map((x) => `- ${x}`),
+    "",
+    `${say("community.avoid")}:`,
+    ...a.avoid.map((x) => `- ${x}`),
+    "",
+    `${say("community.sensitive")}: ${a.sensitive}`,
+    ...(together ? ["", together] : []),
+    "",
+    source,
+  ].join("\n");
+}
