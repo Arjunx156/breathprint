@@ -90,6 +90,23 @@ function said(o: Outdoors): string {
   }
 }
 
+/** Good or moderate: open up whenever suits, though the window is still cleaner. */
+const AIR_FREELY = 1;
+
+/**
+ * The engine's call on opening the windows, timed like the plan's own airing
+ * step: inside the first clean window, and never in a peak.
+ */
+export function airingCall(ctx: Context): string {
+  const a = ctx.air;
+  const fine = healthLevel(a.current.pm25) <= AIR_FREELY;
+  const w = a.windows[0];
+  if (!w) return fine ? "fine now" : "keep them shut today; no hour is cleaner than the rest";
+  if (a.now >= w.start && a.now < w.end) return `open now, until ${clock(w.end)}`;
+  const hours = `${clock(w.start)} to ${clock(w.end)} ${dayName(w.start, a.now)}`;
+  return fine ? `fine now, cleanest from ${hours}` : `keep them shut now; open them from ${hours}`;
+}
+
 /** Today's air in the terms the app shows: the chosen AQI scale, PM2.5 and the clean windows. */
 export function airFacts(ctx: Context) {
   const a = ctx.air;
@@ -117,6 +134,7 @@ export function airFacts(ctx: Context) {
     outdoorExercise: Object.fromEntries(
       Object.entries(outdoorCalls(ctx)).map(([who, call]) => [who, said(call)]),
     ),
+    airing: airingCall(ctx),
     cleanWindows: a.windows.map(span),
     peaks: a.peaks.map(span),
     flatDay: a.flat,

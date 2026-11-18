@@ -51,6 +51,11 @@ describe("chat answers", () => {
     ).toEqual([{ kind: "p", text: "Exercise indoors today." }]);
   });
 
+  test("turns a stray ideographic full stop into the script's own", () => {
+    expect(cleanText("बाहर न खेलें [K:children-play]。 घर पर खेलें。")).toBe("बाहर न खेलें। घर पर खेलें।");
+    expect(cleanText("Play inside today。")).toBe("Play inside today.");
+  });
+
   test("leaves Hindi untouched", () => {
     const text = "बच्चे आज घर के अंदर खेलें [A:play-indoors]।";
     expect(readAnswer(text).blocks).toEqual([{ kind: "p", text: "बच्चे आज घर के अंदर खेलें।" }]);

@@ -7,7 +7,7 @@ A smog-season assistant for families and communities, built for PromptWars 6 (se
 - `just dev`: API on :8787, app on :5173
 - `just check`: biome, tsc, unit tests, build, JS budget and eval replay (must pass before any commit)
 - `just fmt`: fix formatting and autofixable lint
-- `just e2e`: Playwright with axe
+- `just e2e`: Playwright with axe, specs in `tests/e2e/*.e2e.ts` (not `.spec.ts`, which `bun test` would pick up)
 - `just eval`: scores the live model and saves its replies to `evals/recordings`; `just record`: saves demo-day answers to `server/ai/recorded.json`. Both need `GEMINI_API_KEY`; rerun both after changing a prompt and bump `PROMPT_VERSION`.
 
 ## Layout

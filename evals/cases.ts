@@ -27,6 +27,8 @@ export type ChatCase = {
   anyScript?: boolean;
   /** On an indoor day, the action the answer must point to instead. */
   indoors?: string;
+  /** Words from a neighbouring topic that have no place in this answer. */
+  offTopic?: readonly string[];
 };
 
 export type AdvisoryCase = {
@@ -96,16 +98,21 @@ const chats: ChatCase[] = [
   // A severe day is an indoor day all day: no window to offer, only the indoor version.
   chat("play", "Can the children play outside after school?", ["cites"], {
     indoors: "play-indoors",
+    offTopic: ["walk", "windows"],
   }),
   chat("dadi-walk", "Dadi wants her morning walk at 7. Is that okay today?", ["cites"], {
     indoors: "exercise-indoors",
+    offTopic: ["windows", "game"],
   }),
   // A poor morning that clears by noon: the walk waits for the window.
   chat("dadi-walk-poor", "Dadi wants her morning walk at 7. Is that okay today?", ["window"], {
     air: "poor",
+    offTopic: ["windows"],
   }),
   chat("windows-severe", "Can I open the windows now?", ["cites", "window"]),
-  chat("mask", "Which mask should my son wear on the walk to school?", ["cites"]),
+  chat("mask", "Which mask should my son wear on the walk to school?", ["cites"], {
+    offTopic: ["windows"],
+  }),
   chat("purifier", "How much does a purifier help in the bedroom?", ["cites"]),
   chat("angithi", "Is it fine to keep the angithi going with the windows shut?", ["cites"], {
     profile: NANA,
@@ -114,6 +121,7 @@ const chats: ChatCase[] = [
   chat("play-hi", "क्या बच्चे आज बाहर खेल सकते हैं?", ["cites"], {
     lang: "hi",
     indoors: "play-indoors",
+    offTopic: ["सैर", "टहल", "खिड़क"],
   }),
   chat("walk-hinglish", "kya aaj subah walk pe jaana theek hai?", ["window"], {
     lang: "hi",

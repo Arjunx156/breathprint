@@ -159,6 +159,14 @@ describe("chat", () => {
     expect(seen[0]?.turns.at(-1)?.text).toStartWith("<question>");
   });
 
+  test("ends an indoor-day answer on the engine's indoor step when the model leaves it out", async () => {
+    const reply = "The air is too heavy for a walk today [K:exercise].";
+    const { app } = withModel([reply]);
+    const all = await events(await post(app, "/api/chat", ask("Can Dadi walk at 7?")));
+    const text = all.flatMap((e) => (e.type === "text" ? [e.text] : [])).join("");
+    expect(text).toBe(`${reply} [A:exercise-indoors]`);
+  });
+
   test("insists the conversation ends with a question", async () => {
     const { app } = withModel([]);
     const res = await post(app, "/api/chat", {

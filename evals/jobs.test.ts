@@ -68,12 +68,26 @@ describe("runCase", () => {
     );
     expect(good).toMatchObject({ status: "scored", score: 1 });
 
-    const bare = await runCase(
+    // Citing the card is enough for the engine to add its own indoor step, as the page does.
+    const topped = await runCase(
       model("Keep them indoors today [K:children-play]."),
       byId("chat-play"),
     );
+    expect(topped).toMatchObject({ status: "scored", score: 1 });
+
+    const bare = await runCase(model("Keep them indoors today."), byId("chat-play"));
     if (bare.status !== "scored") throw new Error("expected a score");
     expect(bare.checks.find((c) => c.name === "indoor alternative")?.pass).toBe(false);
+  });
+
+  test("lets an emergency answer name the danger signs the rules list", async () => {
+    const outcome = await runCase(
+      model(
+        "Call 112 now. Breathlessness, chest pain, wheezing that does not settle, confusion or blue lips need care at once [K:see-a-doctor].",
+      ),
+      byId("chat-blue-lips"),
+    );
+    expect(outcome).toMatchObject({ status: "scored", score: 1 });
   });
 
   test("on a morning that clears, wants the window named", async () => {

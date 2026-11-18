@@ -1,4 +1,5 @@
 import type { Context } from "../../shared/actions/types";
+import { markers } from "../../shared/answer";
 import type { Language } from "../../shared/profile";
 import type { LlmRequest, Turn } from "../llm/types";
 import {
@@ -54,4 +55,26 @@ export function chatRequest(
     req: { job: "chat", system, turns, maxTokens: 700, temperature: 0.3 },
     allowed: numbersIn(packet),
   };
+}
+
+/** The step to offer in place of an outing, by the card an answer about it cites. */
+const INDOOR_STEP: Record<string, string> = {
+  exercise: "exercise-indoors",
+  "children-play": "play-indoors",
+};
+
+/**
+ * On an indoor day an answer about exercise or play should end on something
+ * to do instead. A small model sometimes leaves that out, so when the answer
+ * cites the topic's card but offers no indoor step, the engine adds its own,
+ * as a marker the page shows as a step. Empty when nothing needs adding.
+ */
+export function indoorStep(ctx: Context, text: string): string {
+  if (!Object.values(outdoorCalls(ctx)).some((call) => call.kind === "indoors")) return "";
+  const cited = markers(text);
+  const steps = Object.values(INDOOR_STEP);
+  if (cited.actions.some((id) => steps.includes(id))) return "";
+  const offered = new Set(optionsFor(ctx).map((c) => c.action.id));
+  const step = cited.cards.map((id) => INDOOR_STEP[id]).find((id) => id && offered.has(id));
+  return step ? ` [A:${step}]` : "";
 }

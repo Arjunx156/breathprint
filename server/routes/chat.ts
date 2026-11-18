@@ -3,7 +3,7 @@ import { stream } from "hono/streaming";
 import { z } from "zod";
 import type { Language } from "../../shared/profile";
 import { type ChatEvent, MAX_CHARS, MAX_MESSAGES } from "../../shared/replies";
-import { chatRequest } from "../ai/chat";
+import { chatRequest, indoorStep } from "../ai/chat";
 import { contextFor } from "../ai/grounding";
 import { ungrounded } from "../ai/guard";
 import { recorded } from "../ai/recorded";
@@ -58,6 +58,8 @@ export function chatRoutes({ llm, air }: { llm: Llm; air: AirSource }) {
           text += piece;
           await send({ type: "text", text: piece });
         }
+        const step = indoorStep(ctx, text);
+        if (step) await send({ type: "text", text: step });
         const flags = ungrounded(text, call.allowed);
         await send({ type: "done", model: reply.model, recorded: reply.recorded, flags });
       } catch {

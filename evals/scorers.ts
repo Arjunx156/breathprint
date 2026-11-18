@@ -111,6 +111,18 @@ export function suggestsTime(
   return check("suggests a time", named, `names none of ${spans}`);
 }
 
+/**
+ * Answers the question asked: a question about play gets no walk, and one
+ * about walks gets no windows. Matched on word starts, in either script.
+ */
+export function onTopic(text: string, offTopic: readonly string[]): Check {
+  const plain = cleanText(text).toLowerCase();
+  const strayed = offTopic.find((w) =>
+    new RegExp(`(?<![\\p{L}\\p{M}])${w.toLowerCase()}`, "u").test(plain),
+  );
+  return check("on topic", !strayed, `brings in "${strayed}"`);
+}
+
 /** Points to emergency care with the number for India. */
 export function emergency(text: string): Check {
   return check("emergency", latin(text).includes("112"), "no 112");

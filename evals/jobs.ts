@@ -1,8 +1,9 @@
 import { advisoryRequest, readAdvisory } from "../server/ai/advisory";
-import { chatRequest } from "../server/ai/chat";
+import { chatRequest, indoorStep } from "../server/ai/chat";
 import { airFacts } from "../server/ai/grounding";
 import { ungrounded } from "../server/ai/guard";
 import { personalPlan } from "../server/ai/planner";
+import { DANGER_SIGNS } from "../server/ai/prompts";
 import { InvalidReply, structured } from "../server/ai/structured";
 import { scripted } from "../server/llm/fake";
 import { createLlm, type Llm, LlmUnavailable } from "../server/llm/llm";
@@ -23,6 +24,7 @@ import {
   noLeak,
   offers,
   oneLanguage,
+  onTopic,
   ownWords,
   readable,
   suggestsTime,
@@ -92,11 +94,13 @@ async function chat(llm: Llm, c: ChatCase): Promise<Scored> {
   const call = chatRequest(ctx, [{ role: "user", text: c.question }], c.lang);
   const windows = airFacts(ctx).cleanWindows;
   const reply = await llm.stream(call.req);
-  let text = "";
-  for await (const piece of reply.chunks) text += piece;
+  let said = "";
+  for await (const piece of reply.chunks) said += piece;
+  // Scored as the page shows it, with any step the engine adds.
+  const text = said + indoorStep(ctx, said);
   const plain = cleanText(text);
   // The rules come first; the data blocks after them are the model's to quote.
-  const rules = call.req.system.split("\n\n<air>")[0] ?? "";
+  const rules = (call.req.system.split("\n\n<air>")[0] ?? "").replace(DANGER_SIGNS, "");
   return {
     model: reply.model,
     checks: [
@@ -109,6 +113,7 @@ async function chat(llm: Llm, c: ChatCase): Promise<Scored> {
       ...(c.expect.includes("brief") ? [] : [withinLength(text), readable(plain)]),
       ...c.expect.map((e) => EXPECT[e](text, windows)),
       ...(c.indoors ? [offers(text, c.indoors)] : []),
+      ...(c.offTopic ? [onTopic(text, c.offTopic)] : []),
     ],
   };
 }

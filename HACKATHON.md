@@ -17,18 +17,17 @@ PromptWars Virtual 2026, run by Hack2skill with Google for Developers. Official 
 
 An AI evaluator reads the public repository against these; a human sees the live link and the video.
 
-## Submission rules (carried over from Challenge 5)
+## Submission rules
 
-- Public GitHub repository, under 10 MB.
-- A live URL.
-- A demo video.
-- Two write-ups of at most 1,024 characters each.
-- A LinkedIn post.
-- At most three submissions.
+From promptwars.in, checked 18 November 2026: a "dual submission" of the technical part (the code and a live preview of the app) and a narrative (a technical blog post, plus a LinkedIn post on the build-in-public journey). Plagiarism and multiple accounts disqualify.
+
+The page contradicts itself on tools. One line says "You must use Google Antigravity or other AI tools", but the FAQ says "using Google Antigravity is a requirement for all submissions". Ask promptwarssupport@hack2skill.com before submitting.
+
+Carried over from Challenge 5 and not seen on this season's page: a public repository under 10 MB, a demo video, two write-ups of at most 1,024 characters, and at most three submissions.
 
 ## Deadline
 
-Not yet confirmed. Challenge 5 ran 19 October to 1 November 2026, closing 23:59 IST, on a 14-day cycle. Copy Challenge 6's closing time here from the official page before the first submission, and push nothing after it.
+Not yet confirmed. Each challenge runs a 14-day cycle: released on a Monday, submissions by day 13, results on day 14. Challenge 6 is live, and its Friday explainer session isn't in the archive yet, which points to a release on Monday 16 November and submissions closing around Saturday 28 November. Copy the exact closing time from the dashboard before the first submission, and push nothing after it.
 
 ## Demo path
 
@@ -38,7 +37,8 @@ Meera lives in Rohini, Delhi with Rohan, their children Kabir (9, asthma) and An
 2. A rule-checked plan is on screen at once; "Personalised plan ready" swaps in Gemini's version.
 3. Tap "Metro instead of car": dose change, PM2.5 and CO2 kept off the street, rupees saved, and how it was worked out.
 4. Ask in Hindi whether the children can play in the park; the answer streams with source chips.
-5. Room scan of the kitchen ranks three fixes by impact per rupee.
-6. A WhatsApp advisory in Hindi for the housing society, and what 120 households carpooling the school run would keep out of the air.
+5. A WhatsApp advisory in Hindi for the housing society, and what 120 households carpooling the school run would keep out of the air.
+
+Planned and not built: a room scan of the kitchen that ranks three fixes by impact per rupee. Leave it out of the video until it ships.
 
 `?demo=meera` replays this path on a fixed forecast and labelled cached model answers.

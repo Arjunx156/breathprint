@@ -10,6 +10,7 @@ import {
   noLeak,
   offers,
   oneLanguage,
+  onTopic,
   ownWords,
   readable,
   suggestsTime,
@@ -52,6 +53,17 @@ describe("scorers", () => {
   test("wants the indoor alternative offered on an indoor day", () => {
     expect(offers("Play a board game instead [A:play-indoors].", "play-indoors").pass).toBe(true);
     expect(offers("Keep them in today.", "play-indoors").pass).toBe(false);
+  });
+
+  test("keeps an answer on the question asked, in either script", () => {
+    const play = ["walk", "windows"];
+    expect(onTopic("Too heavy for a walk today [K:exercise].", play).pass).toBe(false);
+    expect(onTopic("Play inside today. Keep windows shut.", play).pass).toBe(false);
+    expect(onTopic("A board game at home keeps them busy [A:play-indoors].", play).pass).toBe(true);
+    expect(onTopic("Wait for the clean window from 12:00.", ["windows"]).pass).toBe(true);
+    expect(onTopic("आज हवा सैर के लिए भारी है।", ["सैर", "खिड़क"]).pass).toBe(false);
+    expect(onTopic("खिड़कियाँ बंद रखें।", ["खिड़क"]).pass).toBe(false);
+    expect(onTopic("आज घर के अंदर खेलें।", ["सैर", "खिड़क"]).pass).toBe(true);
   });
 
   test("wants a cleaner time named as the data writes it", () => {

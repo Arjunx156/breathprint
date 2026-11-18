@@ -62,6 +62,9 @@ export function cleanText(text: string): string {
   return (
     text
       .replace(MARKER, (whole, kind?: string, id = "") => (drop(kind, id) ? "" : whole))
+      // The model sometimes ends a sentence with the ideographic full stop.
+      .replace(/(\p{Script=Devanagari})\s*。/gu, "$1।")
+      .replace(/。/g, ".")
       // "[K:a], [A:b]." would leave a comma stranded before the full stop.
       .replace(/\s*,\s*([.!?।])/g, "$1")
       .replace(PARTIAL, "")
