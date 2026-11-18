@@ -1,5 +1,5 @@
 import type { MessageKey } from "@shared/i18n";
-import { lazy, Suspense } from "react";
+import { Component, lazy, type ReactNode, Suspense } from "react";
 import { Link, Route, Switch, useLocation } from "wouter";
 import { NotFound } from "../features/NotFound";
 import { TodayPage } from "../features/today/TodayPage";
@@ -10,10 +10,12 @@ const SetupPage = lazy(() => import("../features/setup/SetupPage"));
 const SettingsPage = lazy(() => import("../features/settings/SettingsPage"));
 const AskPage = lazy(() => import("../features/ask/AskPage"));
 const CommunityPage = lazy(() => import("../features/community/CommunityPage"));
+const IndoorsPage = lazy(() => import("../features/indoors/IndoorsPage"));
 
 const NAV: readonly { href: string; label: MessageKey }[] = [
   { href: "/", label: "nav.today" },
   { href: "/ask", label: "nav.ask" },
+  { href: "/indoors", label: "nav.indoors" },
   { href: "/community", label: "nav.community" },
   { href: "/settings", label: "nav.settings" },
 ];
@@ -52,6 +54,32 @@ function PageLoading() {
       <div aria-hidden="true" className="h-40 max-w-3xl animate-pulse rounded-xl bg-line/50" />
     </div>
   );
+}
+
+function PageFailed() {
+  const { t } = useApp();
+  return (
+    <div role="alert" className="max-w-prose py-10">
+      <h1 className="num text-4xl leading-tight">{t("ui.pageFailed")}</h1>
+      <p className="mt-3 text-muted">{t("ui.pageFailedLead")}</p>
+      <button type="button" className="btn btn-primary mt-6" onClick={() => location.reload()}>
+        {t("ui.retry")}
+      </button>
+    </div>
+  );
+}
+
+/** A page whose code can't arrive, say offline on a first visit, says so instead of blanking the app. */
+export class PageBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  override state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  override render() {
+    return this.state.failed ? <PageFailed /> : this.props.children;
+  }
 }
 
 function DemoBanner() {
@@ -96,7 +124,12 @@ function Footer() {
           </p>
           <p>{t("footer.privacy")}</p>
         </div>
-        <p className="md:self-end">{t("footer.by")}</p>
+        <p className="md:self-end">
+          {t("footer.by")} ·{" "}
+          <a className="link" href="/blog/">
+            {t("footer.blog")}
+          </a>
+        </p>
       </div>
     </footer>
   );
@@ -104,6 +137,7 @@ function Footer() {
 
 export function App() {
   const { t, demo } = useApp();
+  const [path] = useLocation();
   return (
     <div className="flex min-h-dvh flex-col">
       <a
@@ -124,16 +158,19 @@ export function App() {
         tabIndex={-1}
         className="mx-auto w-full max-w-6xl flex-1 px-5 pt-6 pb-24 outline-none sm:px-8 sm:pt-10"
       >
-        <Suspense fallback={<PageLoading />}>
-          <Switch>
-            <Route path="/" component={TodayPage} />
-            <Route path="/setup" component={SetupPage} />
-            <Route path="/ask" component={AskPage} />
-            <Route path="/community" component={CommunityPage} />
-            <Route path="/settings" component={SettingsPage} />
-            <Route component={NotFound} />
-          </Switch>
-        </Suspense>
+        <PageBoundary key={path}>
+          <Suspense fallback={<PageLoading />}>
+            <Switch>
+              <Route path="/" component={TodayPage} />
+              <Route path="/setup" component={SetupPage} />
+              <Route path="/ask" component={AskPage} />
+              <Route path="/indoors" component={IndoorsPage} />
+              <Route path="/community" component={CommunityPage} />
+              <Route path="/settings" component={SettingsPage} />
+              <Route component={NotFound} />
+            </Switch>
+          </Suspense>
+        </PageBoundary>
       </main>
       <Footer />
     </div>

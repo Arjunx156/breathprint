@@ -2,7 +2,16 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 /** Every page a visitor can reach, in the demo so each one has a household to show. */
-const PAGES = ["/", "/ask", "/community", "/settings", "/setup", "/no-such-page"];
+const PAGES = [
+  "/",
+  "/ask",
+  "/indoors",
+  "/community",
+  "/settings",
+  "/setup",
+  "/blog/",
+  "/no-such-page",
+];
 const WCAG = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 for (const colorScheme of ["light", "dark"] as const) {

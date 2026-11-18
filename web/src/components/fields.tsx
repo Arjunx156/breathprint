@@ -32,7 +32,7 @@ export function Choice<T extends string>({
         {options.map((option) => (
           <label
             key={option}
-            className="inline-flex min-h-11 cursor-pointer items-center rounded-full border border-line bg-surface px-4 text-sm hover:border-muted has-checked:border-ink has-checked:bg-ink has-checked:text-bg has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent"
+            className="chip inline-flex min-h-11 cursor-pointer items-center rounded-full border border-line bg-surface px-4 text-sm hover:border-muted has-checked:border-ink has-checked:bg-ink has-checked:text-bg has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent"
           >
             <input
               type="radio"

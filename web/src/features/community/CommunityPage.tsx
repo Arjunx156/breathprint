@@ -21,6 +21,7 @@ import { AirFailed, AirWaiting } from "../../components/AirStatus";
 import { Choice, TextField } from "../../components/fields";
 import { client, failure } from "../../lib/api";
 import { localDay } from "../../lib/format";
+import { useLanguageReady } from "../../lib/hindi";
 import { useAir } from "../../lib/useAir";
 
 type Inputs = { audience: Audience; channel: Channel; households: number; lang: Language };
@@ -212,6 +213,8 @@ function Community({ profile, summary }: { profile: Profile; summary: AirSummary
   const [channel, setChannel] = useState<Channel>("whatsapp");
   const [rawHouseholds, setRawHouseholds] = useState("120");
   const [lang, setLang] = useState<Language>(uiLang);
+  // An English page can still write a Hindi advisory; its strings load on the way.
+  useLanguageReady(lang);
   const [invalid, setInvalid] = useState(false);
   const [writing, setWriting] = useState(false);
   const [written, setWritten] = useState<Written | null>(null);

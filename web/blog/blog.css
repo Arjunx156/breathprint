@@ -1,0 +1,232 @@
+@import "@fontsource/instrument-serif/latin-400.css";
+@import "@fontsource/instrument-serif/latin-400-italic.css";
+
+/* The app's Haze palette, for one long reading column. */
+:root {
+  color-scheme: light;
+  --bg: #f4f3f0;
+  --surface: #ffffff;
+  --ink: #16171a;
+  --muted: #5e6066;
+  --line: #dcdad5;
+  --accent: #1f5aa6;
+  --serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Nirmala UI",
+    sans-serif;
+  --mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, "Liberation Mono", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #101113;
+    --surface: #17181b;
+    --ink: #ecedee;
+    --muted: #a0a3a9;
+    --line: #2a2c30;
+    --accent: #8db8f2;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 1.0625rem / 1.7 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  padding-inline: max(1.25rem, env(safe-area-inset-left, 0px));
+}
+
+a {
+  color: var(--accent);
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+}
+
+.skip:focus {
+  left: 1rem;
+  top: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 999px;
+}
+
+.bar,
+main,
+.foot {
+  max-width: 42rem;
+  margin-inline: auto;
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding-block: 1rem;
+}
+
+.brand {
+  font-family: var(--serif);
+  font-size: 1.75rem;
+  line-height: 1;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  font-weight: 600;
+}
+
+main {
+  outline: none;
+  padding-block: clamp(2rem, 6vw, 4.5rem) 4rem;
+}
+
+article {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+article > * {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--serif);
+  font-weight: 400;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(2.6rem, 7vw, 3.9rem);
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  font-size: 2rem;
+  margin-top: 1.6rem;
+}
+
+h3 {
+  font-size: 1.45rem;
+  margin-top: 0.6rem;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+.byline {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* The dek: the italic line right under the byline. */
+.byline + p {
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.byline + p em {
+  font-style: italic;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+}
+
+:not(pre) > code {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.05em 0.35em;
+}
+
+pre {
+  padding: 0.9rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+
+pre code {
+  font-size: 0.8rem;
+}
+
+article > p:last-child {
+  color: var(--muted);
+  font-size: 0.92rem;
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+}
+
+.foot {
+  border-top: 1px solid var(--line);
+  padding-block: 1.5rem 3rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .bar,
+  .skip,
+  .foot {
+    display: none;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  pre {
+    white-space: pre-wrap;
+  }
+}

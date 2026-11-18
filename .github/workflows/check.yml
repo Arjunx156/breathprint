@@ -25,7 +25,8 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun x biome ci .
       - run: bun x tsc --noEmit
-      - run: bun test
+      - run: bun test --coverage
+      - run: bun run scripts/coverage.ts
       - run: bun run build
       - run: bun run evals/run.ts --replay
       # picomatch's ReDoS sits in Vite's build-time globbing, fed only our own

@@ -1,5 +1,8 @@
+/** A photo sent with a turn, base64 without the data: prefix. Never logged. */
+export type InlineImage = { mime: "image/jpeg"; data: string };
+
 /** One message in a conversation; "model" is the assistant's side. */
-export type Turn = { role: "user" | "model"; text: string };
+export type Turn = { role: "user" | "model"; text: string; images?: readonly InlineImage[] };
 
 export type LlmRequest = {
   /** Which job is asking, for the log line: plan, chat, advisory. */

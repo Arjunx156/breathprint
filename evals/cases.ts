@@ -1,5 +1,6 @@
 import type { Audience, Channel } from "../shared/community";
 import { defaultProfile, type Language, MEERA, type Profile } from "../shared/profile";
+import type { Room, Sighting } from "../shared/scan";
 import { withHome } from "../shared/testing";
 
 /*
@@ -39,7 +40,18 @@ export type AdvisoryCase = {
   lang: Language;
 };
 
-export type Case = PlanCase | ChatCase | AdvisoryCase;
+/** A public-domain photo in evals/photos, what must be seen in it and what must not. */
+export type ScanCase = {
+  id: string;
+  job: "scan";
+  photo: string;
+  lang: Language;
+  rooms: readonly Room[];
+  sees: readonly Sighting[];
+  never: readonly Sighting[];
+};
+
+export type Case = PlanCase | ChatCase | AdvisoryCase | ScanCase;
 
 const place = MEERA.place;
 
@@ -153,4 +165,34 @@ const advisories: AdvisoryCase[] = [
   advisory("workplace", "whatsapp", "hi"),
 ];
 
-export const CASES: readonly Case[] = [...plans, ...chats, ...advisories];
+const scan = (
+  photo: string,
+  lang: Language,
+  more: Omit<ScanCase, "id" | "job" | "photo" | "lang">,
+) => ({ id: `scan-${photo}-${lang}`, job: "scan", photo, lang, ...more }) satisfies ScanCase;
+
+const ANY_ROOM: readonly Room[] = ["kitchen", "bedroom", "living", "bathroom", "other"];
+
+const scans: ScanCase[] = [
+  // A gas hob on a counter with nothing over it: the demo's sample photo.
+  scan("kitchen-hob", "en", {
+    rooms: ["kitchen"],
+    sees: ["stove-no-chimney"],
+    never: ["chimney", "incense", "angithi"],
+  }),
+  // The same kind of kitchen with an extractor hood: the contrast case.
+  scan("kitchen-hood", "en", {
+    rooms: ["kitchen"],
+    sees: ["chimney"],
+    never: ["stove-no-chimney", "incense"],
+  }),
+  scan("incense", "hi", { rooms: ANY_ROOM, sees: ["incense"], never: ["angithi", "smoking"] }),
+  scan("bedroom-window", "en", {
+    rooms: ["bedroom"],
+    sees: ["open-window"],
+    never: ["incense", "smoking"],
+  }),
+  scan("brazier", "hi", { rooms: ANY_ROOM, sees: ["angithi"], never: ["incense", "smoking"] }),
+];
+
+export const CASES: readonly Case[] = [...plans, ...chats, ...advisories, ...scans];

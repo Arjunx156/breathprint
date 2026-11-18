@@ -17,6 +17,7 @@ function body(model: string, req: LlmRequest, stream: boolean) {
       ...req.turns.map((t) => ({
         role: t.role === "model" ? "assistant" : "user",
         content: t.text,
+        ...(t.images?.length ? { images: t.images.map((i) => i.data) } : {}),
       })),
     ],
     ...(req.schema ? { format: req.schema } : {}),

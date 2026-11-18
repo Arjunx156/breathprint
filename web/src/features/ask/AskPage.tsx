@@ -6,6 +6,7 @@ import { type SourceId, sourceOf } from "@shared/sources";
 import { type KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link, Redirect } from "wouter";
 import { useApp } from "../../app/state";
+import { useDictation, useReadAloud } from "../../lib/speech";
 import { chat, type Turn } from "./chat";
 
 type Exchange = {
@@ -119,7 +120,26 @@ function Library({ question }: { question: string }) {
   );
 }
 
-function ExchangeView({ x }: { x: Exchange }) {
+type Voice = ReturnType<typeof useReadAloud>;
+
+function ReadAloud({ x, voice }: { x: Exchange; voice: Voice }) {
+  const { t } = useApp();
+  const id = String(x.id);
+  const pieces = readAnswer(x.answer).blocks.flatMap((b) => (b.kind === "p" ? [b.text] : b.items));
+  if (!voice.supported || pieces.length === 0) return null;
+  const reading = voice.reading === id;
+  return (
+    <button
+      type="button"
+      className="link mt-4 min-h-11 text-sm font-medium"
+      onClick={() => (reading ? voice.stop() : voice.read(id, pieces))}
+    >
+      {reading ? t("ask.stopReading") : t("ask.read")}
+    </button>
+  );
+}
+
+function ExchangeView({ x, voice }: { x: Exchange; voice: Voice }) {
   const { t } = useApp();
   const answer = readAnswer(x.answer);
   const streaming = x.state === "streaming";
@@ -155,6 +175,7 @@ function ExchangeView({ x }: { x: Exchange }) {
         )}
         {x.state === "offline" && <Library question={x.question} />}
       </div>
+      {x.state === "done" && <ReadAloud x={x} voice={voice} />}
       {!streaming && <Cited cards={answer.cards} actions={answer.actions} />}
       {x.flags.length > 0 && (
         <p className="mt-6 max-w-prose border-l-2 border-[var(--lvl-3)] pl-3 text-sm">
@@ -175,6 +196,8 @@ function Ask({ profile }: { profile: Profile }) {
   const nextId = useRef(1);
   const fieldId = useId();
   const busy = exchanges.at(-1)?.state === "streaming";
+  const dictation = useDictation(lang, (text) => setDraft(text.slice(0, MAX_CHARS)));
+  const voice = useReadAloud(lang);
 
   useEffect(() => () => active.current?.abort(), []);
 
@@ -188,6 +211,8 @@ function Ask({ profile }: { profile: Profile }) {
   const ask = async (raw: string) => {
     const question = raw.trim().slice(0, MAX_CHARS);
     if (!question || busy) return;
+    dictation.stop();
+    voice.stop();
     const id = nextId.current++;
     const turns = history(exchanges, question);
     const patch = (change: (x: Exchange) => Exchange) =>
@@ -225,7 +250,7 @@ function Ask({ profile }: { profile: Profile }) {
       {exchanges.length > 0 && (
         <div className="mt-10 border-b border-line">
           {exchanges.map((x) => (
-            <ExchangeView key={x.id} x={x} />
+            <ExchangeView key={x.id} x={x} voice={voice} />
           ))}
         </div>
       )}
@@ -255,10 +280,31 @@ function Ask({ profile }: { profile: Profile }) {
           <button type="submit" className="btn btn-primary" disabled={busy || !draft.trim()}>
             {busy ? t("ask.asking") : t("ask.submit")}
           </button>
+          {dictation.supported && (
+            <button
+              type="button"
+              className="btn btn-quiet"
+              aria-describedby={`${fieldId}-voice`}
+              onClick={dictation.listening ? dictation.stop : dictation.start}
+            >
+              {dictation.listening ? t("ask.stopListening") : t("ask.speak")}
+            </button>
+          )}
           <p id={`${fieldId}-note`} className="text-sm text-muted">
             {t("ask.privacy")}
           </p>
         </div>
+        {dictation.supported && (
+          <>
+            <p aria-live="polite" className="mt-3 min-h-5 text-sm">
+              {dictation.listening && t("ask.listening")}
+              {!dictation.listening && dictation.error && t(`ask.voice.${dictation.error}`)}
+            </p>
+            <p id={`${fieldId}-voice`} className="mt-1 max-w-prose text-sm text-muted">
+              {t("ask.voicePrivacy")}
+            </p>
+          </>
+        )}
       </form>
 
       {exchanges.length === 0 && (

@@ -11,6 +11,7 @@ export type ErrorCode =
   | "not_found"
   | "forbidden"
   | "too_large"
+  | "unsupported_media"
   | "rate_limited"
   | "upstream_unavailable"
   | "model_unavailable"

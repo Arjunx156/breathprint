@@ -3,10 +3,12 @@ import { chatRequest } from "../server/ai/chat";
 import { contextFor } from "../server/ai/grounding";
 import { ungrounded } from "../server/ai/guard";
 import { personalPlan } from "../server/ai/planner";
+import { readScan, scanRequest } from "../server/ai/scan";
 import { structured } from "../server/ai/structured";
 import { fixtureSource } from "../server/air/fixture";
 import { loadEnv } from "../server/env";
 import { llmFromEnv } from "../server/llm/config";
+import { photoId } from "../server/routes/scan";
 import { AUDIENCES, CHANNELS, collective, typicalHousehold } from "../shared/community";
 import { t } from "../shared/i18n";
 import { LANGUAGES, MEERA } from "../shared/profile";
@@ -22,6 +24,7 @@ import { knownIds } from "./scorers";
 
 const OUT = "server/ai/recorded.json";
 const QUESTIONS = ["ask.q1", "ask.q2", "ask.q3"] as const;
+const SAMPLE_PHOTO = "web/public/samples/kitchen.jpg";
 
 const env = loadEnv();
 if (env.LLM_PROVIDER === "fake") {
@@ -66,6 +69,14 @@ for (const lang of LANGUAGES) {
       return clean ? text : null;
     });
   }
+
+  // The sample photo the demo offers, filed under its own hash as the route looks it up.
+  const sample = new Uint8Array(await Bun.file(SAMPLE_PHOTO).arrayBuffer());
+  await take(`scan:${lang}:${photoId(sample)}`, async () => {
+    const image = { mime: "image/jpeg" as const, data: Buffer.from(sample).toString("base64") };
+    const { value } = await structured(llm, scanRequest(image, lang), readScan(lang));
+    return JSON.stringify(value);
+  });
 
   for (const audience of AUDIENCES) {
     for (const channel of CHANNELS) {

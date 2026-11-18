@@ -4,14 +4,16 @@ import { airFacts } from "../server/ai/grounding";
 import { ungrounded } from "../server/ai/guard";
 import { personalPlan } from "../server/ai/planner";
 import { DANGER_SIGNS } from "../server/ai/prompts";
+import { readScan, scanRequest } from "../server/ai/scan";
 import { InvalidReply, structured } from "../server/ai/structured";
 import { scripted } from "../server/llm/fake";
 import { createLlm, type Llm, LlmUnavailable } from "../server/llm/llm";
 import { cleanText } from "../shared/answer";
 import { type Advisory, collective, typicalHousehold } from "../shared/community";
 import { forModel, MEERA, type Profile } from "../shared/profile";
+import { sightingsOf } from "../shared/scan";
 import { cleanDay, severeDay } from "../shared/testing";
-import type { AdvisoryCase, Air, Case, ChatCase, ChatExpect, PlanCase } from "./cases";
+import type { AdvisoryCase, Air, Case, ChatCase, ChatExpect, PlanCase, ScanCase } from "./cases";
 import {
   brief,
   type Check,
@@ -140,6 +142,29 @@ async function advisory(llm: Llm, c: AdvisoryCase): Promise<Scored> {
   };
 }
 
+export const photoData = async (photo: string) =>
+  Buffer.from(await Bun.file(`evals/photos/${photo}.jpg`).arrayBuffer()).toString("base64");
+
+async function scan(llm: Llm, c: ScanCase): Promise<Scored> {
+  const req = scanRequest({ mime: "image/jpeg", data: await photoData(c.photo) }, c.lang);
+  const { value, model, repaired } = await structured(llm, req, readScan(c.lang));
+  const kinds = sightingsOf(value);
+  const missed = c.sees.filter((k) => !kinds.includes(k));
+  const invented = c.never.filter((k) => kinds.includes(k));
+  const notes = value.sightings.map((s) => s.where).join("\n");
+  return {
+    model,
+    checks: [
+      passed("valid"),
+      { name: "first try", pass: !repaired },
+      { name: "room", pass: c.rooms.includes(value.room), detail: value.room },
+      { name: "sees", pass: missed.length === 0, detail: missed.join(", ") },
+      { name: "nothing invented", pass: invented.length === 0, detail: invented.join(", ") },
+      ...(notes ? [languageMatches(notes, c.lang)] : []),
+    ],
+  };
+}
+
 function job(llm: Llm, c: Case): Promise<Scored> {
   switch (c.job) {
     case "plan":
@@ -148,6 +173,8 @@ function job(llm: Llm, c: Case): Promise<Scored> {
       return chat(llm, c);
     case "advisory":
       return advisory(llm, c);
+    case "scan":
+      return scan(llm, c);
   }
 }
 

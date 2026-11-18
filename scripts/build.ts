@@ -2,7 +2,9 @@ import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promi
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { IMMUTABLE, SECURITY_HEADERS } from "../server/headers";
-import { robotsTxt, sitemapXml, siteUrl } from "./site";
+import { renderBlog } from "./blog";
+import { PRODUCTION_URL, robotsTxt, sitemapXml, siteUrl } from "./site";
+import { precacheList, stampWorker } from "./sw";
 
 /**
  * Builds the app and the API into Vercel's Build Output format:
@@ -53,6 +55,9 @@ async function writeConfig() {
     routes: [
       { src: "/assets/(.*)", headers: { "Cache-Control": IMMUTABLE }, continue: true },
       { src: "/(.*)", headers: SECURITY_HEADERS, continue: true },
+      { src: "/sw.js", headers: { "Cache-Control": "no-cache" }, continue: true },
+      { src: "/blog", status: 308, headers: { Location: "/blog/" } },
+      { src: "/blog/", dest: "/blog/index.html" },
       { handle: "filesystem" },
       { src: "/api/(.*)", dest: "/api" },
       { src: "/(.*)", dest: "/index.html" },
@@ -75,6 +80,26 @@ async function initialJs(): Promise<{ file: string; gzip: number }[]> {
   );
 }
 
+/** Pours docs/blog.md into the blog page Vite built around it. */
+async function writeBlog() {
+  const page = join(STATIC, "blog/index.html");
+  const markdown = await readFile("docs/blog.md", "utf8");
+  const { body } = renderBlog(
+    markdown,
+    PRODUCTION_URL,
+    (minutes) => `Arjun Krishnan · 18 November 2026 · ${minutes} min read`,
+  );
+  const shell = await readFile(page, "utf8");
+  if (!shell.includes("<!--blog-->")) throw new Error("blog page lost its <!--blog--> slot");
+  await writeFile(page, shell.replace("<!--blog-->", body));
+}
+
+async function writeServiceWorker() {
+  const worker = join(STATIC, "sw.js");
+  const files = precacheList(await readdir(join(STATIC, "assets")));
+  await writeFile(worker, stampWorker(await readFile(worker, "utf8"), files));
+}
+
 async function totalSize(dir: string): Promise<number> {
   let bytes = 0;
   for (const entry of await readdir(dir, { recursive: true, withFileTypes: true })) {
@@ -85,6 +110,8 @@ async function totalSize(dir: string): Promise<number> {
 
 await rm(OUT, { recursive: true, force: true });
 await run(["bun", "x", "vite", "build"]);
+await writeBlog();
+await writeServiceWorker();
 const site = siteUrl();
 await writeFile(join(STATIC, "robots.txt"), robotsTxt(site));
 await writeFile(join(STATIC, "sitemap.xml"), sitemapXml(site));

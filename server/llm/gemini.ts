@@ -41,7 +41,13 @@ export function gemini(apiKey: string): Provider {
       config.responseMimeType = "application/json";
       config.responseJsonSchema = req.schema;
     }
-    const contents = req.turns.map((t) => ({ role: t.role, parts: [{ text: t.text }] }));
+    const contents = req.turns.map((t) => ({
+      role: t.role,
+      parts: [
+        ...(t.images ?? []).map((i) => ({ inlineData: { mimeType: i.mime, data: i.data } })),
+        { text: t.text },
+      ],
+    }));
     return { model, contents, config };
   };
 

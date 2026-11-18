@@ -6,11 +6,12 @@ default: check
 dev:
     bun run scripts/dev.ts
 
-# Everything that must pass before a commit: lint, types, tests, build, budget and eval replay
+# Everything that must pass before a commit: lint, types, tests and coverage, build, budget and eval replay
 check:
     bun x biome check .
     bun x tsc --noEmit
-    bun test
+    bun test --coverage
+    bun run scripts/coverage.ts
     bun run build
     bun run evals/run.ts --replay
 
@@ -21,9 +22,10 @@ fmt:
 test *args:
     bun test {{args}}
 
-# Unit tests with line coverage
+# Tests with coverage, gated at 90% overall and 95% for the shared engine
 cover:
     bun test --coverage
+    bun run scripts/coverage.ts
 
 # Build for Vercel into .vercel/output and check the JS budget
 build:

@@ -88,5 +88,7 @@ await writeFile(`${PUBLIC}/favicon.svg`, MARK);
 console.info(`wrote ${PUBLIC}/favicon.svg`);
 await png(browser, icon(32), 32, 32, `${PUBLIC}/favicon-32.png`);
 await png(browser, icon(180, true), 180, 180, `${PUBLIC}/apple-touch-icon.png`);
+await png(browser, icon(192, true), 192, 192, `${PUBLIC}/icon-192.png`);
+await png(browser, icon(512, true), 512, 512, `${PUBLIC}/icon-512.png`);
 await png(browser, await card(), 1200, 630, `${PUBLIC}/og.png`);
 await browser.close();

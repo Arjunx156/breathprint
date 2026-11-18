@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import { z } from "zod/mini";
+import { useLanguageReady } from "../lib/hindi";
 import { KEYS, load, remove, save } from "../lib/storage";
 
 const DoneSchema = z.object({ day: z.string(), ids: z.array(z.string()) });
@@ -60,7 +61,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   });
 
   const profile = demo ? demoProfile : stored;
-  const lang = profile?.language ?? browserLanguage();
+  const wanted = profile?.language ?? browserLanguage();
+  // Until the Hindi strings arrive, the page stays in English rather than go blank.
+  const lang = useLanguageReady(wanted) ? wanted : "en";
+  // A Hindi reader's first paint waits the moment it takes, so it never starts in English.
+  const [booted, setBooted] = useState(lang === wanted);
+  if (!booted && lang === wanted) setBooted(true);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -121,7 +127,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [profile, demo, lang, saveProfile, forget, exitDemo, doneIds, toggleDone],
   );
 
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={value}>{booted && children}</Ctx.Provider>;
 }
 
 export function useApp(): AppState {

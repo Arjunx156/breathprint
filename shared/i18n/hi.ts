@@ -188,6 +188,10 @@ export const hi: Record<keyof typeof en, string> = {
 
   "ui.skip": "सीधे मुख्य हिस्से पर जाएँ",
   "ui.loading": "पन्ना खुल रहा है",
+  "ui.pageFailed": "यह पन्ना नहीं खुला",
+  "ui.pageFailedLead":
+    "हर पन्ने को एक बार इंटरनेट चाहिए, फिर वह ऑफ़लाइन भी चलता है। कनेक्शन देखें और फिर कोशिश करें।",
+  "ui.retry": "फिर कोशिश करें",
   "nav.label": "मुख्य",
   "nav.today": "आज",
   "nav.ask": "पूछें",
@@ -268,6 +272,7 @@ export const hi: Record<keyof typeof en, string> = {
   "footer.data": "हवा के आँकड़े: Open-Meteo से CAMS पूर्वानुमान, लगभग 45 किमी के दायरे में।",
   "footer.privacy": "आपके परिवार की जानकारी इसी डिवाइस पर रहती है।",
   "footer.by": "निर्माण: अर्जुन कृष्णन",
+  "footer.blog": "यह कैसे बना (अंग्रेज़ी में)",
 
   "setup.title": "आपका परिवार",
   "setup.intro":
@@ -410,6 +415,16 @@ export const hi: Record<keyof typeof en, string> = {
     "सहायक अभी जवाब नहीं दे पा रहा, और Breathprint की लाइब्रेरी में इस सवाल से मेल खाता कोई नोट नहीं है।",
   "ask.broken": "जवाब बीच में रुक गया। थोड़ी देर में फिर पूछें।",
   "ask.recorded": "इस डेमो के लिए Gemini का सहेजा हुआ जवाब।",
+  "ask.speak": "बोलकर पूछें",
+  "ask.stopListening": "सुनना बंद करें",
+  "ask.listening": "सुन रहे हैं। अपना सवाल बोलें, फिर रुकें।",
+  "ask.voice.blocked": "माइक्रोफ़ोन बंद है। ब्राउज़र की साइट सेटिंग में इसकी अनुमति दें, या सवाल टाइप करें।",
+  "ask.voice.silence": "आवाज़ सुनाई नहीं दी। फ़ोन के थोड़ा पास आकर फिर बोलें।",
+  "ask.voice.failed": "बोलकर पूछना रुक गया। अपना सवाल टाइप करें।",
+  "ask.voicePrivacy":
+    "बोलकर पूछने पर आपका ब्राउज़र अपनी स्पीच सेवा इस्तेमाल करता है, जो आवाज़ को टेक्स्ट में बदलने के लिए उसे ब्राउज़र बनाने वाली कंपनी को भेज सकती है।",
+  "ask.read": "सुनें",
+  "ask.stopReading": "सुनना बंद करें",
 
   "community.title": "अपने समुदाय के लिए हवा की सूचना",
   "community.lead":
@@ -469,4 +484,70 @@ export const hi: Record<keyof typeof en, string> = {
   "notFound.title": "यह पन्ना स्मॉग में खो गया",
   "notFound.body": "इस पते पर कुछ नहीं है।",
   "notFound.home": "आज पर वापस",
+
+  "indoors.title": "कमरे की जाँच",
+  "indoors.lead":
+    "अपनी रसोई, सोने के कमरे या बैठक की फ़ोटो लें। Gemini देखता है कि कमरे में क्या धुआँ फैलाता है या सड़क की हवा अंदर आने देता है, और Breathprint आज की हवा में आपके परिवार के लिए उपायों को क्रम से रखता है।",
+  "indoors.choose": "फ़ोटो लें या चुनें",
+  "indoors.sample": "नमूने की रसोई आज़माएँ",
+  "indoors.noPhoto": "फ़ोटो नहीं है? कमरे में जो है उस पर निशान लगाएँ",
+  "indoors.photoAlt": "आपकी चुनी हुई फ़ोटो",
+  "indoors.sampleAlt": "नमूने की रसोई: लकड़ी के काउंटर पर गैस चूल्हा, पास में केतलियाँ, और ऊपर कोई चिमनी नहीं।",
+  "indoors.consent":
+    "स्कैन दबाने पर यह फ़ोटो, छोटी करके और जगह की जानकारी हटाकर, Google के Gemini को भेजी जाती है। Breathprint इसकी सिर्फ़ एक पहचान रखता है, ताकि जवाब दोबारा काम आ सके। Gemini के मुफ़्त स्तर पर Google फ़ोटो का इस्तेमाल अपने उत्पाद सुधारने में कर सकता है।",
+  "indoors.scan": "यह फ़ोटो स्कैन करें",
+  "indoors.scanning": "Gemini फ़ोटो देख रहा है…",
+  "indoors.another": "दूसरी फ़ोटो चुनें",
+  "indoors.badPhoto": "यह फ़ाइल फ़ोटो की तरह पढ़ी नहीं जा सकी। JPEG या PNG आज़माएँ।",
+  "indoors.failed":
+    "Gemini अभी फ़ोटो नहीं देख सका। जो दिख रहा है उस पर निशान लगाएँ, Breathprint फिर भी उपायों को क्रम से रखेगा।",
+  "indoors.recorded": "नमूने की फ़ोटो के लिए Gemini का सहेजा हुआ जवाब, डेमो के लिए रखा गया।",
+  "indoors.read":
+    "Gemini ने पढ़ा। कमरे से मिलाकर देखें: इससे कुछ छूट सकता है, या कुछ ऐसा दिख सकता है जो वहाँ नहीं है।",
+  "indoors.checklist": "कमरे में क्या है?",
+  "indoors.checklistLead": "जो कुछ दिख रहा है, सब पर निशान लगाएँ। कुछ भी इस डिवाइस से बाहर नहीं जाता।",
+  "indoors.rank": "उपाय क्रम से रखें",
+  "indoors.seen": "इस कमरे में",
+  "indoors.room": "Gemini के हिसाब से यह {room} है।",
+  "indoors.notRoom": "यह घर के अंदर की फ़ोटो नहीं लगती। रसोई, सोने के कमरे या बैठक की फ़ोटो आज़माएँ।",
+  "indoors.nothing":
+    "Breathprint की सूची की कोई चीज़ इस फ़ोटो में नहीं दिखती। रसोई की फ़ोटो आज़माएँ, या जहाँ अगरबत्ती या मच्छर की कॉइल जलती है।",
+  "indoors.fixes": "उपाय, सबसे असरदार पहले",
+  "indoors.fixesLead":
+    "आज की हवा में हर उपाय आपके परिवार और आपकी गली के लिए क्या करता है, लागत जोड़कर, उसी क्रम में।",
+  "indoors.noFixes": "आज की हवा में यहाँ कुछ ठीक करने की ज़रूरत नहीं।",
+  "indoors.save": "यह कमरा मेरे घर की जानकारी में जोड़ें",
+  "indoors.saveLead": "इन्हें अपने घर की जानकारी में जोड़ें, तो आज की योजना इन्हें गिनेगी:",
+  "indoors.saved": "सहेज लिया। आज की योजना अब इस कमरे को गिनती है।",
+  "indoors.toToday": "आज की योजना देखें",
+
+  "scan.kind.incense": "अगरबत्ती",
+  "scan.kind.mosquito-coil": "मच्छर की कॉइल",
+  "scan.kind.stove-no-chimney": "बिना चिमनी का चूल्हा",
+  "scan.kind.chimney": "रसोई की चिमनी",
+  "scan.kind.angithi": "अंगीठी या कोयले की सिगड़ी",
+  "scan.kind.kerosene-heater": "मिट्टी के तेल का हीटर",
+  "scan.kind.biomass-stove": "लकड़ी, उपले या कोयले का चूल्हा",
+  "scan.kind.smoking": "धूम्रपान",
+  "scan.kind.open-window": "खुली खिड़की",
+  "scan.kind.window-gaps": "खिड़की या दरवाज़े के आसपास दरारें",
+  "scan.kind.purifier": "एयर प्यूरीफ़ायर",
+  "scan.kind.dry-sweeping": "सूखी झाड़ू",
+
+  "scan.room.kitchen": "रसोई",
+  "scan.room.bedroom": "सोने का कमरा",
+  "scan.room.living": "बैठक",
+  "scan.room.bathroom": "बाथरूम",
+  "scan.room.other": "एक कमरा",
+
+  "scan.home.incense": "घर में अगरबत्ती जलती है",
+  "scan.home.mosquitoCoil": "रात में मच्छर की कॉइल जलती है",
+  "scan.home.chimney.false": "चूल्हे के ऊपर चिमनी नहीं है",
+  "scan.home.chimney.true": "चूल्हे के ऊपर चिमनी है",
+  "scan.home.heating.angithi": "अंगीठी या कोयले से गरमाहट",
+  "scan.home.heating.kerosene": "मिट्टी के तेल के हीटर से गरमाहट",
+  "scan.home.cooking.biomass": "लकड़ी, उपले या कोयले पर खाना बनता है",
+  "scan.home.smoking": "घर के अंदर कोई धूम्रपान करता है",
+  "scan.home.tightness.leaky": "खिड़कियों और दरवाज़ों से बाहर की हवा अंदर आती है",
+  "scan.home.purifier": "घर में एयर प्यूरीफ़ायर है",
 };

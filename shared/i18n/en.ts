@@ -200,6 +200,10 @@ export const en = {
 
   "ui.skip": "Skip to content",
   "ui.loading": "Loading the page",
+  "ui.pageFailed": "This page didn't load",
+  "ui.pageFailedLead":
+    "Each page needs the network once, then works offline. Check your connection and try again.",
+  "ui.retry": "Try again",
   "nav.label": "Main",
   "nav.today": "Today",
   "nav.ask": "Ask",
@@ -283,6 +287,7 @@ export const en = {
   "footer.data": "Air data: CAMS forecasts through Open-Meteo, modelled about 45 km wide.",
   "footer.privacy": "Your household stays on this device.",
   "footer.by": "Engineered by Arjun Krishnan",
+  "footer.blog": "How it was built",
 
   "setup.title": "Your household",
   "setup.intro":
@@ -427,6 +432,17 @@ export const en = {
     "The assistant can't answer right now, and no note in Breathprint's library matches this question.",
   "ask.broken": "The answer stopped partway. Ask again in a moment.",
   "ask.recorded": "A saved Gemini answer for this demo.",
+  "ask.speak": "Speak",
+  "ask.stopListening": "Stop listening",
+  "ask.listening": "Listening. Ask your question, then pause.",
+  "ask.voice.blocked":
+    "The microphone is blocked. Allow it in your browser's site settings, or type instead.",
+  "ask.voice.silence": "Didn't catch that. Try again a little closer to the phone.",
+  "ask.voice.failed": "Voice input stopped. Type your question instead.",
+  "ask.voicePrivacy":
+    "Speaking uses your browser's own speech service, which may send your voice to the browser's maker to turn it into text.",
+  "ask.read": "Read aloud",
+  "ask.stopReading": "Stop reading",
 
   "community.title": "An air advisory for your community",
   "community.lead":
@@ -487,4 +503,72 @@ export const en = {
   "notFound.title": "This page drifted off in the smog",
   "notFound.body": "Nothing lives at this address.",
   "notFound.home": "Back to today",
+
+  "indoors.title": "Scan a room",
+  "indoors.lead":
+    "Photograph your kitchen, bedroom or living room. Gemini looks for what puts smoke into the air or lets the street's air in, and Breathprint ranks the fixes for your family on today's air.",
+  "indoors.choose": "Take or choose a photo",
+  "indoors.sample": "Try the sample kitchen",
+  "indoors.noPhoto": "No photo? Tick what's in the room",
+  "indoors.photoAlt": "The photo you chose",
+  "indoors.sampleAlt":
+    "A sample kitchen: a gas hob on a wooden counter with kettles beside it and no chimney above.",
+  "indoors.consent":
+    "Scan sends this photo, made smaller and with its location data removed, to Google's Gemini. Breathprint keeps nothing of it except a fingerprint to reuse the answer. On Gemini's free tier, Google may use photos to improve its products.",
+  "indoors.scan": "Scan this photo",
+  "indoors.scanning": "Gemini is looking at the photo…",
+  "indoors.another": "Choose another photo",
+  "indoors.badPhoto": "That file couldn't be read as a photo. Try a JPEG or PNG.",
+  "indoors.failed":
+    "Gemini couldn't look at the photo just now. Tick what you can see instead, and Breathprint will still rank the fixes.",
+  "indoors.recorded": "A saved answer from Gemini for the sample photo, kept for the demo.",
+  "indoors.read":
+    "Read by Gemini. Check it against the room: it can miss things, or see what isn't there.",
+  "indoors.checklist": "What's in the room?",
+  "indoors.checklistLead": "Tick everything you can see. Nothing leaves this device.",
+  "indoors.rank": "Rank the fixes",
+  "indoors.seen": "In this room",
+  "indoors.room": "Gemini sees {room}.",
+  "indoors.notRoom":
+    "That doesn't look like the inside of a home. Try a photo of a kitchen, bedroom or living room.",
+  "indoors.nothing":
+    "Nothing on Breathprint's list shows in this photo. Try the kitchen, or wherever incense or a mosquito coil burns.",
+  "indoors.fixes": "Fixes, best first",
+  "indoors.fixesLead":
+    "Ranked by what each does for your family and your street on today's air, with its cost counted.",
+  "indoors.noFixes": "Nothing here needs fixing on today's air.",
+  "indoors.save": "Add this room to my household",
+  "indoors.saveLead": "Add these to your household and today's plan will count them:",
+  "indoors.saved": "Saved. Today's plan now counts this room.",
+  "indoors.toToday": "See today's plan",
+
+  "scan.kind.incense": "Incense",
+  "scan.kind.mosquito-coil": "Mosquito coil",
+  "scan.kind.stove-no-chimney": "Stove with no chimney",
+  "scan.kind.chimney": "Kitchen chimney",
+  "scan.kind.angithi": "Angithi or coal brazier",
+  "scan.kind.kerosene-heater": "Kerosene heater",
+  "scan.kind.biomass-stove": "Wood, dung or coal stove",
+  "scan.kind.smoking": "Smoking",
+  "scan.kind.open-window": "Open window",
+  "scan.kind.window-gaps": "Gaps around a window or door",
+  "scan.kind.purifier": "Air purifier",
+  "scan.kind.dry-sweeping": "Dry broom",
+
+  "scan.room.kitchen": "a kitchen",
+  "scan.room.bedroom": "a bedroom",
+  "scan.room.living": "a living room",
+  "scan.room.bathroom": "a bathroom",
+  "scan.room.other": "a room",
+
+  "scan.home.incense": "Incense burns at home",
+  "scan.home.mosquitoCoil": "A mosquito coil burns at night",
+  "scan.home.chimney.false": "No chimney over the stove",
+  "scan.home.chimney.true": "A chimney over the stove",
+  "scan.home.heating.angithi": "Heated with an angithi or coal",
+  "scan.home.heating.kerosene": "Heated with a kerosene heater",
+  "scan.home.cooking.biomass": "Cooking on wood, dung or coal",
+  "scan.home.smoking": "Someone smokes indoors",
+  "scan.home.tightness.leaky": "Windows and doors let outside air in",
+  "scan.home.purifier": "An air purifier at home",
 } as const;

@@ -9,8 +9,11 @@ export function siteUrl(env: Record<string, string | undefined> = process.env): 
   return `http://localhost:${env.PORT ?? 8787}`;
 }
 
-/** Every page worth indexing. The app has one public page; the rest is per household. */
-const PAGES = ["/"];
+/** Where the live site is, for content written to be read off this site too. */
+export const PRODUCTION_URL = "https://breathprint-zeta.vercel.app";
+
+/** Every page worth indexing: the app's front page and the blog; the rest is per household. */
+const PAGES = ["/", "/blog/"];
 
 export function robotsTxt(site: string): string {
   return `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${site}/sitemap.xml\n`;

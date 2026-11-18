@@ -14,16 +14,22 @@ import { airRoutes } from "./routes/air";
 import { chatRoutes } from "./routes/chat";
 import { geocodeRoutes } from "./routes/geocode";
 import { planRoutes } from "./routes/plan";
+import { MAX_PHOTO_BYTES, scanRoutes } from "./routes/scan";
 
 export type Deps = { env: Env; air: AirSource; geocode: Geocoder; llm: Llm };
 
 /** JSON bodies are a profile and a few chat turns; nothing legitimate is bigger. */
 export const JSON_LIMIT = 16 * 1024;
+/** A room photo as base64, plus the few fields around it. */
+export const PHOTO_LIMIT = Math.ceil((MAX_PHOTO_BYTES * 4) / 3) + 1024;
 
-const tooLarge = bodyLimit({
-  maxSize: JSON_LIMIT,
-  onError: (c) => apiError(c, 413, "too_large", "That request is too large."),
-});
+const limit = (maxSize: number) =>
+  bodyLimit({
+    maxSize,
+    onError: (c) => apiError(c, 413, "too_large", "That request is too large."),
+  });
+const tooLarge = limit(JSON_LIMIT);
+const photoTooLarge = limit(PHOTO_LIMIT);
 
 /**
  * The whole API as one Hono app, shared by the Vercel function, the Bun
@@ -32,11 +38,13 @@ const tooLarge = bodyLimit({
 export function createApp({ env, air, geocode, llm }: Deps) {
   const app = new Hono<{ Variables: RequestIdVariables }>();
   app.use(requestId({ limitLength: 64 }), accessLog, securityHeaders);
-  app.use("/api/*", sameOrigin(env.ALLOWED_ORIGINS), tooLarge);
+  app.use("/api/*", sameOrigin(env.ALLOWED_ORIGINS), (c, next) =>
+    c.req.path === "/api/scan" ? photoTooLarge(c, next) : tooLarge(c, next),
+  );
   app.use("/api/*", rateLimit({ name: "all", perMinute: env.RATE_LIMIT_PER_MIN }));
   // Model calls spend a small free quota, so they get a tighter limit of their own.
   const ai = rateLimit({ name: "ai", perMinute: env.RATE_LIMIT_AI_PER_MIN });
-  for (const path of ["/api/plan", "/api/chat", "/api/advisory"]) app.use(path, ai);
+  for (const path of ["/api/plan", "/api/chat", "/api/advisory", "/api/scan"]) app.use(path, ai);
   app.onError(onError);
   app.notFound(notFound);
 
@@ -48,7 +56,8 @@ export function createApp({ env, air, geocode, llm }: Deps) {
     .route("/api/geocode", geocodeRoutes(geocode))
     .route("/api/plan", planRoutes({ llm, air }))
     .route("/api/chat", chatRoutes({ llm, air }))
-    .route("/api/advisory", advisoryRoutes({ llm, air }));
+    .route("/api/advisory", advisoryRoutes({ llm, air }))
+    .route("/api/scan", scanRoutes({ llm }));
 }
 
 export type AppType = ReturnType<typeof createApp>;

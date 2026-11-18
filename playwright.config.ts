@@ -16,6 +16,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: CI,
   retries: CI ? 1 : 0,
+  // One browser per core starves the build server on a laptop and every test times out.
+  workers: CI ? 2 : 4,
   reporter: CI ? "github" : "list",
   use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure" },
   projects: [

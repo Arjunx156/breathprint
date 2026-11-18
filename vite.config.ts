@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, normalizePath, type Plugin } from "vite";
 import { siteUrl } from "./scripts/site.ts";
 
 const at = (path: string) => fileURLToPath(new URL(path, import.meta.url));
@@ -15,9 +15,26 @@ function site(): Plugin {
   };
 }
 
+/**
+ * Points shared/i18n's Hindi import at web/src/lib/hindi.ts, which loads the
+ * strings when someone picks Hindi. English readers save about 10 KB.
+ */
+function lazyHindi(): Plugin {
+  // Vite's own id for this file uses forward slashes; a Windows path here makes a second, empty copy.
+  const stub = normalizePath(at("./web/src/lib/hindi.ts"));
+  return {
+    name: "breathprint-lazy-hindi",
+    enforce: "pre",
+    resolveId(source, importer) {
+      const fromIndex = importer?.replaceAll("\\", "/").endsWith("/shared/i18n/index.ts");
+      return source === "./hi" && fromIndex ? stub : null;
+    },
+  };
+}
+
 export default defineConfig({
   root: "web",
-  plugins: [react(), tailwindcss(), site()],
+  plugins: [lazyHindi(), react(), tailwindcss(), site()],
   resolve: {
     alias: { "@shared": at("./shared"), "@web": at("./web/src") },
   },
@@ -27,6 +44,8 @@ export default defineConfig({
     target: "es2022",
     // The CSP allows fonts and scripts from this origin only, never data: URLs.
     assetsInlineLimit: 0,
+    // The blog is a plain page with no script; the build fills in the post.
+    rollupOptions: { input: { app: at("./web/index.html"), blog: at("./web/blog/index.html") } },
   },
   server: {
     port: 5173,

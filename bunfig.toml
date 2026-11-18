@@ -1,0 +1,6 @@
+[test]
+# Loads React DOM against a page once, before any test file; see the file for why.
+preload = ["./web/test/preload.ts"]
+coverageSkipTestFiles = true
+# scripts/coverage.ts reads the lcov report and gates the totals.
+coverageReporter = ["text", "lcov"]

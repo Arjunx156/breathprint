@@ -11,9 +11,13 @@ export function isMessageKey(key: string): key is MessageKey {
   return Object.hasOwn(en, key);
 }
 
-/** The string for `key` in `lang`, with {placeholders} filled from `vars`. */
+/**
+ * The string for `key` in `lang`, with {placeholders} filled from `vars`. The
+ * browser loads Hindi on demand, so for that moment English stands in.
+ */
 export function t(lang: Language, key: MessageKey, vars: Vars = {}): string {
-  return MESSAGES[lang][key].replace(/\{(\w+)\}/g, (whole, name: string) =>
+  const text: string | undefined = MESSAGES[lang][key];
+  return (text ?? en[key]).replace(/\{(\w+)\}/g, (whole, name: string) =>
     name in vars ? String(vars[name]) : whole,
   );
 }

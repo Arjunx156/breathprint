@@ -36,9 +36,8 @@ Meera lives in Rohini, Delhi with Rohan, their children Kabir (9, asthma) and An
 1. Twenty-second setup: place, household, travel, home. Today shows the AQI, the 48-hour ribbon and the clean window.
 2. A rule-checked plan is on screen at once; "Personalised plan ready" swaps in Gemini's version.
 3. Tap "Metro instead of car": dose change, PM2.5 and CO2 kept off the street, rupees saved, and how it was worked out.
-4. Ask in Hindi whether the children can play in the park; the answer streams with source chips.
-5. A WhatsApp advisory in Hindi for the housing society, and what 120 households carpooling the school run would keep out of the air.
-
-Planned and not built: a room scan of the kitchen that ranks three fixes by impact per rupee. Leave it out of the video until it ships.
+4. Ask in Hindi whether the children can play in the park, by voice or typed; the answer streams with source chips and can be read aloud.
+5. Indoors: scan the sample kitchen photo. Gemini spots the stove with no chimney, the engine ranks the fixes, and saving adds them to today's plan.
+6. A WhatsApp advisory in Hindi for the housing society, and what 120 households carpooling the school run would keep out of the air.
 
 `?demo=meera` replays this path on a fixed forecast and labelled cached model answers.
