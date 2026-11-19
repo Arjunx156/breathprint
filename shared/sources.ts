@@ -176,6 +176,7 @@ export const SOURCES = {
 
 export type SourceId = keyof typeof SOURCES;
 
+/** The publication a source id cites: title, publisher, year and link. */
 export function sourceOf(id: SourceId): Source {
   return SOURCES[id];
 }

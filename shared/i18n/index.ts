@@ -7,6 +7,7 @@ export type Vars = Readonly<Record<string, string | number>>;
 
 const MESSAGES: Record<Language, Readonly<Record<MessageKey, string>>> = { en, hi };
 
+/** Whether a key built at run time names a real message, so `t` can take it. */
 export function isMessageKey(key: string): key is MessageKey {
   return Object.hasOwn(en, key);
 }

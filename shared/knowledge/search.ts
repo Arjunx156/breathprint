@@ -73,6 +73,7 @@ export function search(query: string, k = 4, index: Index = DEFAULT_INDEX): Hit[
 
 const BY_ID = new Map(CARDS.map((c) => [c.id, c]));
 
+/** The knowledge card with an id, or undefined when no card has it. */
 export function cardById(id: string): Card | undefined {
   return BY_ID.get(id);
 }

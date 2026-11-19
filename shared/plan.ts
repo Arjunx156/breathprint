@@ -262,6 +262,7 @@ export function selectSteps(ctx: Context, ranked: readonly Candidate[]): Candida
 
 export type Reasoner = (ctx: Context, candidate: Candidate, time: string) => string;
 
+/** A day plan from the rules alone: the selected steps, timed, reasoned and in clock order. */
 export function buildRulePlan(
   ctx: Context,
   ranked: readonly Candidate[],

@@ -13,6 +13,7 @@ export function cleanDay(profile: Profile = MEERA): Context {
   return severeDay(profile, 28);
 }
 
+/** A copy of a profile with some home fields changed, for tests that vary one thing. */
 export function withHome(profile: Profile, home: Partial<Profile["home"]>): Profile {
   return { ...profile, home: { ...profile.home, ...home } };
 }

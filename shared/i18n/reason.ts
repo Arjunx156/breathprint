@@ -73,6 +73,7 @@ export function ruleReason(lang: Language): Reasoner {
   };
 }
 
+/** The plan's headline for how bad today's mean PM2.5 is, in the family's language. */
 export function headline(lang: Language, ctx: Context): string {
   return t(lang, `headline.${healthLevel(ctx.air.today.mean)}`);
 }

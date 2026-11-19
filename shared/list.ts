@@ -1,8 +1,10 @@
 /** A list with at least one item, so its first and last always exist. */
 export type NonEmpty<T> = readonly [T, ...T[]];
 
+/** Narrows a list to NonEmpty, so its first and last items read without a check. */
 export const isNonEmpty = <T>(items: readonly T[]): items is NonEmpty<T> => items.length > 0;
 
+/** The last item of a non-empty list; the fallback to the first only satisfies the types. */
 export const lastOf = <T>(items: NonEmpty<T>): T => items[items.length - 1] ?? items[0];
 
 /**

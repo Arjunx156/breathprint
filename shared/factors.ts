@@ -403,6 +403,7 @@ export type FactorId = keyof typeof FACTORS;
 /** Picks one bound of every factor, for evaluating a model at that bound. */
 export type Pick = (id: FactorId) => number;
 
+/** A Pick that reads every factor at one bound: low, mid or high. */
 export function picker(bound: Bound): Pick {
   return (id) => FACTORS[id][bound];
 }

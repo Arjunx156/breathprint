@@ -67,6 +67,7 @@ export const CATALOGUE: readonly ActionDef[] = [
 
 const BY_ID = new Map(CATALOGUE.map((a) => [a.id, a]));
 
+/** The catalogue entry for an id, or undefined when no action has it. */
 export function actionById(id: string): ActionDef | undefined {
   return BY_ID.get(id);
 }

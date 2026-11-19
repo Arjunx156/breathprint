@@ -15,6 +15,7 @@ export function spread(model: (bound: Bound) => number): Range {
   return { low: Math.min(low, mid, high), mid, high: Math.max(low, mid, high) };
 }
 
+/** A range times a factor, with low and high kept in order when the factor is negative. */
 export function scale(r: Range, factor: number): Range {
   const a = r.low * factor;
   const b = r.high * factor;

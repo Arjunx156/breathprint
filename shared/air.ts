@@ -77,7 +77,9 @@ export function localHourOf(nowMs: number, utcOffsetSeconds: number): string {
   return `${local.toISOString().slice(0, 13)}:00`;
 }
 
+/** The hour of day, 0 to 23, from a YYYY-MM-DDTHH:MM time. */
 export const hourOf = (time: string) => Number(time.slice(11, 13));
+/** The YYYY-MM-DD date from a YYYY-MM-DDTHH:MM time. */
 export const dayOf = (time: string) => time.slice(0, 10);
 
 function indexOfNow(hours: readonly Hour[], now: string): number {
@@ -260,4 +262,5 @@ export function inWindow(summary: AirSummary, clock: string): Window | null {
   );
 }
 
+/** The HH:MM clock time from a YYYY-MM-DDTHH:MM time. */
 export const clockOf = (time: string) => time.slice(11, 16);

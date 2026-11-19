@@ -54,6 +54,7 @@ const TIGHTNESS_FACTOR: Record<Profile["home"]["tightness"], FactorId> = {
   tight: "airExchangeTight",
 };
 
+/** Air changes per hour for how tight the home is, at one factor bound. */
 export function airExchangeOf(profile: Profile, pick: Pick): number {
   return pick(TIGHTNESS_FACTOR[profile.home.tightness]);
 }
@@ -143,6 +144,7 @@ export function leg(
   };
 }
 
+/** The inhaled dose alone from one leg of a trip. */
 export function legDose(
   member: Member,
   mode: TravelMode,

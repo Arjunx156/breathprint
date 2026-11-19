@@ -17,6 +17,7 @@ export type { Exposure };
 
 const ZERO: Exposure = { exposure: 0, dose: 0 };
 
+/** Exposure and inhaled dose for one member breathing `deltaC` more PM2.5 for `hours`. */
 export function exposed(
   member: Member,
   deltaC: number,
@@ -29,6 +30,7 @@ export function exposed(
   };
 }
 
+/** The sum of several exposures, zero for none. */
 export function total(parts: readonly Exposure[]): Exposure {
   return parts.reduce(
     (a, b) => ({ exposure: a.exposure + b.exposure, dose: a.dose + b.dose }),
@@ -72,6 +74,7 @@ function shareOfDay(
   return day > 0 ? doseMid / day : null;
 }
 
+/** An impact from the fields given, with every other field at nothing. */
 export function impact(partial: Partial<Impact>): Impact {
   return { ...NO_IMPACT, ...partial };
 }
@@ -116,10 +119,12 @@ function awayAt(profile: Profile, member: Member, clock: string): boolean {
   );
 }
 
+/** Members at home at a clock time: everyone not out on a commute or school run. */
 export function homeAt(ctx: Context, clock: string): Member[] {
   return ctx.profile.members.filter((m) => !awayAt(ctx.profile, m, clock));
 }
 
+/** Members who make a trip; with `masks`, only those who can wear one, so never an infant. */
 export function tripMembers(
   ctx: Context,
   trip: Trip | null,
@@ -145,20 +150,25 @@ export function tripExposure(
   ]);
 }
 
+/** Exposure `a` less `b`: what switching from the one to the other saves. */
 export function minus(a: Exposure, b: Exposure): Exposure {
   return { exposure: a.exposure - b.exposure, dose: a.dose - b.dose };
 }
 
+/** An exposure scaled by `k`, such as the share a mask lets through. */
 export function times(a: Exposure, k: number): Exposure {
   return { exposure: a.exposure * k, dose: a.dose * k };
 }
 
+/** Mean outdoor PM2.5 over the coming night, the air the bedroom models start from. */
 export const overnight = (ctx: Context) => overnightPm25(ctx.air);
 
+/** The family home's indoor PM2.5 for an outdoor level, with an optional purifier's CADR. */
 export function homeIndoor(ctx: Context, outdoor: number, pick: Pick, cadr = 0): number {
   return homeConcentration(ctx.profile, outdoor, pick, cadr);
 }
 
+/** The family home's air changes per hour at one factor bound. */
 export function airExchange(ctx: Context, pick: Pick): number {
   return airExchangeOf(ctx.profile, pick);
 }

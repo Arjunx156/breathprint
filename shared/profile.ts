@@ -87,6 +87,7 @@ export function isSensitive(member: Member): boolean {
   return SENSITIVE_GROUPS.has(member.group) || member.conditions.length > 0;
 }
 
+/** Whether the home heats by burning fuel indoors, which adds carbon monoxide to the smoke. */
 export function hasCombustionHeating(profile: Profile): boolean {
   return (
     profile.home.heating === "angithi" ||
@@ -95,6 +96,7 @@ export function hasCombustionHeating(profile: Profile): boolean {
   );
 }
 
+/** Whether a fuel-burning heater or a biomass or kerosene stove runs indoors. */
 export function hasCombustionIndoors(profile: Profile): boolean {
   return (
     hasCombustionHeating(profile) ||
