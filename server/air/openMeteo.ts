@@ -25,7 +25,7 @@ type Response = z.infer<typeof ResponseSchema>;
 const clean = (v: number | null | undefined) =>
   v === null || v === undefined || v < 0 || v > 5000 ? null : Math.round(v * 10) / 10;
 
-export function toSnapshot(lat: number, lon: number, body: Response, fetchedAt: Date): AirSnapshot {
+function toSnapshot(lat: number, lon: number, body: Response, fetchedAt: Date): AirSnapshot {
   const h = body.hourly;
   return AirSnapshotSchema.parse({
     lat,

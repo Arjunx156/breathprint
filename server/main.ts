@@ -19,7 +19,7 @@ function cachedGeocoder(geocode: Geocoder): Geocoder {
 }
 
 /** Production wiring: real upstreams behind caches, chosen by configuration. */
-export function productionDeps(env: Env, clientIp: ClientIp): Deps {
+function productionDeps(env: Env, clientIp: ClientIp): Deps {
   return {
     env,
     air: cached(env.AIR_SOURCE === "fixture" ? fixtureSource() : openMeteo()),

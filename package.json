@@ -9,7 +9,18 @@
   "scripts": {
     "dev": "bun run scripts/dev.ts",
     "build": "bun run scripts/build.ts",
-    "start": "bun run server/serve.ts"
+    "start": "bun run server/serve.ts",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "tsc --noEmit",
+    "unused": "bun x knip@5.88.1",
+    "test": "bun test",
+    "coverage": "bun test --coverage && bun run scripts/coverage.ts",
+    "eval:replay": "bun run evals/run.ts --replay",
+    "check": "bun run lint && bun run typecheck && bun run unused && bun run coverage && bun run build && bun run eval:replay",
+    "e2e": "playwright test",
+    "eval": "bun run evals/run.ts",
+    "record": "bun run evals/record.ts"
   },
   "dependencies": {
     "@fontsource/instrument-serif": "^5.3.0",

@@ -36,7 +36,7 @@ function document(card: Card): Doc {
 
 export type Index = { docs: Doc[]; avgLength: number; df: Map<string, number> };
 
-export function buildIndex(cards: readonly Card[]): Index {
+function buildIndex(cards: readonly Card[]): Index {
   const docs = cards.map(document);
   const df = new Map<string, number>();
   for (const d of docs) for (const term of d.terms.keys()) df.set(term, (df.get(term) ?? 0) + 1);

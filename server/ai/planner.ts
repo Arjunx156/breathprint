@@ -1,6 +1,5 @@
 import type { Candidate } from "../../shared/actions/catalogue";
 import type { Context } from "../../shared/actions/types";
-import { inScript } from "../../shared/i18n/script";
 import {
   checkPlan,
   DayPlanSchema,
@@ -12,12 +11,11 @@ import type { Language } from "../../shared/profile";
 import type { Llm } from "../llm/llm";
 import type { LlmRequest } from "../llm/types";
 import { airFacts, householdFacts, numbersIn, optionFacts, optionsFor } from "./grounding";
-import { ungrounded } from "./guard";
-import { block, plannerSystem, wrongLanguage } from "./prompts";
-import { type Parsed, parseJson, structured } from "./structured";
+import { block, plannerSystem } from "./prompts";
+import { type Parsed, parseShaped, proseIssues, structured, verdict } from "./structured";
 
 /** The reply's shape, with ids limited to today's options and this household. */
-export function planSchema(actionIds: readonly string[], memberIds: readonly string[]) {
+function planSchema(actionIds: readonly string[], memberIds: readonly string[]) {
   return {
     type: "object",
     properties: {
@@ -100,25 +98,15 @@ function normalize(steps: readonly PlanStep[], options: readonly Candidate[]): P
  */
 export function readPlan(ctx: Context, { options, allowed, lang }: Omit<PlannerCall, "req">) {
   return (text: string): Parsed<PlanReply["plan"]> => {
-    const json = parseJson(text);
-    if (!json.ok) return json;
-    const shaped = DayPlanSchema.safeParse(json.value);
-    if (!shaped.success) {
-      return {
-        ok: false,
-        issues: shaped.error.issues.map((i) => `${i.path.join(".") || "plan"}: ${i.message}`),
-      };
-    }
-    const plan = { ...shaped.data, steps: normalize(shaped.data.steps, options) };
-    const issues = checkPlan(ctx, plan, options).map((i) => i.detail);
+    const shaped = parseShaped(text, DayPlanSchema, "plan");
+    if (!shaped.ok) return shaped;
+    const plan = { ...shaped.value, steps: normalize(shaped.value.steps, options) };
     const words = [plan.headline, ...plan.steps.map((s) => s.reason)].join("\n");
-    for (const figure of ungrounded(words, allowed)) {
-      issues.push(`"${figure}" is not in the data; use only figures written there.`);
-    }
-    if (!inScript(words, lang)) issues.push(wrongLanguage(lang));
-    return issues.length > 0
-      ? { ok: false, issues }
-      : { ok: true, value: { ...plan, source: "ai" } };
+    const issues = [
+      ...checkPlan(ctx, plan, options).map((i) => i.detail),
+      ...proseIssues(words, allowed, lang),
+    ];
+    return verdict<PlanReply["plan"]>({ ...plan, source: "ai" }, issues);
   };
 }
 

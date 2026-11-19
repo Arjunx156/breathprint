@@ -1,6 +1,6 @@
 import type { Language } from "@shared/profile";
 import { type ScanReply, ScanReplySchema } from "@shared/scan";
-import { client, failure } from "../../lib/api";
+import { client, replyOf } from "../../lib/api";
 
 /** Enough for Gemini to read a room, and small enough for a slow connection. */
 const MAX_SIDE = 1280;
@@ -8,11 +8,11 @@ const QUALITY = 0.82;
 
 export type Photo = { url: string; data: string; sample: boolean };
 
-export async function base64(blob: Blob): Promise<string> {
+async function base64(blob: Blob): Promise<string> {
   const bytes = new Uint8Array(await blob.arrayBuffer());
   let binary = "";
-  for (let i = 0; i < bytes.length; i += 0x8000) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  for (let i = 0; i < bytes.length; i += 0x80_00) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x80_00));
   }
   return btoa(binary);
 }
@@ -54,6 +54,5 @@ export async function scanPhoto(
     { json: { image: photo.data, lang, demo } },
     { init: { signal } },
   );
-  if (!res.ok) throw await failure(res);
-  return ScanReplySchema.parse(await res.json());
+  return replyOf(res, ScanReplySchema);
 }

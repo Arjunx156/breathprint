@@ -2,7 +2,7 @@ import { type PlanReply, PlanReplySchema } from "@shared/plan";
 import { forModel, type Language, type Profile } from "@shared/profile";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { z } from "zod/mini";
-import { client, failure } from "../../lib/api";
+import { client, replyOf } from "../../lib/api";
 import { KEYS, load, save } from "../../lib/storage";
 
 export type PersonalPlan =
@@ -19,10 +19,10 @@ const SavedSchema = z.object({ key: z.string(), reply: PlanReplySchema });
 const fetched = new Map<string, PlanReply>();
 
 function fnv1a(text: string): string {
-  let h = 0x811c9dc5;
+  let h = 0x81_1c_9d_c5;
   for (let i = 0; i < text.length; i++) {
     h ^= text.charCodeAt(i);
-    h = Math.imul(h, 0x01000193);
+    h = Math.imul(h, 0x01_00_01_93);
   }
   return (h >>> 0).toString(36);
 }
@@ -44,8 +44,7 @@ async function fetchPlan(
     { json: { profile: forModel(profile), lang, demo } },
     { init: { signal } },
   );
-  if (!res.ok) throw await failure(res);
-  return PlanReplySchema.parse(await res.json());
+  return replyOf(res, PlanReplySchema);
 }
 
 function remembered(key: string, demo: boolean): PlanReply | null {

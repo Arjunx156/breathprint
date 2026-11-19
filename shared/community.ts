@@ -2,7 +2,7 @@ import { z } from "zod/mini";
 import { actionById } from "./actions/catalogue";
 import { type AirSummary, clockOf, dayOf } from "./air";
 import type { Scale } from "./aqi";
-import { isMessageKey, t } from "./i18n";
+import { t, tx } from "./i18n";
 import { defaultProfile, type Language, type Place, type Profile } from "./profile";
 import { type Range, scale } from "./range";
 
@@ -124,8 +124,6 @@ export function collective(
   return { actionId: action.id, households, co2kg, pm25g };
 }
 
-const say = (lang: Language, key: string) => (isMessageKey(key) ? t(lang, key) : key);
-
 /**
  * Breathprint's own advisory, from templates and the engine's numbers, for
  * when the model can't write one. It says less, but nothing in it is guessed.
@@ -138,7 +136,7 @@ export function templateAdvisory(
   audience: Audience,
 ): Advisory {
   const reading = air.current.aqi[aqiScale];
-  const category = say(lang, `aqi.${aqiScale}.${reading.category}`);
+  const category = tx(lang, `aqi.${aqiScale}.${reading.category}`);
   const today = dayOf(air.now);
   const window = air.flat ? undefined : air.windows.find((w) => dayOf(w.start) === today);
   const vars = { category: category.toLowerCase(), aqi: reading.value };
@@ -151,7 +149,7 @@ export function templateAdvisory(
           to: clockOf(window.end),
         })
       : t(lang, "advisory.situationFlat", vars),
-    do: AUDIENCE_ACTIONS[audience].slice(0, 4).map((id) => say(lang, `action.${id}.title`)),
+    do: AUDIENCE_ACTIONS[audience].slice(0, 4).map((id) => tx(lang, `action.${id}.title`)),
     avoid: [t(lang, "advisory.avoid.burning"), t(lang, "advisory.avoid.exercise")],
     sensitive: t(lang, "advisory.sensitive"),
   };

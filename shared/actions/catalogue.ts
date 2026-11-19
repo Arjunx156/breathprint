@@ -87,7 +87,7 @@ const BUDGET_WEIGHT = { tight: 2, moderate: 1, comfortable: 0.5 } as const;
  * as the air worsens; prevention keeps a floor of 30% so the shared air is
  * never ignored. Safety actions always come first.
  */
-export function score(ctx: Context, action: ActionDef, impact: Impact): number {
+function score(ctx: Context, action: ActionDef, impact: Impact): number {
   if (action.safety) return 10;
   const level = healthLevel(ctx.air.today.mean);
   const protectWeight = Math.min(0.7, 0.4 + 0.06 * level);

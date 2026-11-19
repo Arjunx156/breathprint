@@ -1,3 +1,5 @@
+import { latinDigits } from "../../shared/format";
+
 /** Units that make a number a claim worth checking, in English and Hindi. */
 const UNIT =
   "%|percent|µg|μg|ug|mcg|mg|kg|g|grams?|kilograms?|tonnes?|cigarettes?|m³|cubic met(?:re|er)s?|प्रतिशत|किलो|ग्राम|सिगरेट";
@@ -6,10 +8,6 @@ const FIGURE = new RegExp(
   String.raw`(${PREFIX})?(\d[\d,]*(?:\.\d+)?)(\s?(?:${UNIT})(?![\p{L}]))?`,
   "giu",
 );
-
-const DEVANAGARI_DIGITS = /[०-९]/g;
-const latinDigits = (text: string) =>
-  text.replace(DEVANAGARI_DIGITS, (d) => String(d.charCodeAt(0) - 0x0966));
 
 export type Figure = { text: string; value: number };
 

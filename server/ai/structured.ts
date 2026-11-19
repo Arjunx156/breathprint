@@ -1,28 +1,64 @@
+import { inScript } from "../../shared/i18n/script";
+import type { Language } from "../../shared/profile";
+import { issueLines, type SchemaIssue } from "../issues";
 import type { Llm } from "../llm/llm";
 import type { LlmRequest } from "../llm/types";
 import { logger } from "../log";
-import { REPAIR_PROMPT } from "./prompts";
+import { ungrounded } from "./guard";
+import { REPAIR_PROMPT, wrongLanguage } from "./prompts";
 
-export type Parsed<T> = { ok: true; value: T } | { ok: false; issues: string[] };
+export type Parsed<T> = { ok: true; value: T } | { ok: false; issues: readonly string[] };
+
+/** Anything with zod's safeParse, from zod or zod/mini. */
+type Schema<T> = {
+  safeParse(
+    value: unknown,
+  ): { success: true; data: T } | { success: false; error: { issues: readonly SchemaIssue[] } };
+};
 
 /** The model answered twice and both answers broke the rules; the caller falls back. */
 export class InvalidReply extends Error {
-  constructor(
-    readonly job: string,
-    readonly issues: readonly string[],
-  ) {
+  readonly job: string;
+  readonly issues: readonly string[];
+
+  constructor(job: string, issues: readonly string[]) {
     super(`${job}: ${issues.length} issue(s) after repair`);
     this.name = "InvalidReply";
+    this.job = job;
+    this.issues = issues;
   }
 }
 
 /** JSON.parse that reports failure as an issue instead of throwing. */
-export function parseJson(text: string): Parsed<unknown> {
+function parseJson(text: string): Parsed<unknown> {
   try {
     return { ok: true, value: JSON.parse(text) };
   } catch {
     return { ok: false, issues: ["The reply was not valid JSON."] };
   }
+}
+
+/** A reply read as JSON and checked against `schema`; each issue names its field, or `whole`. */
+export function parseShaped<T>(text: string, schema: Schema<T>, whole: string): Parsed<T> {
+  const json = parseJson(text);
+  if (!json.ok) return json;
+  const shaped = schema.safeParse(json.value);
+  if (shaped.success) return { ok: true, value: shaped.data };
+  return { ok: false, issues: issueLines(shaped.error.issues, whole) };
+}
+
+/** The value when nothing is wrong with it; otherwise every issue, to send back for a repair. */
+export function verdict<T>(value: T, issues: readonly string[]): Parsed<T> {
+  return issues.length > 0 ? { ok: false, issues } : { ok: true, value };
+}
+
+/** Prose that only quotes figures from the data, written in the reader's own script. */
+export function proseIssues(words: string, allowed: readonly number[], lang: Language): string[] {
+  const issues = ungrounded(words, allowed).map(
+    (figure) => `"${figure}" is not in the data; use only figures written there.`,
+  );
+  if (!inScript(words, lang)) issues.push(wrongLanguage(lang));
+  return issues;
 }
 
 /**

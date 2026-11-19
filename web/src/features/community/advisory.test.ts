@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
+import { summarize } from "@shared/air";
 import type { Collective } from "@shared/community";
+import { DEMO_DAY, delhiMorning, delhiSevereSnapshot } from "@shared/fixtures";
+import { MEERA } from "@shared/profile";
 import {
+  draftOf,
   householdsOf,
   type Inputs,
   plainText,
@@ -28,6 +32,19 @@ describe("community advisory", () => {
     expect(sameInputs(asked, { ...asked })).toBe(true);
     expect(sameInputs(asked, { ...asked, lang: "hi" })).toBe(false);
     expect(sameInputs(asked, { ...asked, households: 121 })).toBe(false);
+  });
+
+  test("drafts its own advisory, counting the households only once the count is valid", () => {
+    const summary = summarize(delhiSevereSnapshot(DEMO_DAY), delhiMorning(DEMO_DAY));
+    const ask = { audience: "society", channel: "whatsapp", lang: "en" } as const;
+    const counted = draftOf({ ...ask, households: 120 }, summary, MEERA);
+    expect(counted).toMatchObject({ ...ask, households: 120, by: "template" });
+    expect(counted.advisory.headline).not.toBe("");
+    expect(counted.collective?.households).toBe(120);
+
+    const uncounted = draftOf({ ...ask, households: null }, summary, MEERA);
+    expect(uncounted.households).toBe(1);
+    expect(uncounted.collective).toBeNull();
   });
 
   test("says what households keep out of the air, in whichever figures exist", () => {

@@ -126,7 +126,7 @@ describe("setup", () => {
   });
 
   test("a located household is rounded to the grid before anything keeps it", async () => {
-    geolocation((ok) => ok({ coords: { latitude: 28.70412, longitude: 77.10249 } } as never));
+    geolocation((ok) => ok({ coords: { latitude: 28.704_12, longitude: 77.102_49 } } as never));
     const view = setup();
     fireEvent.click(await view.findByRole("button", { name: en("setup.locate") }));
     expect(view.getByText(en("setup.chosen", { place: en("setup.here") }))).toBeTruthy();

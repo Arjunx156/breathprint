@@ -1,14 +1,17 @@
+import { z } from "zod";
 import { type Chunk, type LlmRequest, type Provider, ProviderError } from "./types";
 
-type Line = {
-  message?: { content?: string };
-  done?: boolean;
-  prompt_eval_count?: number;
-  eval_count?: number;
-  error?: string;
-};
+/** One line of Ollama's chat reply; the last one carries the token counts. */
+const LineSchema = z.object({
+  message: z.object({ content: z.string().optional() }).optional(),
+  done: z.boolean().optional(),
+  prompt_eval_count: z.number().optional(),
+  eval_count: z.number().optional(),
+  error: z.string().optional(),
+});
+type Line = z.infer<typeof LineSchema>;
 
-function body(model: string, req: LlmRequest, stream: boolean) {
+function payload(model: string, req: LlmRequest, stream: boolean) {
   return JSON.stringify({
     model,
     stream,
@@ -37,12 +40,12 @@ export function ollama(host: string): Provider {
     const res = await fetch(new URL("/api/chat", host), {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: body(model, req, stream),
+      body: payload(model, req, stream),
       signal,
     }).catch((err: unknown) => {
       throw new ProviderError(0, err instanceof Error ? err.name : "ollama unreachable");
     });
-    if (!res.ok || !res.body) throw new ProviderError(res.status, `ollama ${res.status}`);
+    if (!res.ok) throw new ProviderError(res.status, `ollama ${res.status}`);
     return res;
   };
 
@@ -50,13 +53,12 @@ export function ollama(host: string): Provider {
     name: "ollama",
     async generate(model, req, signal) {
       const res = await call(model, req, signal, false);
-      const line = (await res.json()) as Line;
+      const line = LineSchema.parse(await res.json());
       if (line.error) throw new ProviderError(500, "ollama error");
       return chunk(line);
     },
     async *stream(model, req, signal) {
-      const res = await call(model, req, signal, true);
-      for await (const line of ndjson(res.body as ReadableStream<Uint8Array>)) {
+      for await (const line of ndjson(await call(model, req, signal, true))) {
         if (line.error) throw new ProviderError(500, "ollama error");
         yield chunk(line);
       }
@@ -64,9 +66,10 @@ export function ollama(host: string): Provider {
   };
 }
 
-/** One parsed object per line of a newline-delimited JSON stream. */
-async function* ndjson(source: ReadableStream<Uint8Array>): AsyncGenerator<Line> {
-  const reader = source.getReader();
+/** One checked object per line of a newline-delimited JSON reply. */
+async function* ndjson(res: Response): AsyncGenerator<Line> {
+  if (!res.body) throw new ProviderError(502, "ollama sent no body");
+  const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
   for (;;) {
@@ -75,6 +78,6 @@ async function* ndjson(source: ReadableStream<Uint8Array>): AsyncGenerator<Line>
     buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split("\n");
     buffer = lines.pop() ?? "";
-    for (const raw of lines) if (raw.trim()) yield JSON.parse(raw) as Line;
+    for (const raw of lines) if (raw.trim()) yield LineSchema.parse(JSON.parse(raw));
   }
 }

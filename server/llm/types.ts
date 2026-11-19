@@ -29,11 +29,11 @@ export type Provider = {
 
 /** A provider failure with the HTTP status that explains it; 0 when the network failed. */
 export class ProviderError extends Error {
-  constructor(
-    readonly status: number,
-    message: string,
-  ) {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
     super(message);
     this.name = "ProviderError";
+    this.status = status;
   }
 }

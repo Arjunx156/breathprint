@@ -1,5 +1,5 @@
 import { SIGHTINGS, type Sighting } from "@shared/scan";
-import { type FormEvent, useState } from "react";
+import { type SubmitEvent, useState } from "react";
 import { useApp } from "../../app/state";
 import { Toggle } from "../../components/fields";
 
@@ -7,7 +7,7 @@ import { Toggle } from "../../components/fields";
 export function Checklist({ onDone }: { onDone: (kinds: Sighting[]) => void }) {
   const { t } = useApp();
   const [ticked, setTicked] = useState<Sighting[]>([]);
-  const submit = (e: FormEvent) => {
+  const submit = (e: SubmitEvent) => {
     e.preventDefault();
     onDone(SIGHTINGS.filter((k) => ticked.includes(k)));
   };

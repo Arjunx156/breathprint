@@ -95,6 +95,6 @@ export function rateLimit({
       c.header("Retry-After", String(resetSeconds));
       return apiError(c, 429, "rate_limited", "Too many requests. Try again in a minute.");
     }
-    await next();
+    return next();
   };
 }

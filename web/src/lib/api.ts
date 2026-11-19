@@ -1,28 +1,42 @@
 import type { AppType } from "@server/app";
 import { type AirSnapshot, AirSnapshotSchema } from "@shared/air";
-import type { Language, Place } from "@shared/profile";
+import { type Language, type Place, PlaceSchema } from "@shared/profile";
 import { hc } from "hono/client";
+import { z } from "zod/mini";
 
 /** Typed calls to our own API; the types come straight from the server's routes. */
 export const client = hc<AppType>("/");
 
+/** A refusal from our API, carrying the code the server chose so the page can explain it. */
 export class ApiError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: string,
-  ) {
+  readonly status: number;
+  readonly code: string;
+
+  constructor(status: number, code: string) {
     super(code);
     this.name = "ApiError";
+    this.status = status;
+    this.code = code;
   }
 }
 
-export async function failure(res: {
-  status: number;
-  json(): Promise<unknown>;
-}): Promise<ApiError> {
-  const body = (await res.json().catch(() => null)) as { error?: { code?: string } } | null;
-  return new ApiError(res.status, body?.error?.code ?? "network");
+/** The part of the server's error envelope the page reads; anything else counts as the network. */
+const ErrorBodySchema = z.object({ error: z.object({ code: z.string() }) });
+
+type Reply = { ok: boolean; status: number; json(): Promise<unknown> };
+
+export async function failure(res: Omit<Reply, "ok">): Promise<ApiError> {
+  const body = ErrorBodySchema.safeParse(await res.json().catch(() => null));
+  return new ApiError(res.status, body.success ? body.data.error.code : "network");
 }
+
+/** A reply's body, checked against what the page expects; a refusal becomes an ApiError. */
+export async function replyOf<T>(res: Reply, schema: { parse(data: unknown): T }): Promise<T> {
+  if (!res.ok) throw await failure(res);
+  return schema.parse(await res.json());
+}
+
+const PlacesSchema = z.object({ places: z.array(PlaceSchema) });
 
 export async function fetchAir(
   lat: number,
@@ -33,8 +47,7 @@ export async function fetchAir(
     { query: { lat: String(lat), lon: String(lon) } },
     signal ? { init: { signal } } : {},
   );
-  if (!res.ok) throw await failure(res);
-  return AirSnapshotSchema.parse(await res.json());
+  return replyOf(res, AirSnapshotSchema);
 }
 
 export async function searchPlaces(
@@ -46,6 +59,5 @@ export async function searchPlaces(
     { query: { q, lang } },
     signal ? { init: { signal } } : {},
   );
-  if (!res.ok) throw await failure(res);
-  return (await res.json()).places;
+  return (await replyOf(res, PlacesSchema)).places;
 }

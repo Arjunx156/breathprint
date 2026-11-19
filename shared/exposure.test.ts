@@ -117,12 +117,13 @@ describe("properties", () => {
 
   test("a stronger purifier never makes the room dirtier", () => {
     fc.assert(
-      fc.property(roomArb, fc.double({ min: 0, max: 500, noNaN: true }), (room, extra) => {
-        return (
+      fc.property(
+        roomArb,
+        fc.double({ min: 0, max: 500, noNaN: true }),
+        (room, extra) =>
           indoorConcentration({ ...room, cadr: room.cadr + extra }) <=
-          indoorConcentration(room) + 1e-9
-        );
-      }),
+          indoorConcentration(room) + 1e-9,
+      ),
     );
   });
 

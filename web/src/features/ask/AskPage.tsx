@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Redirect } from "wouter";
 import { useApp } from "../../app/state";
 import { useDictation, useReadAloud } from "../../lib/speech";
+import { useLatestRequest } from "../../lib/useLatestRequest";
 import { chat } from "./chat";
 import { ExchangeView } from "./ExchangeView";
 import { asked, type Exchange, history, step } from "./exchange";
@@ -37,13 +38,11 @@ function Ask({ profile }: { profile: Profile }) {
   const { t, lang, demo } = useApp();
   const [exchanges, setExchanges] = useState<Exchange[]>([]);
   const [draft, setDraft] = useState("");
-  const active = useRef<AbortController | null>(null);
+  const start = useLatestRequest();
   const nextId = useRef(1);
   const busy = exchanges.at(-1)?.state === "streaming";
   const dictation = useDictation(lang, (text) => setDraft(text.slice(0, MAX_CHARS)));
   const voice = useReadAloud(lang);
-
-  useEffect(() => () => active.current?.abort(), []);
 
   // Bring each new question to the top so its answer streams in view.
   const latest = exchanges.at(-1)?.id;
@@ -63,16 +62,14 @@ function Ask({ profile }: { profile: Profile }) {
       setExchanges((xs) => xs.map((x) => (x.id === id ? change(x) : x)));
     setExchanges((xs) => [...xs, asked(id, question)]);
     setDraft("");
-    const controller = new AbortController();
-    active.current = controller;
+    const signal = start();
     try {
-      for await (const event of chat({ profile, lang, demo, turns }, controller.signal)) {
+      for await (const event of chat({ profile, lang, demo, turns }, signal)) {
         patch((x) => step(x, event));
       }
       patch((x) => (x.state === "streaming" ? { ...x, state: "broken" } : x));
     } catch {
-      if (!controller.signal.aborted)
-        patch((x) => ({ ...x, state: x.answer ? "broken" : "offline" }));
+      if (!signal.aborted) patch((x) => ({ ...x, state: x.answer ? "broken" : "offline" }));
     }
   };
   const onAsk = (question: string) => void ask(question);

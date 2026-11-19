@@ -51,9 +51,14 @@ describe("api client", () => {
   });
 
   test("place search passes the reader's language along", async () => {
-    const place = { name: "Rohini", region: "Delhi", country: "IN", lat: 28.7, lon: 77.1 };
+    const place = { name: "Rohini, Delhi", country: "IN", lat: 28.7, lon: 77.1 };
     const asked = answer(() => Response.json({ places: [place] }));
     expect(await searchPlaces("Rohini", "hi")).toEqual([place]);
     expect(asked[0]).toContain("lang=hi");
+  });
+
+  test("a reply that isn't the shape the page expects is refused, not shown", async () => {
+    answer(() => Response.json({ places: [{ name: "Rohini", country: "IN", lat: 999, lon: 77 }] }));
+    await expect(searchPlaces("Rohini", "en")).rejects.toThrow();
   });
 });

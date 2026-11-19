@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # The same steps as `just check`: lint, types, tests, build with the JS budget, eval replay.
+  # The same steps as `just check`: lint, types, unused code, tests, build with the JS budget, eval replay.
   check:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -25,6 +25,7 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun x biome ci .
       - run: bun x tsc --noEmit
+      - run: bun run unused
       - run: bun test --coverage
       - run: bun run scripts/coverage.ts
       - run: bun run build

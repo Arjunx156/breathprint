@@ -1,28 +1,17 @@
-import type { AirSummary } from "@shared/air";
 import type { Scale } from "@shared/aqi";
 import { today } from "@shared/engine";
-import type { Profile } from "@shared/profile";
 import { useMemo, useState } from "react";
-import { Link, Redirect } from "wouter";
+import { Link } from "wouter";
 import { useApp } from "../../app/state";
-import { AirFailed, AirWaiting } from "../../components/AirStatus";
+import { type Air, AirPage } from "../../components/AirPage";
 import { clockIn, localDay } from "../../lib/format";
-import { useAir } from "../../lib/useAir";
 import { PlanSection } from "../plan/PlanSection";
 import { PersonalNotice } from "./PersonalNotice";
 import { Reading } from "./Reading";
 import { Ribbon } from "./Ribbon";
 import { usePersonalPlan } from "./usePersonalPlan";
 
-function Day({
-  profile,
-  summary,
-  offline,
-}: {
-  profile: Profile;
-  summary: AirSummary;
-  offline: boolean;
-}) {
+function Day({ profile, summary, offline }: Air) {
   const { t, lang, demo, saveProfile } = useApp();
   const ctx = useMemo(() => ({ profile, air: summary }), [profile, summary]);
   const { ranked, plan } = useMemo(() => today(ctx, lang), [ctx, lang]);
@@ -78,16 +67,6 @@ function Day({
   );
 }
 
-function TodayFor({ profile }: { profile: Profile }) {
-  const { demo } = useApp();
-  const air = useAir(profile.place, demo);
-  if (air.status === "loading") return <AirWaiting place={profile.place.name} />;
-  if (air.status === "error") return <AirFailed retry={air.retry} />;
-  return <Day profile={profile} summary={air.summary} offline={air.offline} />;
-}
-
 export function TodayPage() {
-  const { profile } = useApp();
-  if (!profile) return <Redirect to="/setup" replace />;
-  return <TodayFor profile={profile} />;
+  return <AirPage page={Day} />;
 }

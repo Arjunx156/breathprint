@@ -37,5 +37,5 @@ export function inTurn(replies: Array<string | Error>, seen: LlmRequest[] = []):
 
 /** A whole model client on a script: silent, instant, and on the models given. */
 export function scriptedLlm(script: Script, models: readonly string[] = ["m1"]): Llm {
-  return createLlm({ provider: scripted(script), models, timeoutMs: 5_000, ...SILENT });
+  return createLlm({ provider: scripted(script), models, timeoutMs: 5000, ...SILENT });
 }

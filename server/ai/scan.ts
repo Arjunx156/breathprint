@@ -1,9 +1,9 @@
 import { inScript } from "../../shared/i18n/script";
 import type { Language } from "../../shared/profile";
-import { ROOMS, type Scan, ScanSchema, SIGHTINGS } from "../../shared/scan";
+import { distinctSightings, ROOMS, type Scan, ScanSchema, SIGHTINGS } from "../../shared/scan";
 import type { InlineImage, LlmRequest } from "../llm/types";
 import { scanSystem, wrongLanguage } from "./prompts";
-import { type Parsed, parseJson } from "./structured";
+import { type Parsed, parseShaped, verdict } from "./structured";
 
 const SCAN_JSON_SCHEMA = {
   type: "object",
@@ -39,32 +39,21 @@ export function scanRequest(image: InlineImage, lang: Language): LlmRequest {
 
 const DIGIT = /[0-9०-९]/;
 
-/**
- * Reads a reply as a scan: the closed list only, each kind once, short notes
- * in the right language and with no figures, since the engine owns every number.
- */
+/** Notes describe places in words and in the reader's language; the engine owns every number. */
+function noteIssues(sightings: Scan["sightings"], lang: Language): string[] {
+  const notes = sightings.map((s) => s.where).join("\n");
+  const issues: string[] = [];
+  if (DIGIT.test(notes)) issues.push("A where note has a number in it; describe places in words.");
+  if (notes && !inScript(notes, lang)) issues.push(wrongLanguage(lang));
+  return issues;
+}
+
+/** Reads a reply as a scan: the closed list only, each kind once, short notes in words. */
 export function readScan(lang: Language) {
   return (reply: string): Parsed<Scan> => {
-    const json = parseJson(reply);
-    if (!json.ok) return json;
-    const shaped = ScanSchema.safeParse(json.value);
-    if (!shaped.success) {
-      return {
-        ok: false,
-        issues: shaped.error.issues.map((i) => `${i.path.join(".") || "scan"}: ${i.message}`),
-      };
-    }
-    const { room } = shaped.data;
-    const seen = new Set<string>();
-    const sightings =
-      room === "notRoom"
-        ? []
-        : shaped.data.sightings.filter((s) => !seen.has(s.kind) && seen.add(s.kind));
-    const notes = sightings.map((s) => s.where).join("\n");
-    const issues: string[] = [];
-    if (DIGIT.test(notes))
-      issues.push("A where note has a number in it; describe places in words.");
-    if (notes && !inScript(notes, lang)) issues.push(wrongLanguage(lang));
-    return issues.length > 0 ? { ok: false, issues } : { ok: true, value: { room, sightings } };
+    const shaped = parseShaped(reply, ScanSchema, "scan");
+    if (!shaped.ok) return shaped;
+    const sightings = distinctSightings(shaped.value);
+    return verdict({ room: shaped.value.room, sightings }, noteIssues(sightings, lang));
   };
 }

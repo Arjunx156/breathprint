@@ -1,3 +1,4 @@
+import type { AgeGroup } from "./profile";
 import type { Bound } from "./range";
 import type { SourceId } from "./sources";
 
@@ -58,9 +59,8 @@ export const INHALATION = {
     moderate: perHour(2.6e-2),
     high: perHour(4.7e-2),
   },
-} as const;
+} as const satisfies Record<AgeGroup, Record<string, number>>;
 
-export type AgeGroup = keyof typeof INHALATION;
 export type Activity = keyof (typeof INHALATION)["adult"];
 
 export const FACTORS = {

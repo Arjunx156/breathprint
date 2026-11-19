@@ -149,6 +149,49 @@ function Chart({ summary, scale, label }: Props & { label: string }) {
   );
 }
 
+/** A faint rule at each midnight after the first, so the two days read apart. */
+function Midnights({ series }: { series: readonly Hour[] }) {
+  return (
+    <>
+      {series.map((h, i) =>
+        i > 0 && hourOf(h.time) === 0 ? (
+          <line
+            key={h.time}
+            x1={i}
+            x2={i}
+            y1={0}
+            y2={100}
+            stroke="var(--line)"
+            vectorEffect="non-scaling-stroke"
+          />
+        ) : null,
+      )}
+    </>
+  );
+}
+
+/** One bar an hour, as tall as its PM2.5 against the ceiling and coloured by its level. */
+function HourBars({ series, scale, top }: { series: readonly Hour[]; scale: Scale; top: number }) {
+  return (
+    <>
+      {series.map((h, i) => {
+        if (h.pm25 === null) return null;
+        const height = Math.max(1.5, (h.pm25 / top) * 100);
+        return (
+          <rect
+            key={h.time}
+            x={i + 0.14}
+            y={100 - height}
+            width={0.72}
+            height={height}
+            fill={`var(--lvl-${aqi(scale, h.pm25, null).level})`}
+          />
+        );
+      })}
+    </>
+  );
+}
+
 /** One unit per hour across, 0 to 100 up; the bars stretch to whatever width the page gives. */
 function Bars({
   series,
@@ -182,33 +225,8 @@ function Bars({
           fillOpacity="0.08"
         />
       ))}
-      {series.map((h, i) =>
-        i > 0 && hourOf(h.time) === 0 ? (
-          <line
-            key={`d${h.time}`}
-            x1={i}
-            x2={i}
-            y1={0}
-            y2={100}
-            stroke="var(--line)"
-            vectorEffect="non-scaling-stroke"
-          />
-        ) : null,
-      )}
-      {series.map((h, i) => {
-        if (h.pm25 === null) return null;
-        const height = Math.max(1.5, (h.pm25 / top) * 100);
-        return (
-          <rect
-            key={h.time}
-            x={i + 0.14}
-            y={100 - height}
-            width={0.72}
-            height={height}
-            fill={`var(--lvl-${aqi(scale, h.pm25, null).level})`}
-          />
-        );
-      })}
+      <Midnights series={series} />
+      <HourBars series={series} scale={scale} top={top} />
       <line
         x1={0}
         x2={n}

@@ -1,4 +1,5 @@
 import { mkdir } from "node:fs/promises";
+import { z } from "zod";
 import { PROMPT_VERSION } from "../server/ai/prompts";
 import { loadEnv } from "../server/env";
 import { llmFromEnv } from "../server/llm/config";
@@ -15,33 +16,45 @@ import { type Outcome, overall, replaying, runCase, taped } from "./jobs";
 const RECORDING = "evals/recordings/latest.json";
 const RESULTS = "evals/results/latest.json";
 
-type Recording = {
-  promptVersion: string;
-  at: string;
-  score: number;
-  cases: Record<string, { model: string; replies: string[] }>;
-};
+const RecordingSchema = z.object({
+  promptVersion: z.string(),
+  at: z.string(),
+  score: z.number(),
+  cases: z.record(z.string(), z.object({ model: z.string(), replies: z.array(z.string()) })),
+});
+type Recording = z.infer<typeof RecordingSchema>;
 
 type Usage = { calls: number; failed: number; input: number; output: number; ms: number };
 
 const percent = (x: number) => `${(x * 100).toFixed(1)}%`;
 
-function report(outcomes: readonly Outcome[]) {
-  const width = Math.max(...outcomes.map((o) => o.id.length)) + 2;
+/** One case's line: its score and the checks it failed, or why it was skipped. */
+function caseLine(o: Outcome, width: number): string {
+  if (o.status === "skipped") return `${o.id.padEnd(width)}skipped  ${o.reason}`;
+  const why = o.checks
+    .filter((c) => !c.pass)
+    .map((c) => (c.detail ? `${c.name}: ${c.detail}` : c.name))
+    .join("; ");
+  return `${o.id.padEnd(width)}${percent(o.score).padStart(6)}   ${why}`;
+}
+
+/** How many of the cases that ran each check passed it. */
+function byCheck(outcomes: readonly Outcome[]): Map<string, { pass: number; of: number }> {
   const tally = new Map<string, { pass: number; of: number }>();
   for (const o of outcomes) {
-    if (o.status === "skipped") {
-      console.info(`${o.id.padEnd(width)}skipped  ${o.reason}`);
-      continue;
-    }
-    const failed = o.checks.filter((c) => !c.pass);
-    const why = failed.map((c) => (c.detail ? `${c.name}: ${c.detail}` : c.name)).join("; ");
-    console.info(`${o.id.padEnd(width)}${percent(o.score).padStart(6)}   ${why}`);
+    if (o.status === "skipped") continue;
     for (const c of o.checks) {
       const t = tally.get(c.name) ?? { pass: 0, of: 0 };
       tally.set(c.name, { pass: t.pass + (c.pass ? 1 : 0), of: t.of + 1 });
     }
   }
+  return tally;
+}
+
+function report(outcomes: readonly Outcome[]) {
+  const width = Math.max(...outcomes.map((o) => o.id.length)) + 2;
+  for (const o of outcomes) console.info(caseLine(o, width));
+  const tally = byCheck(outcomes);
   console.info("\nBy check");
   const label = Math.max(...[...tally.keys()].map((n) => n.length)) + 2;
   for (const [name, t] of tally) console.info(`  ${name.padEnd(label)}${t.pass}/${t.of}`);
@@ -69,7 +82,7 @@ async function live() {
   };
   const llm = llmFromEnv(env, log);
   // The free tier allows a handful of requests a minute.
-  const delayMs = Number(process.env.EVAL_DELAY_MS ?? 4_000);
+  const delayMs = Number(process.env.EVAL_DELAY_MS ?? 4000);
 
   const outcomes: Outcome[] = [];
   const cases: Recording["cases"] = {};
@@ -108,7 +121,7 @@ async function replay() {
     console.info("No recorded replies yet; run `just eval` with GEMINI_API_KEY set to make them.");
     return;
   }
-  const recording = (await file.json()) as Recording;
+  const recording = RecordingSchema.parse(await file.json());
   const outcomes: Outcome[] = [];
   for (const c of CASES) {
     const saved = recording.cases[c.id];

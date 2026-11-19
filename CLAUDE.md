@@ -5,7 +5,7 @@ A smog-season assistant for families and communities, built for PromptWars 6. It
 ## Commands
 
 - `just dev`: API on :8787, app on :5173
-- `just check`: biome (Markdown too), tsc, tests with the coverage gate (95% of lines overall, 98% of `shared/`, every source file loaded by a test), build, JS budget and eval replay (must pass before any commit)
+- `just check`: biome (Markdown too), tsc, knip, tests with the coverage gate (95% of lines overall, 98% of `shared/`, every source file loaded by a test), build, JS budget and eval replay (must pass before any commit). Each step is also a package script: `bun run lint`, `typecheck`, `unused`, `coverage`.
 - `just fmt`: fix formatting and autofixable lint
 - `just e2e`: Playwright with axe, specs in `tests/e2e/*.e2e.ts` (not `.spec.ts`, which `bun test` would pick up). Don't run it alongside `bun test`; each starves the other into timeouts.
 - `just eval`: scores the live model and saves its replies to `evals/recordings`; `just record`: saves demo-day answers to `server/ai/recorded.json`. Both need `GEMINI_API_KEY`; rerun both after changing a prompt and bump `PROMPT_VERSION`.
@@ -17,7 +17,7 @@ A smog-season assistant for families and communities, built for PromptWars 6. It
 - `server/ai/`: the four Gemini jobs (plan, chat, advisory, scan), their prompts, grounding packets and the figure guard.
 - `web/`: React app built by Vite into `dist/public`; `web/public/sw.js` is the offline worker, stamped with the precache list at build time by `scripts/sw.ts`.
 - `web/test/`: the happy-dom page, render helpers and speech fakes for component tests. `bunfig.toml` preloads React DOM with a DOM up, because Bun evaluates CommonJS deps before a test file's own imports, and `server/quiet.ts` to silence the logger.
-- `docs/`: the blog (served at `/blog/`), `security.md` and `accessibility.md`. The Vercel firewall rule they describe lives in the Vercel project, not in this repo.
+- `docs/`: `architecture.md`, the blog (served at `/blog/`), `security.md` and `accessibility.md`. The Vercel firewall rule they describe lives in the Vercel project, not in this repo.
 - `evals/`: cases, pure scorers, the runner and the demo recorder.
 - `scripts/build.ts`: writes `.vercel/output` (static, one function, routes and headers), plus robots and sitemap from `scripts/site.ts`.
 - `scripts/assets.ts`: renders the favicons and `og.png` into `web/public`; rerun after changing the mark.
@@ -33,5 +33,9 @@ A smog-season assistant for families and communities, built for PromptWars 6. It
 - Precise location never leaves the browser; the server rounds to 0.1 degree and redirects anything finer.
 - Schemas in `shared/` use `zod/mini` so the browser bundle stays under the 120 KB budget; server-only schemas may use classic `zod`.
 - The browser loads Hindi on demand through `web/src/lib/hindi.ts`. The Vite plugin that swaps it in must hand Vite a forward-slash path, or Windows builds ship a second, empty Hindi table.
+- Biome caps a function at 50 lines and a cognitive complexity of 10, and keeps `shared/` free of React, Hono, the Gemini SDK, Node built-ins and both sides. Split with a hook, a component or a pure helper; never waive the rule.
+- knip runs as `bun x knip@5.88.1`, which carries its own TypeScript 5, because TypeScript 7 has no JS API. Mark an export kept on purpose with `/** @public */`.
+- A key built at run time goes through `tx`, which reads an unknown key as itself. Index arrays with `itemAt`, `lastOf` or `isNonEmpty` from `shared/list.ts`, not a cast.
+- Pages that need the forecast render inside `AirPage`; a request a newer one replaces starts with `useLatestRequest`; a JSON reply is read with `replyOf`.
 - Component tests import `web/test/page` first, then call `withPage()`.
 - `sd -F` silently does nothing on multi-line patterns here; use an editor for those.

@@ -5,9 +5,12 @@ export type Failure = "offline" | "quota" | "timeout" | "unavailable" | "refused
 
 /** No model could answer. Routes catch this and fall back to the engine's own answer. */
 export class LlmUnavailable extends Error {
-  constructor(readonly reason: Failure) {
-    super(`model unavailable: ${reason}`);
+  readonly reason: Failure;
+
+  constructor(reason: Failure, options?: ErrorOptions) {
+    super(`model unavailable: ${reason}`, options);
     this.name = "LlmUnavailable";
+    this.reason = reason;
   }
 }
 
@@ -47,8 +50,19 @@ export type Llm = {
 const BUDGET_MS = 25_000;
 const BACKOFF_MS = 400;
 
+type Settings = Required<LlmOptions>;
+
+const defaultLog = (line: LogLine) =>
+  line.outcome === "ok" ? logger.info(line) : logger.warn(line);
+
+const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+function settle(options: LlmOptions): Settings {
+  return { budgetMs: BUDGET_MS, price: [0, 0], log: defaultLog, sleep: wait, ...options };
+}
+
 /** What a failed attempt means for the next one. */
-export function classify(err: unknown, timedOut: boolean): Failure {
+function classify(err: unknown, timedOut: boolean): Failure {
   if (timedOut) return "timeout";
   if (!(err instanceof ProviderError)) return "unavailable";
   if (err.status === 429) return "quota";
@@ -56,9 +70,6 @@ export function classify(err: unknown, timedOut: boolean): Failure {
   if (err.status === 401 || err.status === 403) return "refused";
   return "unavailable";
 }
-
-const defaultLog = (line: LogLine) =>
-  line.outcome === "ok" ? logger.info(line) : logger.warn(line);
 
 /** Aborts one attempt when its time is up or the caller hangs up, and knows which it was. */
 function attemptSignal(ms: number, outer?: AbortSignal) {
@@ -91,6 +102,46 @@ type Attempt = ReturnType<typeof attemptSignal>;
 type Recorder = (outcome: "ok" | Failure, usage?: Usage) => void;
 type Asked<T> = { ok: true; value: T } | { ok: false; failure: Failure };
 
+/** What one attempt on one model has to work with. */
+type Turn = {
+  provider: Provider;
+  model: string;
+  attempt: Attempt;
+  record: Recorder;
+  /** When the whole call's budget runs out, on the performance clock. */
+  deadline: number;
+};
+type Ask<T> = (turn: Turn) => Promise<T>;
+
+/** One call as it walks the model chain. */
+type Call<T> = {
+  settings: Settings;
+  provider: Provider;
+  req: LlmRequest;
+  deadline: number;
+  signal: AbortSignal | undefined;
+  ask: Ask<T>;
+};
+
+/** One log line per attempt: model, outcome, tokens, time and cost, and never the text. */
+function recorder(s: Settings, req: LlmRequest, model: string, attempt: number): Recorder {
+  const started = performance.now();
+  return (outcome, usage = { input: 0, output: 0 }) => {
+    const usd = (usage.input * s.price[0] + usage.output * s.price[1]) / 1e6;
+    s.log({
+      llm: req.job,
+      provider: s.provider?.name ?? "none",
+      model,
+      attempt,
+      outcome,
+      ms: Math.round(performance.now() - started),
+      in: usage.input,
+      out: usage.output,
+      usd: Number(usd.toFixed(6)),
+    });
+  };
+}
+
 /** Passes a stream on piece by piece and logs once, however it ends. */
 async function* relay(
   source: AsyncIterator<Chunk>,
@@ -110,11 +161,78 @@ async function* relay(
   } catch (err) {
     const reason = classify(err, attempt.timedOut());
     record(reason, usage);
-    throw new LlmUnavailable(reason);
+    throw new LlmUnavailable(reason, { cause: err });
   } finally {
     attempt.stop();
   }
 }
+
+/** One attempt on one model, with its own timeout and log line. */
+async function once<T>(call: Call<T>, model: string, n: number): Promise<Asked<T>> {
+  const { settings, provider, req, deadline, signal, ask } = call;
+  const left = deadline - performance.now();
+  if (left <= 0) return { ok: false, failure: "timeout" };
+  const attempt = attemptSignal(Math.min(settings.timeoutMs, left), signal);
+  const record = recorder(settings, req, model, n);
+  try {
+    return { ok: true, value: await ask({ provider, model, attempt, record, deadline }) };
+  } catch (err) {
+    attempt.stop();
+    if (signal?.aborted) throw err;
+    const failure = classify(err, attempt.timedOut());
+    record(failure);
+    return { ok: false, failure };
+  }
+}
+
+/** Up to two attempts on one model: the second only after a server error. */
+async function onModel<T>(call: Call<T>, model: string): Promise<Asked<T>> {
+  const first = await once(call, model, 1);
+  if (first.ok || first.failure !== "unavailable") return first;
+  await call.settings.sleep(BACKOFF_MS * (1 + Math.random()));
+  return once(call, model, 2);
+}
+
+/** Tries each model in turn until one answers; a refused key ends the chain early. */
+async function overChain<T>(
+  settings: Settings,
+  req: LlmRequest,
+  signal: AbortSignal | undefined,
+  ask: Ask<T>,
+): Promise<{ value: T; model: string }> {
+  const { provider, models, budgetMs } = settings;
+  if (!provider || models.length === 0) throw new LlmUnavailable("offline");
+  const deadline = performance.now() + budgetMs;
+  const call: Call<T> = { settings, provider, req, deadline, signal, ask };
+  let last: Failure = "unavailable";
+  for (const model of models) {
+    const asked = await onModel(call, model);
+    if (asked.ok) return { value: asked.value, model };
+    last = asked.failure;
+    if (last === "refused") break;
+  }
+  throw new LlmUnavailable(last);
+}
+
+/** Asks for the whole reply at once. */
+const whole =
+  (req: LlmRequest): Ask<string> =>
+  async ({ provider, model, attempt, record }) => {
+    const reply = await provider.generate(model, req, attempt.signal);
+    attempt.stop();
+    record("ok", reply.usage);
+    return reply.text;
+  };
+
+/** Waits only for the first words; the rest may take whatever the budget has left. */
+const streamed =
+  (req: LlmRequest): Ask<AsyncGenerator<string>> =>
+  async ({ provider, model, attempt, record, deadline }) => {
+    const source = provider.stream(model, req, attempt.signal)[Symbol.asyncIterator]();
+    const first = await source.next();
+    attempt.arm(Math.max(1, deadline - performance.now()));
+    return relay(source, first, attempt, record);
+  };
 
 /**
  * Asks the configured models in order with a timeout on every attempt. A
@@ -122,116 +240,16 @@ async function* relay(
  * straight to the next model; a refused key stops. Each attempt logs one
  * line with the model, outcome, tokens, time and cost, and never the text.
  */
-export function createLlm({
-  provider,
-  models,
-  timeoutMs,
-  budgetMs = BUDGET_MS,
-  price = [0, 0],
-  log = defaultLog,
-  sleep = (ms) => new Promise((r) => setTimeout(r, ms)),
-}: LlmOptions): Llm {
-  const recorder =
-    (req: LlmRequest, model: string, attempt: number, started: number): Recorder =>
-    (outcome, usage) => {
-      const tokens = usage ?? { input: 0, output: 0 };
-      const usd = (tokens.input * price[0] + tokens.output * price[1]) / 1e6;
-      log({
-        llm: req.job,
-        provider: provider?.name ?? "none",
-        model,
-        attempt,
-        outcome,
-        ms: Math.round(performance.now() - started),
-        in: tokens.input,
-        out: tokens.output,
-        usd: Number(usd.toFixed(6)),
-      });
-    };
-
-  type Ask<T> = (
-    p: Provider,
-    model: string,
-    attempt: Attempt,
-    record: Recorder,
-    deadline: number,
-  ) => Promise<T>;
-
-  type Call<T> = {
-    p: Provider;
-    req: LlmRequest;
-    model: string;
-    deadline: number;
-    signal: AbortSignal | undefined;
-    ask: Ask<T>;
-  };
-
-  /** One attempt, with its own timeout and log line. */
-  async function once<T>({ p, req, model, deadline, signal, ask }: Call<T>, n: number) {
-    const left = deadline - performance.now();
-    if (left <= 0) return { ok: false, failure: "timeout" } as const;
-    const attempt = attemptSignal(Math.min(timeoutMs, left), signal);
-    const record = recorder(req, model, n, performance.now());
-    try {
-      return { ok: true, value: await ask(p, model, attempt, record, deadline) } as const;
-    } catch (err) {
-      attempt.stop();
-      if (signal?.aborted) throw err;
-      const failure = classify(err, attempt.timedOut());
-      record(failure);
-      return { ok: false, failure } as const;
-    }
-  }
-
-  /** Up to two attempts on one model: the second only after a server error. */
-  async function onModel<T>(call: Call<T>): Promise<Asked<T>> {
-    const first = await once(call, 1);
-    if (first.ok || first.failure !== "unavailable") return first;
-    await sleep(BACKOFF_MS * (1 + Math.random()));
-    return once(call, 2);
-  }
-
-  async function overChain<T>(req: LlmRequest, signal: AbortSignal | undefined, ask: Ask<T>) {
-    if (!provider || models.length === 0) throw new LlmUnavailable("offline");
-    const deadline = performance.now() + budgetMs;
-    let last: Failure = "unavailable";
-    for (const model of models) {
-      const asked = await onModel({
-        p: provider,
-        req,
-        model,
-        deadline,
-        signal,
-        ask: (...args) => ask(...args).then((value) => ({ value, model })),
-      });
-      if (asked.ok) return asked.value;
-      last = asked.failure;
-      if (last === "refused") break;
-    }
-    throw new LlmUnavailable(last);
-  }
-
+export function createLlm(options: LlmOptions): Llm {
+  const settings = settle(options);
   return {
-    ready: provider !== null && models.length > 0,
-
+    ready: settings.provider !== null && settings.models.length > 0,
     generate: async (req, signal) => {
-      const { value, model } = await overChain(req, signal, async (p, m, attempt, record) => {
-        const reply = await p.generate(m, req, attempt.signal);
-        attempt.stop();
-        record("ok", reply.usage);
-        return reply.text;
-      });
+      const { value, model } = await overChain(settings, req, signal, whole(req));
       return { text: value, model };
     },
-
     stream: async (req, signal) => {
-      const { value, model } = await overChain(req, signal, async (p, m, attempt, record, end) => {
-        const source = p.stream(m, req, attempt.signal)[Symbol.asyncIterator]();
-        const first = await source.next();
-        // The first words are in; the rest may take whatever the budget has left.
-        attempt.arm(Math.max(1, end - performance.now()));
-        return relay(source, first, attempt, record);
-      });
+      const { value, model } = await overChain(settings, req, signal, streamed(req));
       return { model, chunks: value };
     },
   };

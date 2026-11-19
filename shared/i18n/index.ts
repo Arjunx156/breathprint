@@ -22,6 +22,11 @@ export function t(lang: Language, key: MessageKey, vars: Vars = {}): string {
   );
 }
 
+/** For keys built at run time, such as `aqi.${scale}.${category}`: a key with no string reads as itself. */
+export function tx(lang: Language, key: string, vars?: Vars): string {
+  return isMessageKey(key) ? t(lang, key, vars) : key;
+}
+
 /** Placeholder names a string expects, for checking translations agree. */
 export function placeholders(lang: Language, key: MessageKey): string[] {
   return [...MESSAGES[lang][key].matchAll(/\{(\w+)\}/g)].map((m) => m[1] as string).sort();

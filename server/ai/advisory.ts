@@ -9,14 +9,12 @@ import {
   SHARED_ACTION,
 } from "../../shared/community";
 import { short } from "../../shared/format";
-import { isMessageKey, t } from "../../shared/i18n";
-import { inScript } from "../../shared/i18n/script";
+import { tx } from "../../shared/i18n";
 import type { Language } from "../../shared/profile";
 import type { LlmRequest } from "../llm/types";
 import { airFacts, numbersIn } from "./grounding";
-import { ungrounded } from "./guard";
-import { advisorySystem, block, wrongLanguage } from "./prompts";
-import { type Parsed, parseJson } from "./structured";
+import { advisorySystem, block } from "./prompts";
+import { type Parsed, parseShaped, proseIssues, verdict } from "./structured";
 
 const ADVISORY_JSON_SCHEMA = {
   type: "object",
@@ -36,8 +34,6 @@ const AUDIENCE_NAME: Record<Audience, string> = {
   workplace: "a workplace",
 };
 
-const text = (lang: Language, key: string) => (isMessageKey(key) ? t(lang, key) : key);
-
 export type AdvisoryCall = { req: LlmRequest; allowed: number[]; lang: Language };
 
 export function advisoryRequest(
@@ -50,12 +46,12 @@ export function advisoryRequest(
     air: airFacts(ctx),
     actions: AUDIENCE_ACTIONS[audience].map((id) => ({
       id,
-      title: text(lang, `action.${id}.title`),
-      how: text(lang, `action.${id}.detail`),
+      title: tx(lang, `action.${id}.title`),
+      how: tx(lang, `action.${id}.detail`),
     })),
     community: together && {
       households: together.households,
-      sharedAction: text("en", `action.${SHARED_ACTION[audience]}.title`),
+      sharedAction: tx("en", `action.${SHARED_ACTION[audience]}.title`),
       keptOutOfTheAirEachDay: {
         co2kg: together.co2kg ? short(together.co2kg.mid) : null,
         pm25g: together.pm25g ? short(together.pm25g.mid) : null,
@@ -85,21 +81,10 @@ export function advisoryRequest(
 /** Reads a reply as an advisory, rejecting any figure not in the data or words in the wrong language. */
 export function readAdvisory({ allowed, lang }: Omit<AdvisoryCall, "req">) {
   return (reply: string): Parsed<Advisory> => {
-    const json = parseJson(reply);
-    if (!json.ok) return json;
-    const shaped = AdvisorySchema.safeParse(json.value);
-    if (!shaped.success) {
-      return {
-        ok: false,
-        issues: shaped.error.issues.map((i) => `${i.path.join(".") || "advisory"}: ${i.message}`),
-      };
-    }
-    const a = shaped.data;
+    const shaped = parseShaped(reply, AdvisorySchema, "advisory");
+    if (!shaped.ok) return shaped;
+    const a = shaped.value;
     const words = [a.headline, a.situation, ...a.do, ...a.avoid, a.sensitive].join("\n");
-    const issues = ungrounded(words, allowed).map(
-      (f) => `"${f}" is not in the data; use only figures written there.`,
-    );
-    if (!inScript(words, lang)) issues.push(wrongLanguage(lang));
-    return issues.length > 0 ? { ok: false, issues } : { ok: true, value: a };
+    return verdict(a, proseIssues(words, allowed, lang));
   };
 }

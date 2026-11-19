@@ -15,5 +15,12 @@ export function short(n: number): string {
 /** Whole rupees grouped the Indian way, so 3500 reads 3,500 and 120000 reads 1,20,000. */
 export const rupees = (n: number) => Math.round(Math.abs(n)).toLocaleString("en-IN");
 
+const DEVANAGARI_DIGITS = /[०-९]/g;
+const DEVANAGARI_ZERO = "०".charCodeAt(0);
+
+/** Hindi text may write ४२ for 42; this reads every digit the Latin way. */
+export const latinDigits = (text: string) =>
+  text.replace(DEVANAGARI_DIGITS, (d) => String(d.charCodeAt(0) - DEVANAGARI_ZERO));
+
 /** HH:MM from a local YYYY-MM-DDTHH:MM time. */
 export const clock = (time: string) => time.slice(11, 16);

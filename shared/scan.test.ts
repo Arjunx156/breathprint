@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { defaultProfile, MEERA } from "./profile";
 import {
+  distinctSightings,
   homeAfter,
   homeChanges,
   type Scan,
@@ -25,6 +26,17 @@ describe("room scan", () => {
       "stove-no-chimney",
     ]);
     expect(sightingsOf(scan("notRoom", "incense"))).toEqual([]);
+  });
+
+  test("keeps the first note for a kind seen twice", () => {
+    const seen: Scan = {
+      room: "kitchen",
+      sightings: [
+        { kind: "incense", where: "on the shelf" },
+        { kind: "incense", where: "by the door" },
+      ],
+    };
+    expect(distinctSightings(seen)).toEqual([{ kind: "incense", where: "on the shelf" }]);
   });
 
   test("turns sightings into the household's own answers", () => {

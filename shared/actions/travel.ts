@@ -47,6 +47,10 @@ function motorTrip(trip: Trip | null): trip is Trip & { mode: Motor } {
   return trip !== null && MOTOR.has(trip.mode);
 }
 
+/** An action's impact on one of the household's trips, or none when there is no such trip. */
+const onTrip = (trip: Trip | null, measure: (trip: Trip) => Impact): Impact =>
+  trip ? measure(trip) : impact({});
+
 type Switch = { to: "metro" | "bus"; co2: FactorId; fare: FactorId; wear: FactorId | null };
 
 const SWITCHES: Record<"metro" | "bus", Switch> = {
@@ -155,7 +159,8 @@ export const carpool: ActionDef = {
   quantified: true,
   appliesTo: (ctx) => tripMembers(ctx, ctx.profile.commute),
   eligible: (ctx) => ctx.profile.commute?.mode === "car",
-  impact: (ctx) => carKmImpact(() => roundTrip(ctx.profile.commute as Trip) / 2, "method.carpool"),
+  impact: (ctx) =>
+    onTrip(ctx.profile.commute, (trip) => carKmImpact(() => roundTrip(trip) / 2, "method.carpool")),
 };
 
 export const schoolCarpool: ActionDef = {
@@ -169,7 +174,9 @@ export const schoolCarpool: ActionDef = {
   appliesTo: (ctx) => tripMembers(ctx, ctx.profile.schoolRun),
   eligible: (ctx) => ctx.profile.schoolRun?.mode === "car",
   impact: (ctx) =>
-    carKmImpact(() => (roundTrip(ctx.profile.schoolRun as Trip) * 2) / 3, "method.rota"),
+    onTrip(ctx.profile.schoolRun, (trip) =>
+      carKmImpact(() => (roundTrip(trip) * 2) / 3, "method.rota"),
+    ),
 };
 
 export const combineErrands: ActionDef = {
@@ -211,6 +218,33 @@ export const engineOff: ActionDef = {
   },
 };
 
+/** What leaving a motor vehicle at home saves the street and the wallet; nothing for other modes. */
+function motorSavings(trip: Trip) {
+  if (!motorTrip(trip)) return { co2kg: null, pm25g: null, inrPerDay: null };
+  const km = roundTrip(trip);
+  return {
+    co2kg: ranged((p) => km * co2PerKm(trip.mode, p)),
+    pm25g: ranged((p) => km * wearPerKm(trip.mode, p)),
+    inrPerDay: ranged((p) => km * inrPerKm(trip.mode, p)),
+  };
+}
+
+/** Both legs of a commute not made: the dose the commuters skip and what the vehicle doesn't burn. */
+function stayHomeImpact(ctx: Context, trip: Trip): Impact {
+  const commuters = tripMembers(ctx, trip);
+  const model = (p: Pick) => total(commuters.map((m) => tripExposure(ctx, m, trip, trip.mode, p)));
+  return protectImpact(ctx, commuters, model, {
+    ...motorSavings(trip),
+    method: [
+      {
+        label: "method.tripDose",
+        formula: "both legs of the commute, not made",
+        result: `${short(model(pickMid).dose)} µg`,
+      },
+    ],
+  });
+}
+
 export const workFromHome: ActionDef = {
   id: "work-from-home",
   group: "commute",
@@ -225,26 +259,7 @@ export const workFromHome: ActionDef = {
     ctx.profile.commute !== null &&
     ctx.profile.commute.mode !== "none" &&
     healthLevel(ctx.air.today.mean) >= 4,
-  impact: (ctx) => {
-    const trip = ctx.profile.commute as Trip;
-    const commuters = tripMembers(ctx, trip);
-    const model = (p: Pick) =>
-      total(commuters.map((m) => tripExposure(ctx, m, trip, trip.mode, p)));
-    const motor = motorTrip(trip);
-    const km = roundTrip(trip);
-    return protectImpact(ctx, commuters, model, {
-      co2kg: motor ? ranged((p) => km * co2PerKm(trip.mode as Motor, p)) : null,
-      pm25g: motor ? ranged((p) => km * wearPerKm(trip.mode as Motor, p)) : null,
-      inrPerDay: motor ? ranged((p) => km * inrPerKm(trip.mode as Motor, p)) : null,
-      method: [
-        {
-          label: "method.tripDose",
-          formula: "both legs of the commute, not made",
-          result: `${short(model(pickMid).dose)} µg`,
-        },
-      ],
-    });
-  },
+  impact: (ctx) => onTrip(ctx.profile.commute, (trip) => stayHomeImpact(ctx, trip)),
 };
 
 /** N95 or FFP2 on open-air legs. Infants never wear masks. */
@@ -281,7 +296,7 @@ export const maskSchoolRun: ActionDef = {
   quantified: true,
   appliesTo: (ctx) => tripMembers(ctx, ctx.profile.schoolRun, { masks: true }),
   eligible: (ctx) => openTrip(ctx, ctx.profile.schoolRun),
-  impact: (ctx) => maskImpact(ctx, ctx.profile.schoolRun as Trip),
+  impact: (ctx) => onTrip(ctx.profile.schoolRun, (trip) => maskImpact(ctx, trip)),
 };
 
 export const maskCommute: ActionDef = {
@@ -294,7 +309,7 @@ export const maskCommute: ActionDef = {
   quantified: true,
   appliesTo: (ctx) => tripMembers(ctx, ctx.profile.commute, { masks: true }),
   eligible: (ctx) => openTrip(ctx, ctx.profile.commute),
-  impact: (ctx) => maskImpact(ctx, ctx.profile.commute as Trip),
+  impact: (ctx) => onTrip(ctx.profile.commute, (trip) => maskImpact(ctx, trip)),
 };
 
 export const carRecirculate: ActionDef = {

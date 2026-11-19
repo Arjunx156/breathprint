@@ -10,7 +10,7 @@ import { scriptedLlm } from "../server/llm/fake";
 import { type Llm, LlmUnavailable } from "../server/llm/llm";
 import { cleanText } from "../shared/answer";
 import { type Advisory, collective, typicalHousehold } from "../shared/community";
-import { forModel, MEERA, type Profile } from "../shared/profile";
+import { forModel, type Language, MEERA, type Profile } from "../shared/profile";
 import { sightingsOf } from "../shared/scan";
 import { cleanDay, severeDay } from "../shared/testing";
 import type { AdvisoryCase, Air, Case, ChatCase, ChatExpect, PlanCase, ScanCase } from "./cases";
@@ -66,19 +66,19 @@ const rejected = (err: InvalidReply): Scored => ({
   ],
 });
 
+/** What every structured reply is held to: it parsed first time, in one plain language. */
+const structuredChecks = (words: string, lang: Language, repaired: boolean): Check[] => [
+  passed("valid"),
+  { name: "first try", pass: !repaired },
+  languageMatches(words, lang),
+  oneLanguage(words),
+  readable(words),
+];
+
 async function plan(llm: Llm, c: PlanCase): Promise<Scored> {
   const { value, model, repaired } = await personalPlan(llm, dayFor(c.profile, c.air), c.lang);
   const words = [value.headline, ...value.steps.map((s) => s.reason)].join("\n");
-  return {
-    model,
-    checks: [
-      passed("valid"),
-      { name: "first try", pass: !repaired },
-      languageMatches(words, c.lang),
-      oneLanguage(words),
-      readable(words),
-    ],
-  };
+  return { model, checks: structuredChecks(words, c.lang, repaired) };
 }
 
 type Windows = Parameters<typeof suggestsTime>[1];
@@ -120,7 +120,7 @@ async function chat(llm: Llm, c: ChatCase): Promise<Scored> {
   };
 }
 
-export const advisoryText = (a: Advisory) =>
+const advisoryText = (a: Advisory) =>
   [a.headline, a.situation, ...a.do, ...a.avoid, a.sensitive].join("\n");
 
 async function advisory(llm: Llm, c: AdvisoryCase): Promise<Scored> {
@@ -132,17 +132,13 @@ async function advisory(llm: Llm, c: AdvisoryCase): Promise<Scored> {
   return {
     model,
     checks: [
-      passed("valid"),
-      { name: "first try", pass: !repaired },
-      languageMatches(words, c.lang),
-      oneLanguage(words),
-      readable(words),
+      ...structuredChecks(words, c.lang, repaired),
       ...(c.channel === "whatsapp" ? [charsAtMost(words, WHATSAPP_CHARS)] : []),
     ],
   };
 }
 
-export const photoData = async (photo: string) =>
+const photoData = async (photo: string) =>
   Buffer.from(await Bun.file(`evals/photos/${photo}.jpg`).arrayBuffer()).toString("base64");
 
 async function scan(llm: Llm, c: ScanCase): Promise<Scored> {

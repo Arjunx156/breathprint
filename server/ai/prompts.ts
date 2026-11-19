@@ -9,7 +9,7 @@ export const PROMPT_VERSION = "2026-11-18.16";
 export const DANGER_SIGNS =
   "breathlessness, chest pain, wheezing that does not settle, confusion or blue lips";
 
-export const LANGUAGE_NAME: Record<Language, string> = {
+const LANGUAGE_NAME: Record<Language, string> = {
   en: "plain English",
   hi: "simple everyday Hindi in Devanagari script",
 };
@@ -110,7 +110,7 @@ ${DATA_RULE}`;
 }
 
 /** What each sighting means, so the model and the evals read the list the same way. */
-export const SIGHTING_GUIDE = `incense: incense or agarbatti sticks, lit or not, or a holder with ash.
+const SIGHTING_GUIDE = `incense: incense or agarbatti sticks, lit or not, or a holder with ash.
 mosquito-coil: a mosquito coil or its stand.
 stove-no-chimney: a cooking hob or stove with no chimney or extractor hood above it.
 chimney: a kitchen chimney or extractor hood.

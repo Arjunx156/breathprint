@@ -1,4 +1,4 @@
-import { isMessageKey, type MessageKey, t as translate, type Vars } from "@shared/i18n";
+import { type MessageKey, t as translate, tx as translateAny, type Vars } from "@shared/i18n";
 import { type Language, MEERA, type Profile, ProfileSchema } from "@shared/profile";
 import {
   createContext,
@@ -47,22 +47,8 @@ function browserLanguage(): Language {
   return navigator.language.toLowerCase().startsWith("hi") ? "hi" : "en";
 }
 
-/**
- * The household, demo mode and what's been done today. All of it lives in
- * this browser; nothing here is sent anywhere until a model is asked.
- */
-export function AppProvider({ children }: { children: ReactNode }) {
-  const [demo, setDemo] = useState(demoRequested);
-  const [stored, setStored] = useState(() => load(KEYS.profile, ProfileSchema));
-  const [demoProfile, setDemoProfile] = useState<Profile>(MEERA);
-  const [doneIds, setDoneIds] = useState<string[]>(() => {
-    const saved = load(KEYS.done, DoneSchema);
-    return saved?.day === today() ? saved.ids : [];
-  });
-
-  const profile = demo ? demoProfile : stored;
-  const wanted = profile?.language ?? browserLanguage();
-  // Until the Hindi strings arrive, the page stays in English rather than go blank.
+/** The language to show: the household's own once its strings are here, English until then. */
+function usePageLanguage(wanted: Language) {
   const lang = useLanguageReady(wanted) ? wanted : "en";
   // A Hindi reader's first paint waits the moment it takes, so it never starts in English.
   const [booted, setBooted] = useState(lang === wanted);
@@ -71,6 +57,44 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.lang = lang;
   }, [lang]);
+
+  return { lang, booted };
+}
+
+/** Steps marked done today. A new day starts empty, and the demo never saves. */
+function useDoneToday(demo: boolean) {
+  const [ids, setIds] = useState<string[]>(() => {
+    const saved = load(KEYS.done, DoneSchema);
+    return saved?.day === today() ? saved.ids : [];
+  });
+
+  const toggle = useCallback(
+    (id: string) => {
+      setIds((current) => {
+        const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
+        if (!demo) save(KEYS.done, { day: today(), ids: next });
+        return next;
+      });
+    },
+    [demo],
+  );
+
+  const clear = useCallback(() => setIds([]), []);
+  return { ids, toggle, clear };
+}
+
+/**
+ * The household, demo mode and what's been done today. All of it lives in
+ * this browser; nothing here is sent anywhere until a model is asked.
+ */
+export function AppProvider({ children }: { children: ReactNode }) {
+  const [demo, setDemo] = useState(demoRequested);
+  const [stored, setStored] = useState(() => load(KEYS.profile, ProfileSchema));
+  const [demoProfile, setDemoProfile] = useState<Profile>(MEERA);
+  const profile = demo ? demoProfile : stored;
+  const { lang, booted } = usePageLanguage(profile?.language ?? browserLanguage());
+  const done = useDoneToday(demo);
+  const clearDone = done.clear;
 
   const saveProfile = useCallback(
     (next: Profile) => {
@@ -86,8 +110,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     remove(KEYS.done);
     remove(KEYS.aiPlan);
     setStored(null);
-    setDoneIds([]);
-  }, []);
+    clearDone();
+  }, [clearDone]);
 
   const exitDemo = useCallback(() => {
     try {
@@ -96,20 +120,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Session storage blocked; leaving demo mode in memory is enough.
     }
     setDemo(false);
-    setDoneIds([]);
+    clearDone();
     history.replaceState(null, "", "/");
-  }, []);
-
-  const toggleDone = useCallback(
-    (id: string) => {
-      setDoneIds((ids) => {
-        const next = ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id];
-        if (!demo) save(KEYS.done, { day: today(), ids: next });
-        return next;
-      });
-    },
-    [demo],
-  );
+  }, [clearDone]);
 
   const value = useMemo<AppState>(
     () => ({
@@ -117,14 +130,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       demo,
       lang,
       t: (key, vars) => translate(lang, key, vars),
-      tx: (key, vars) => (isMessageKey(key) ? translate(lang, key, vars) : key),
+      tx: (key, vars) => translateAny(lang, key, vars),
       saveProfile,
       forget,
       exitDemo,
-      done: new Set(doneIds),
-      toggleDone,
+      done: new Set(done.ids),
+      toggleDone: done.toggle,
     }),
-    [profile, demo, lang, saveProfile, forget, exitDemo, doneIds, toggleDone],
+    [profile, demo, lang, saveProfile, forget, exitDemo, done.ids, done.toggle],
   );
 
   return <Ctx.Provider value={value}>{booted && children}</Ctx.Provider>;

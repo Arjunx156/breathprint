@@ -3,8 +3,10 @@
  * social cards. Vercel sets VERCEL_PROJECT_PRODUCTION_URL during its builds;
  * SITE_URL overrides it for any other host; local builds point at localhost.
  */
+const TRAILING_SLASHES = /\/+$/;
+
 export function siteUrl(env: Record<string, string | undefined> = process.env): string {
-  if (env.SITE_URL) return env.SITE_URL.replace(/\/+$/, "");
+  if (env.SITE_URL) return env.SITE_URL.replace(TRAILING_SLASHES, "");
   if (env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`;
   return `http://localhost:${env.PORT ?? 8787}`;
 }

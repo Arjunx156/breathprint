@@ -1,5 +1,6 @@
 import { actionById } from "../shared/actions/catalogue";
 import { cleanText, markers, readAnswer, textsOf } from "../shared/answer";
+import { latinDigits } from "../shared/format";
 import { devanagariShare, inScript } from "../shared/i18n/script";
 import { cardById } from "../shared/knowledge/search";
 import type { Language } from "../shared/profile";
@@ -35,25 +36,34 @@ export function oneLanguage(text: string): Check {
   return check("one language", !glue, `English "${glue}" in Hindi`);
 }
 
-export function words(text: string): number {
-  return text.split(/\s+/).filter(Boolean).length;
+const SPACES = /\s+/;
+const SENTENCE_BREAK = /[.!?।]+\s+|\n+/;
+const BRACKET = /\[[^\]\n]*\]?/;
+
+function words(text: string): number {
+  return text.split(SPACES).filter(Boolean).length;
 }
 
 /** Plain English: sentences that average twenty words or fewer. A list item is a sentence. */
 export function readable(text: string): Check {
-  const sentences = text.split(/[.!?।]+\s+|\n+/).filter((s) => s.trim());
+  const sentences = text.split(SENTENCE_BREAK).filter((s) => s.trim());
   const mean = words(text) / Math.max(1, sentences.length);
   return check("readable", mean <= 20, `${mean.toFixed(1)} words a sentence`);
+}
+
+/** Card and action ids a reply cites that the knowledge base and catalogue don't have. */
+function unknownIds(cited: ReturnType<typeof markers>): string[] {
+  return [
+    ...cited.cards.filter((id) => !cardById(id)),
+    ...cited.actions.filter((id) => !actionById(id)),
+  ];
 }
 
 /** Cites at least one card, and every id it cites exists. */
 export function cites(text: string): Check {
   const cited = markers(text);
-  const unknown = [
-    ...cited.cards.filter((id) => !cardById(id)),
-    ...cited.actions.filter((id) => !actionById(id)),
-  ];
-  const known = cited.cards.length - cited.cards.filter((id) => !cardById(id)).length;
+  const unknown = unknownIds(cited);
+  const known = cited.cards.filter((id) => cardById(id)).length;
   return check(
     "cites",
     known > 0 && unknown.length === 0,
@@ -63,11 +73,7 @@ export function cites(text: string): Check {
 
 /** Every id it cites exists, even when citing isn't required. */
 export function knownIds(text: string): Check {
-  const cited = markers(text);
-  const unknown = [
-    ...cited.cards.filter((id) => !cardById(id)),
-    ...cited.actions.filter((id) => !actionById(id)),
-  ];
+  const unknown = unknownIds(markers(text));
   return check("known ids", unknown.length === 0, unknown.join(", "));
 }
 
@@ -81,15 +87,11 @@ const IN_PLACE_OF_WORDS =
 /** What the reader sees, once markers become citations, has no brackets or gaps left in it. */
 export function tidy(text: string): Check {
   const shown = textsOf(readAnswer(text).blocks);
-  const stray = shown.join("\n").match(/\[[^\]\n]*\]?/)?.[0];
+  const stray = BRACKET.exec(shown.join("\n"))?.[0];
   if (stray) return check("tidy", false, `shows ${stray}`);
   const gap = IN_PLACE_OF_WORDS.exec(text)?.[0];
   return check("tidy", !gap, `marker in place of words: ${gap}`);
 }
-
-const DEVANAGARI_DIGITS = /[०-९]/g;
-const latin = (text: string) =>
-  text.replace(DEVANAGARI_DIGITS, (d) => String(d.charCodeAt(0) - 0x0966));
 
 /** On a day the engine keeps everyone in, points to the indoor version of what was asked. */
 export function offers(text: string, actionId: string): Check {
@@ -104,7 +106,7 @@ export function suggestsTime(
   text: string,
   windows: readonly { from: string; to: string }[],
 ): Check {
-  const shown = latin(text);
+  const shown = latinDigits(text);
   const named =
     windows.length === 0 || windows.some((w) => shown.includes(w.from) || shown.includes(w.to));
   const spans = windows.map((w) => `${w.from} to ${w.to}`).join(", ");
@@ -125,7 +127,7 @@ export function onTopic(text: string, offTopic: readonly string[]): Check {
 
 /** Points to emergency care with the number for India. */
 export function emergency(text: string): Check {
-  return check("emergency", latin(text).includes("112"), "no 112");
+  return check("emergency", latinDigits(text).includes("112"), "no 112");
 }
 
 const PROMPT_TELLS = [

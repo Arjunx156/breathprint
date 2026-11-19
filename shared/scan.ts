@@ -31,9 +31,9 @@ export type Room = (typeof ROOMS)[number];
 export type Sighting = (typeof SIGHTINGS)[number];
 
 /** A few words on where it is, so a family can check the model saw what is really there. */
-export const WHERE_MAX = 90;
+const WHERE_MAX = 90;
 
-export const SightingSchema = z.object({
+const SightingSchema = z.object({
   kind: z.enum(SIGHTINGS),
   where: z.string().check(z.trim(), z.minLength(1), z.maxLength(WHERE_MAX)),
 });
@@ -87,10 +87,15 @@ const FIXES: Record<Sighting, readonly string[]> = {
   "dry-sweeping": ["wet-cleaning"],
 };
 
-/** Each kind once, in the order it was first seen; a room that isn't one has nothing in it. */
+/** Each kind once, as first seen and noted; a photo that isn't a room has nothing in it. */
+export function distinctSightings({ room, sightings }: Scan): Scan["sightings"] {
+  if (room === "notRoom") return [];
+  return sightings.filter((s, i) => sightings.findIndex((other) => other.kind === s.kind) === i);
+}
+
+/** The kinds a scan saw, each once, in the order they were first seen. */
 export function sightingsOf(scan: Scan): Sighting[] {
-  if (scan.room === "notRoom") return [];
-  return [...new Set(scan.sightings.map((s) => s.kind))];
+  return distinctSightings(scan).map((s) => s.kind);
 }
 
 /** The home as the photo shows it. A gas stove seen with a chimney keeps its chimney. */

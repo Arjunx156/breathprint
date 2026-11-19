@@ -153,11 +153,6 @@ export function legDose(
   return leg(member, mode, km, ambient, pick).dose;
 }
 
-export function membersOn(profile: Profile, trip: Trip | null): Member[] {
-  if (!trip) return [];
-  return profile.members.filter((m) => trip.who.includes(m.id));
-}
-
 const toHours = (clock: string) => Number(clock.slice(0, 2)) + Number(clock.slice(3, 5)) / 60;
 
 /** Hours a member spends away from home on their trips, assuming they stay indoors there. */

@@ -1,5 +1,5 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { type Browser, chromium } from "playwright-core";
+import { type Browser, chromium } from "@playwright/test";
 import { summarize } from "../shared/air";
 import { aqi } from "../shared/aqi";
 import { DEMO_DAY, delhiMorning, delhiSevereSnapshot } from "../shared/fixtures";

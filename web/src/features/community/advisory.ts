@@ -1,9 +1,17 @@
-import type { Advisory, Audience, Channel, Collective } from "@shared/community";
+import type { AirSummary } from "@shared/air";
+import {
+  type Advisory,
+  type Audience,
+  type Channel,
+  type Collective,
+  collective,
+  templateAdvisory,
+} from "@shared/community";
 import { short } from "@shared/format";
 import { t as translate } from "@shared/i18n";
 import { coarse, type Language, type Profile } from "@shared/profile";
 import { type AdvisoryReply, AdvisoryReplySchema } from "@shared/replies";
-import { client, failure } from "../../lib/api";
+import { client, replyOf } from "../../lib/api";
 
 export type Inputs = { audience: Audience; channel: Channel; households: number; lang: Language };
 export type Written = Inputs & {
@@ -22,14 +30,30 @@ export async function fetchAdvisory(
 ): Promise<AdvisoryReply> {
   const place = { ...input.place, lat: coarse(input.place.lat), lon: coarse(input.place.lon) };
   const res = await client.api.advisory.$post({ json: { ...input, place } }, { init: { signal } });
-  if (!res.ok) throw await failure(res);
-  return AdvisoryReplySchema.parse(await res.json());
+  return replyOf(res, AdvisoryReplySchema);
 }
 
 /** A whole number of households in range, or null for anything else typed. */
 export function householdsOf(raw: string): number | null {
   const n = Number(raw);
   return Number.isInteger(n) && n >= 1 && n <= MAX_HOUSEHOLDS ? n : null;
+}
+
+/** Breathprint's own advisory for what the form asks, ready before anyone presses Write. */
+export function draftOf(
+  ask: Omit<Inputs, "households"> & { households: number | null },
+  summary: AirSummary,
+  profile: Profile,
+): Written {
+  const { audience, lang, households } = ask;
+  return {
+    ...ask,
+    households: households ?? 1,
+    advisory: templateAdvisory(lang, summary, profile.place, profile.scale, audience),
+    collective:
+      households === null ? null : collective(summary, profile.place, audience, households),
+    by: "template",
+  };
 }
 
 /** Whether a written advisory still answers what the form asks for. */

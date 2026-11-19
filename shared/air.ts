@@ -1,6 +1,7 @@
 import { z } from "zod/mini";
 import { type AqiReading, aqi, healthLevel, type Level, nowcast } from "./aqi";
 import { THRESHOLDS } from "./factors";
+import { isNonEmpty, itemAt, lastOf, type NonEmpty } from "./list";
 
 const localHour = z.string().check(z.regex(/^\d{4}-\d{2}-\d{2}T\d{2}:00$/));
 const reading = z.nullable(z.number().check(z.gte(0), z.lte(5000)));
@@ -66,7 +67,7 @@ const FLAT_RATIO = 0.25;
 
 const round1 = (x: number) => Math.round(x * 10) / 10;
 
-export function mean(xs: readonly number[]): number {
+function mean(xs: readonly number[]): number {
   return xs.length === 0 ? 0 : xs.reduce((a, b) => a + b, 0) / xs.length;
 }
 
@@ -91,18 +92,19 @@ const pm25Of = (hours: readonly { pm25: number | null }[]) =>
 const pm10Of = (hours: readonly Hour[]) =>
   hours.map((h) => h.pm10).filter((v): v is number => v !== null);
 
-function runs(hours: readonly Hour[], keep: (h: Hour) => boolean): Hour[][] {
-  const out: Hour[][] = [];
+/** Unbroken stretches of hours that pass `keep`. */
+function runs(hours: readonly Hour[], keep: (h: Hour) => boolean): NonEmpty<Hour>[] {
+  const out: NonEmpty<Hour>[] = [];
   let current: Hour[] = [];
   for (const h of hours) {
     if (keep(h)) {
       current.push(h);
-    } else if (current.length > 0) {
+    } else if (isNonEmpty(current)) {
       out.push(current);
       current = [];
     }
   }
-  if (current.length > 0) out.push(current);
+  if (isNonEmpty(current)) out.push(current);
   return out;
 }
 
@@ -118,9 +120,9 @@ function resolveQuality(quality: Window["quality"], meanPm25: number): Window["q
   return meanPm25 <= THRESHOLDS.sensitiveCaution ? "clean" : "better";
 }
 
-function toWindow(run: readonly Hour[], quality: Window["quality"]): Window {
-  const first = run[0] as Hour;
-  const last = run[run.length - 1] as Hour;
+function toWindow(run: NonEmpty<Hour>, quality: Window["quality"]): Window {
+  const [first] = run;
+  const last = lastOf(run);
   const meanPm25 = round1(mean(pm25Of(run)));
   const resolved = resolveQuality(quality, meanPm25);
   return {
@@ -177,7 +179,7 @@ function groupByDay(hours: readonly Hour[]): Hour[][] {
 function currentReading(hours: readonly Hour[], index: number) {
   const past = hours.slice(Math.max(0, index - 23), index + 1);
   const newestFirst = [...past].reverse();
-  const here = hours[index] as Hour;
+  const here = itemAt(hours, index);
   const fine = nowcast(newestFirst.map((h) => h.pm25)) ?? here.pm25 ?? 0;
   const coarse = nowcast(newestFirst.map((h) => h.pm10)) ?? here.pm10;
   const fine24 = mean(pm25Of(past));
@@ -199,7 +201,7 @@ export function summarize(snapshot: AirSnapshot, nowMs: number): AirSummary {
   const now = localHourOf(nowMs, snapshot.utcOffsetSeconds);
   const index = indexOfNow(snapshot.hours, now);
   const ahead = snapshot.hours.slice(index, index + 48);
-  const todayKey = dayOf((snapshot.hours[index] as Hour).time);
+  const todayKey = dayOf(itemAt(snapshot.hours, index).time);
   const todayAll = snapshot.hours.filter((h) => dayOf(h.time) === todayKey);
   const todayValues = pm25Of(todayAll);
   const tomorrowHours = snapshot.hours.filter((h) => dayOf(h.time) > todayKey).slice(0, 24);

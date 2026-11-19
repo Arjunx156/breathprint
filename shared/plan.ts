@@ -204,7 +204,7 @@ export function timeFor(ctx: Context, action: ActionDef): string {
 }
 
 /** Keeps the best of each group of alternatives, in ranked order. */
-export function bestOfGroups(candidates: readonly Candidate[]): Candidate[] {
+function bestOfGroups(candidates: readonly Candidate[]): Candidate[] {
   const seen = new Set<string>();
   return candidates.filter((c) => {
     const g = c.action.group;

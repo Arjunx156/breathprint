@@ -3,13 +3,10 @@ import type { Context } from "@shared/actions/types";
 import { names } from "@shared/i18n";
 import { ruleReason } from "@shared/i18n/reason";
 import { alternativesFor, type DayPlan, type PlanStep, timeFor } from "@shared/plan";
-import { lazy, type ReactNode, Suspense, useEffect, useId, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useApp } from "../../app/state";
 import { Ledger } from "./Ledger";
-
-// The working and the sources behind a step load when someone reaches for them.
-const loadPanel = () => import("./ImpactPanel");
-const ImpactPanel = lazy(() => loadPanel().then((m) => ({ default: m.ImpactPanel })));
+import { NumbersButton, NumbersPanel, useNumbers } from "./Numbers";
 
 type Step = PlanStep & { origin: string; candidate: Candidate };
 /** Which alternative replaced which step, by the step's original action id. */
@@ -25,8 +22,7 @@ type ItemProps = {
 
 function StepItem({ ctx, step, alternatives, onSwap }: ItemProps) {
   const { t, tx, lang, done, toggleDone } = useApp();
-  const [open, setOpen] = useState(false);
-  const panelId = useId();
+  const numbers = useNumbers();
   const heading = useRef<HTMLHeadingElement>(null);
   const shown = useRef(step.actionId);
   const id = step.actionId;
@@ -65,17 +61,7 @@ function StepItem({ ctx, step, alternatives, onSwap }: ItemProps) {
             {t("plan.done")}
             <span className="sr-only">: {title}</span>
           </label>
-          <button
-            type="button"
-            className="link min-h-11 font-medium"
-            aria-expanded={open}
-            aria-controls={panelId}
-            onPointerEnter={loadPanel}
-            onFocus={loadPanel}
-            onClick={() => setOpen((v) => !v)}
-          >
-            {open ? t("plan.hideNumbers") : t("plan.numbers")}
-          </button>
+          <NumbersButton numbers={numbers} />
         </div>
 
         {alternatives.length > 0 && (
@@ -94,15 +80,13 @@ function StepItem({ ctx, step, alternatives, onSwap }: ItemProps) {
           </div>
         )}
 
-        <div id={panelId} hidden={!open} className="text-ink">
-          {open && (
-            <Suspense
-              fallback={<p className="mt-4 text-sm text-muted">{t("plan.loadingNumbers")}</p>}
-            >
-              <ImpactPanel ctx={ctx} candidate={step.candidate} time={step.time} />
-            </Suspense>
-          )}
-        </div>
+        <NumbersPanel
+          numbers={numbers}
+          ctx={ctx}
+          candidate={step.candidate}
+          time={step.time}
+          className="text-ink"
+        />
       </div>
     </li>
   );

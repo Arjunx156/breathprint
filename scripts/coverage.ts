@@ -24,7 +24,19 @@ export const ENTRY_POINTS: ReadonlySet<string> = new Set([
   "web/src/main.tsx",
 ]);
 
-export type Totals = { lines: [hit: number, found: number]; functions: [number, number] };
+type Count = [hit: number, found: number];
+export type Totals = { lines: Count; functions: Count };
+
+/** An lcov record is a tag, a colon, then the value, which may hold colons of its own. */
+const RECORD = /^([A-Z]+):(.*)$/;
+
+/** The running total each counting tag adds to. */
+const COUNTS: Readonly<Record<string, readonly [keyof Totals, 0 | 1]>> = {
+  LH: ["lines", 0],
+  LF: ["lines", 1],
+  FNH: ["functions", 0],
+  FNF: ["functions", 1],
+};
 
 const slashes = (path: string) => path.replaceAll("\\", "/");
 
@@ -33,21 +45,18 @@ export function totals(lcov: string, prefix: string): Totals {
   const sum: Totals = { lines: [0, 0], functions: [0, 0] };
   let inside = false;
   for (const raw of lcov.split("\n")) {
-    const [tag, value = ""] = raw.trim().split(":", 2) as [string, string?];
+    const [, tag = "", value = ""] = RECORD.exec(raw.trim()) ?? [];
     if (tag === "SF") inside = slashes(value).startsWith(prefix);
-    if (!inside) continue;
-    const n = Number(value);
-    if (tag === "LH") sum.lines[0] += n;
-    if (tag === "LF") sum.lines[1] += n;
-    if (tag === "FNH") sum.functions[0] += n;
-    if (tag === "FNF") sum.functions[1] += n;
+    const count = COUNTS[tag];
+    if (inside && count) sum[count[0]][count[1]] += Number(value);
   }
   return sum;
 }
 
-export const percent = ([hit, found]: [number, number]) => (found ? (hit / found) * 100 : 100);
+export const percent = ([hit, found]: Count) => (found ? (hit / found) * 100 : 100);
 
-const isTest = (path: string) => /\.(test|e2e)\.tsx?$|\.d\.ts$/.test(path);
+const NOT_SOURCE = /\.(test|e2e)\.tsx?$|\.d\.ts$/;
+const isTest = (path: string) => NOT_SOURCE.test(path);
 
 /**
  * Source files no test loaded. Bun only reports files a test imports, so

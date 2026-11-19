@@ -8,17 +8,17 @@ export type AirSource = {
 };
 
 export class UpstreamError extends Error {
-  constructor(
-    readonly service: string,
-    detail: string,
-  ) {
+  readonly service: string;
+
+  constructor(service: string, detail: string) {
     super(`${service}: ${detail}`);
     this.name = "UpstreamError";
+    this.service = service;
   }
 }
 
 /** Forecasts update hourly at best, so half an hour per cell is plenty fresh. */
-export const AIR_TTL_MS = 30 * 60_000;
+const AIR_TTL_MS = 30 * 60_000;
 
 /** Wraps a source so each grid cell is fetched at most once per TTL, however many ask. */
 export function cached(source: AirSource, ttlMs = AIR_TTL_MS): AirSource {

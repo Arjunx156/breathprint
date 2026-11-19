@@ -5,7 +5,7 @@ import { client, failure } from "../../lib/api";
 export type Turn = { role: "user" | "model"; text: string };
 
 /** The most recent turns that fit the API's limits, ending on the question. */
-export function wireTurns(turns: readonly Turn[]): Turn[] {
+function wireTurns(turns: readonly Turn[]): Turn[] {
   return turns
     .map((turn) => ({ role: turn.role, text: turn.text.trim().slice(0, MAX_CHARS) }))
     .filter((turn) => turn.text.length > 0)

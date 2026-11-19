@@ -10,7 +10,7 @@ const json = (body: unknown, status = 200) =>
 
 const OPEN_METEO = {
   timezone: "Asia/Kolkata",
-  utc_offset_seconds: 19800,
+  utc_offset_seconds: 19_800,
   hourly: {
     time: ["2026-11-18T00:00", "2026-11-18T01:00"],
     pm2_5: [301.24, null],

@@ -9,13 +9,14 @@ import { useEffect, useState } from "react";
  * import the real file and never come here.
  */
 
+/** @public Imported by shared/i18n in the browser build, through the alias in vite.config.ts. */
 export const hi = {} as Record<MessageKey, string>;
 
 let loading: Promise<void> | null = null;
 
-export const hindiLoaded = () => Object.keys(hi).length > 0;
+const hindiLoaded = () => Object.keys(hi).length > 0;
 
-export function loadHindi(): Promise<void> {
+function loadHindi(): Promise<void> {
   loading ??= import("@shared/i18n/hi").then((m) => {
     Object.assign(hi, m.hi);
   });

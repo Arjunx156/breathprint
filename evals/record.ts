@@ -34,7 +34,7 @@ if (env.LLM_PROVIDER === "fake") {
 }
 const llm = llmFromEnv(env, SILENT.log);
 const air = fixtureSource();
-const delayMs = Number(process.env.EVAL_DELAY_MS ?? 4_000);
+const delayMs = Number(process.env.EVAL_DELAY_MS ?? 4000);
 // Merged into what is there, so a run cut short by the quota loses nothing.
 const saved: Record<string, string> = await Bun.file(OUT).json();
 let first = true;

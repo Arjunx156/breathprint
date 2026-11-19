@@ -37,7 +37,7 @@ export function total(parts: readonly Exposure[]): Exposure {
 }
 
 /** Evaluates a protect model at low, mid and high factor values. */
-export function protectRanges(model: (pick: Pick) => Exposure): { dose: Range; exposure: Range } {
+function protectRanges(model: (pick: Pick) => Exposure): { dose: Range; exposure: Range } {
   const runs = {
     low: model(picker("low")),
     mid: model(picker("mid")),
@@ -60,7 +60,7 @@ const mid = picker("mid");
  * own smoke (incense, a coil) is added back to the day it is a share of;
  * otherwise a strong source on a clean day would read as more than 100%.
  */
-export function shareOfDay(
+function shareOfDay(
   ctx: Context,
   people: readonly Member[],
   doseMid: number,
@@ -106,7 +106,7 @@ export function bedroomGroup(ctx: Context): Member[] {
 const toMinutes = (clock: string) => Number(clock.slice(0, 2)) * 60 + Number(clock.slice(3, 5));
 
 /** Whether a member is out on one of their trips at a given clock time. */
-export function awayAt(profile: Profile, member: Member, clock: string): boolean {
+function awayAt(profile: Profile, member: Member, clock: string): boolean {
   const t = toMinutes(clock);
   return [profile.commute, profile.schoolRun].some(
     (trip) =>
@@ -171,10 +171,6 @@ export function runningCost(watts: FactorId, hours: number): Range {
 /** CO2 from an appliance's electricity, as a negative saving. */
 export function runningCo2(watts: FactorId, hours: number): Range {
   return ranged((p) => (-(p(watts) * hours) / 1000) * p("gridCo2PerKwh"));
-}
-
-export function fmtRange(r: Range): string {
-  return `${short(r.mid)} (${short(r.low)} to ${short(r.high)})`;
 }
 
 export { short };

@@ -8,25 +8,28 @@ type Entry<T> = { value: T; expires: number };
 export class TtlCache<T> {
   readonly #entries = new Map<string, Entry<T>>();
   readonly #pending = new Map<string, Promise<T>>();
+  readonly #ttlMs: number;
+  readonly #maxEntries: number;
+  readonly #now: () => number;
 
-  constructor(
-    private readonly ttlMs: number,
-    private readonly maxEntries = 500,
-    private readonly now: () => number = Date.now,
-  ) {}
+  constructor(ttlMs: number, maxEntries = 500, now: () => number = Date.now) {
+    this.#ttlMs = ttlMs;
+    this.#maxEntries = maxEntries;
+    this.#now = now;
+  }
 
   get(key: string): T | undefined {
     const hit = this.#entries.get(key);
     if (!hit) return undefined;
-    if (hit.expires > this.now()) return hit.value;
+    if (hit.expires > this.#now()) return hit.value;
     this.#entries.delete(key);
     return undefined;
   }
 
   set(key: string, value: T): void {
     this.#entries.delete(key);
-    this.#entries.set(key, { value, expires: this.now() + this.ttlMs });
-    while (this.#entries.size > this.maxEntries) {
+    this.#entries.set(key, { value, expires: this.#now() + this.#ttlMs });
+    while (this.#entries.size > this.#maxEntries) {
       const oldest = this.#entries.keys().next().value;
       if (oldest === undefined) break;
       this.#entries.delete(oldest);

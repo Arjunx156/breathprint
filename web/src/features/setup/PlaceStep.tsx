@@ -1,4 +1,4 @@
-import { coarse, type Place } from "@shared/profile";
+import { coarse, type Language, type Place } from "@shared/profile";
 import { useEffect, useState } from "react";
 import { useApp } from "../../app/state";
 import { TextField } from "../../components/fields";
@@ -11,13 +11,14 @@ type Search =
   | { status: "error" };
 
 const DEBOUNCE_MS = 300;
+const REGION = /^[A-Z]{2}$/;
 
 /** India's bounding box picks the India scale and rupee prices; elsewhere the browser's region does. */
 function countryAt(lat: number, lon: number): string {
   if (lat >= 6.5 && lat <= 35.7 && lon >= 68 && lon <= 97.5) return "IN";
   try {
     const region = new Intl.Locale(navigator.language).maximize().region;
-    return region && /^[A-Z]{2}$/.test(region) ? region : "US";
+    return region && REGION.test(region) ? region : "US";
   } catch {
     return "US";
   }
@@ -31,18 +32,9 @@ function statusKey(search: Search) {
   return null;
 }
 
-export function PlaceStep({
-  place,
-  onPlace,
-}: {
-  place: Place | null;
-  onPlace: (place: Place) => void;
-}) {
-  const { t, lang } = useApp();
-  const [query, setQuery] = useState("");
+/** Places matching what's typed, a moment after typing stops. */
+function usePlaceSearch(query: string, lang: Language): Search {
   const [search, setSearch] = useState<Search>({ status: "idle" });
-  const [locating, setLocating] = useState<"idle" | "busy" | "failed">("idle");
-
   useEffect(() => {
     const q = query.trim();
     if (q.length < 2) return setSearch({ status: "idle" });
@@ -60,7 +52,13 @@ export function PlaceStep({
       controller.abort();
     };
   }, [query, lang]);
+  return search;
+}
 
+/** Asks the browser where the household is, and rounds the answer before anyone sees it. */
+function useLocate(onPlace: (place: Place) => void) {
+  const { t } = useApp();
+  const [locating, setLocating] = useState<"idle" | "busy" | "failed">("idle");
   const locate = () => {
     if (!("geolocation" in navigator)) return setLocating("failed");
     setLocating("busy");
@@ -76,7 +74,40 @@ export function PlaceStep({
       { timeout: 10_000, maximumAge: 10 * 60_000 },
     );
   };
+  return { locating, locate };
+}
 
+const samePlace = (a: Place | null, b: Place) =>
+  a?.name === b.name && a.lat === b.lat && a.lon === b.lon;
+
+type Choose = { place: Place | null; onPlace: (place: Place) => void };
+
+/** The places a search found, the chosen one pressed. */
+function Results({ search, place, onPlace }: Choose & { search: Search }) {
+  if (search.status !== "done" || search.places.length === 0) return null;
+  return (
+    <ul className="mt-2 divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+      {search.places.map((p) => (
+        <li key={`${p.name}${p.lat}${p.lon}`}>
+          <button
+            type="button"
+            className="flex min-h-12 w-full items-center px-4 text-left hover:bg-bg aria-pressed:font-semibold"
+            aria-pressed={samePlace(place, p)}
+            onClick={() => onPlace(p)}
+          >
+            {p.name}
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function PlaceStep({ place, onPlace }: Choose) {
+  const { t, lang } = useApp();
+  const [query, setQuery] = useState("");
+  const search = usePlaceSearch(query, lang);
+  const { locating, locate } = useLocate(onPlace);
   const status = statusKey(search);
 
   return (
@@ -94,24 +125,7 @@ export function PlaceStep({
         <p role="status" className="mt-2 text-sm text-muted">
           {status && t(status)}
         </p>
-        {search.status === "done" && search.places.length > 0 && (
-          <ul className="mt-2 divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
-            {search.places.map((p) => (
-              <li key={`${p.name}${p.lat}${p.lon}`}>
-                <button
-                  type="button"
-                  className="flex min-h-12 w-full items-center px-4 text-left hover:bg-bg aria-pressed:font-semibold"
-                  aria-pressed={
-                    place?.name === p.name && place.lat === p.lat && place.lon === p.lon
-                  }
-                  onClick={() => onPlace(p)}
-                >
-                  {p.name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        <Results search={search} place={place} onPlace={onPlace} />
       </div>
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2">

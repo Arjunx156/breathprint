@@ -6,7 +6,7 @@ import { healthLevel } from "../../shared/aqi";
 import { THRESHOLDS } from "../../shared/factors";
 import { DEMO_DAY, delhiMorning, delhiSevereSnapshot } from "../../shared/fixtures";
 import { clock } from "../../shared/format";
-import { isMessageKey, t } from "../../shared/i18n";
+import { isMessageKey, t, tx } from "../../shared/i18n";
 import { ruleReason } from "../../shared/i18n/reason";
 import { CARDS } from "../../shared/knowledge/cards";
 import { search } from "../../shared/knowledge/search";
@@ -97,7 +97,7 @@ const AIR_FREELY = 1;
  * The engine's call on opening the windows, timed like the plan's own airing
  * step: inside the first clean window, and never in a peak.
  */
-export function airingCall(ctx: Context): string {
+function airingCall(ctx: Context): string {
   const a = ctx.air;
   const fine = healthLevel(a.current.pm25) <= AIR_FREELY;
   const w = a.windows[0];
@@ -124,7 +124,7 @@ export function airFacts(ctx: Context) {
     aqi: {
       scale: scale === "IN" ? "India NAQI" : "US AQI",
       value: reading.value,
-      category: t("en", `aqi.${scale}.${reading.category}` as never),
+      category: tx("en", `aqi.${scale}.${reading.category}`),
     },
     healthLevel: a.current.health,
     pm25Now: round(a.current.pm25),

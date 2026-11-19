@@ -1,9 +1,11 @@
 import { createHash } from "node:crypto";
 
+const OFFLINE_ASSET = /\.(js|css|woff2)$/;
+
 /** What a visitor needs offline: both pages, and the app's code, styles and fonts. */
 export function precacheList(assets: readonly string[]): string[] {
   const files = assets
-    .filter((name) => /\.(js|css|woff2)$/.test(name))
+    .filter((name) => OFFLINE_ASSET.test(name))
     .sort()
     .map((name) => `/assets/${name}`);
   return ["/", "/blog/", ...files];

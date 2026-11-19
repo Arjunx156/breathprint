@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { issueLines } from "./issues";
 
 /** Empty strings from a .env file mean "not set". */
 const optional = <T extends z.ZodType>(schema: T) =>
@@ -62,6 +63,6 @@ export type Env = z.infer<typeof EnvSchema>;
 export function loadEnv(source: Record<string, string | undefined> = process.env): Env {
   const parsed = EnvSchema.safeParse(source);
   if (parsed.success) return parsed.data;
-  const fields = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
+  const fields = issueLines(parsed.error.issues, "env").join("; ");
   throw new Error(`Invalid configuration. ${fields}`);
 }

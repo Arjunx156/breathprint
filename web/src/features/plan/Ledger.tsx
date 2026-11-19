@@ -6,7 +6,7 @@ import { useApp } from "../../app/state";
 export type Totals = { cig: number; co2: number; pm: number; inrPerDay: number; inrOnce: number };
 
 /** Central figures summed over a set of steps; negatives (a running cost, a worse trip) count against. */
-export function totals(steps: readonly Candidate[]): Totals {
+function totals(steps: readonly Candidate[]): Totals {
   const sum = (pick: (c: Candidate) => number) => steps.reduce((acc, c) => acc + pick(c), 0);
   return {
     cig: Math.max(0, sum((c) => c.impact.exposure?.mid ?? 0) / CIGARETTE_EXPOSURE),

@@ -1,6 +1,6 @@
 import { AUDIENCES, type Audience, CHANNELS, type Channel } from "@shared/community";
 import { GRID_KM, LANGUAGES, type Language } from "@shared/profile";
-import type { FormEvent } from "react";
+import type { SubmitEvent } from "react";
 import { useApp } from "../../app/state";
 import { Choice, TextField } from "../../components/fields";
 import { MAX_HOUSEHOLDS } from "./advisory";
@@ -13,7 +13,7 @@ type Props = {
   invalid: boolean;
   writing: boolean;
   onChange: (patch: Partial<Form>) => void;
-  onSubmit: (e: FormEvent) => void;
+  onSubmit: (e: SubmitEvent) => void;
 };
 
 /** Who the advisory is for, how it travels, and in which language. */

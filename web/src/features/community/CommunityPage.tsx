@@ -1,14 +1,18 @@
-import type { AirSummary } from "@shared/air";
-import { collective, templateAdvisory } from "@shared/community";
-import type { Profile } from "@shared/profile";
-import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { Redirect } from "wouter";
+import type { Language, Place } from "@shared/profile";
+import { type SubmitEvent, useMemo, useRef, useState } from "react";
 import { useApp } from "../../app/state";
-import { AirFailed, AirWaiting } from "../../components/AirStatus";
+import { type Air, AirPage } from "../../components/AirPage";
 import { useLanguageReady } from "../../lib/hindi";
-import { useAir } from "../../lib/useAir";
+import { useLatestRequest } from "../../lib/useLatestRequest";
 import { AdvisoryForm, type Form } from "./AdvisoryForm";
-import { fetchAdvisory, householdsOf, type Inputs, sameInputs, type Written } from "./advisory";
+import {
+  draftOf,
+  fetchAdvisory,
+  householdsOf,
+  type Inputs,
+  sameInputs,
+  type Written,
+} from "./advisory";
 import { Paper } from "./Paper";
 
 const NOTE = {
@@ -18,59 +22,38 @@ const NOTE = {
   template: "community.draft",
 } as const;
 
-function Community({ profile, summary }: { profile: Profile; summary: AirSummary }) {
-  const { t, lang: uiLang, demo } = useApp();
+/** The form opens on a WhatsApp message for a society of 120 households, in the page's language. */
+function useAdvisoryForm(pageLang: Language) {
   const [form, setForm] = useState<Form>({
     audience: "society",
     channel: "whatsapp",
     rawHouseholds: "120",
-    lang: uiLang,
+    lang: pageLang,
   });
+  const [invalid, setInvalid] = useState(false);
   // An English page can still write a Hindi advisory; its strings load on the way.
   useLanguageReady(form.lang);
-  const [invalid, setInvalid] = useState(false);
-  const [writing, setWriting] = useState(false);
-  const [written, setWritten] = useState<Written | null>(null);
-  const active = useRef<AbortController | null>(null);
-  const heading = useRef<HTMLHeadingElement>(null);
-  const { audience, channel, lang } = form;
-  const households = householdsOf(form.rawHouseholds);
-
-  useEffect(() => () => active.current?.abort(), []);
 
   const change = (patch: Partial<Form>) => {
     setForm((f) => ({ ...f, ...patch }));
     if (patch.rawHouseholds !== undefined && householdsOf(patch.rawHouseholds) !== null)
       setInvalid(false);
   };
+  return { form, invalid, setInvalid, change };
+}
 
-  // Breathprint's own advisory follows the form as it changes; Gemini's
-  // stays only while it still matches what was asked for.
-  const draft = useMemo<Written>(() => {
-    const n = households ?? 1;
-    return {
-      audience,
-      channel,
-      households: n,
-      lang,
-      advisory: templateAdvisory(lang, summary, profile.place, profile.scale, audience),
-      collective: households ? collective(summary, profile.place, audience, n) : null,
-      by: "template",
-    };
-  }, [audience, channel, households, lang, summary, profile]);
-  const current = written && sameInputs(written, draft) ? written : draft;
+/** Asks Gemini to write the advisory; on any failure it settles into Breathprint's own words. */
+function useWriter(place: Place, demo: boolean) {
+  const [writing, setWriting] = useState(false);
+  const [written, setWritten] = useState<Written | null>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const start = useLatestRequest();
 
-  const write = (e: FormEvent) => {
-    e.preventDefault();
-    if (households === null) return setInvalid(true);
-    setInvalid(false);
-    active.current?.abort();
-    const controller = new AbortController();
-    active.current = controller;
-    const inputs: Inputs = { audience, channel, households, lang };
+  const write = (inputs: Inputs, draft: Written) => {
+    const signal = start();
     setWriting(true);
     // Settles into an advisory either way, so nothing is left to await.
-    void fetchAdvisory({ ...inputs, place: profile.place, demo }, controller.signal)
+    void fetchAdvisory({ ...inputs, place, demo }, signal)
       .then(
         (reply): Written => ({
           ...inputs,
@@ -81,11 +64,54 @@ function Community({ profile, summary }: { profile: Profile; summary: AirSummary
       )
       .catch((): Written => ({ ...draft, ...inputs, by: "fallback" }))
       .then((result) => {
-        if (controller.signal.aborted) return;
+        if (signal.aborted) return;
         setWritten(result);
         setWriting(false);
         heading.current?.focus();
       });
+  };
+  return { writing, written, write, heading };
+}
+
+/** Gemini at work, or whose words the advisory below is in. */
+function WritingNote({ writing, by }: { writing: boolean; by: Written["by"] }) {
+  const { t } = useApp();
+  return (
+    <div aria-live="polite" className="mb-4 min-h-6 text-sm text-muted print:hidden">
+      {writing ? (
+        <p className="flex items-center gap-3">
+          <span
+            aria-hidden="true"
+            className="size-2 shrink-0 rounded-full bg-accent motion-safe:animate-pulse"
+          />
+          {t("community.writing")}
+        </p>
+      ) : (
+        <p>{t(NOTE[by])}</p>
+      )}
+    </div>
+  );
+}
+
+function Community({ profile, summary }: Air) {
+  const { t, lang: pageLang, demo } = useApp();
+  const { form, invalid, setInvalid, change } = useAdvisoryForm(pageLang);
+  const writer = useWriter(profile.place, demo);
+  const { audience, channel, lang } = form;
+  const households = householdsOf(form.rawHouseholds);
+
+  // Breathprint's own advisory follows the form as it changes; Gemini's
+  // stays only while it still matches what was asked for.
+  const draft = useMemo(
+    () => draftOf({ audience, channel, lang, households }, summary, profile),
+    [audience, channel, lang, households, summary, profile],
+  );
+  const current = writer.written && sameInputs(writer.written, draft) ? writer.written : draft;
+
+  const submit = (e: SubmitEvent) => {
+    e.preventDefault();
+    setInvalid(households === null);
+    if (households !== null) writer.write({ audience, channel, households, lang }, draft);
   };
 
   return (
@@ -101,42 +127,24 @@ function Community({ profile, summary }: { profile: Profile; summary: AirSummary
         <AdvisoryForm
           form={form}
           invalid={invalid}
-          writing={writing}
+          writing={writer.writing}
           onChange={change}
-          onSubmit={write}
+          onSubmit={submit}
         />
-
         <div>
-          <div aria-live="polite" className="mb-4 min-h-6 text-sm text-muted print:hidden">
-            {writing ? (
-              <p className="flex items-center gap-3">
-                <span
-                  aria-hidden="true"
-                  className="size-2 shrink-0 rounded-full bg-accent motion-safe:animate-pulse"
-                />
-                {t("community.writing")}
-              </p>
-            ) : (
-              <p>{t(NOTE[current.by])}</p>
-            )}
-          </div>
-          <Paper written={current} summary={summary} profile={profile} headingRef={heading} />
+          <WritingNote writing={writer.writing} by={current.by} />
+          <Paper
+            written={current}
+            summary={summary}
+            profile={profile}
+            headingRef={writer.heading}
+          />
         </div>
       </div>
     </div>
   );
 }
 
-function CommunityFor({ profile }: { profile: Profile }) {
-  const { demo } = useApp();
-  const air = useAir(profile.place, demo);
-  if (air.status === "loading") return <AirWaiting place={profile.place.name} />;
-  if (air.status === "error") return <AirFailed retry={air.retry} />;
-  return <Community profile={profile} summary={air.summary} />;
-}
-
 export default function CommunityPage() {
-  const { profile } = useApp();
-  if (!profile) return <Redirect to="/setup" replace />;
-  return <CommunityFor profile={profile} />;
+  return <AirPage page={Community} />;
 }

@@ -38,7 +38,11 @@ export class FakeUtterance {
   voice: unknown = null;
   onend: (() => void) | null = null;
   onerror: (() => void) | null = null;
-  constructor(readonly text: string) {}
+  readonly text: string;
+
+  constructor(text: string) {
+    this.text = text;
+  }
 }
 
 /** Installs a speaker with one Hindi voice; returns what it has been asked to say. */

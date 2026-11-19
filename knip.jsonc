@@ -1,0 +1,17 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  // What runs without being imported, beyond the package scripts, bunfig and index.html,
+  // which knip finds itself. Every other file and export must be reachable from these.
+  "entry": [
+    "server/vercel.ts",
+    "web/test/*.ts",
+    "scripts/*.ts",
+    "**/*.test.{ts,tsx}",
+    "tests/e2e/*.e2e.ts"
+  ],
+  "project": ["**/*.{ts,tsx}"],
+  // A type a module's own exports take or return is part of its API, so it stays exported.
+  "ignoreExportsUsedInFile": { "type": true },
+  // Both are imported by web/src/styles.css, which knip doesn't read.
+  "ignoreDependencies": ["@fontsource/instrument-serif", "tailwindcss"]
+}

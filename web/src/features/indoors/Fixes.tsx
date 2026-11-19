@@ -1,40 +1,24 @@
 import type { Candidate } from "@shared/actions/catalogue";
 import type { Context } from "@shared/actions/types";
 import { timeFor } from "@shared/plan";
-import { lazy, Suspense, useId, useState } from "react";
 import { useApp } from "../../app/state";
-
-const ImpactPanel = lazy(() =>
-  import("../plan/ImpactPanel").then((m) => ({ default: m.ImpactPanel })),
-);
+import { NumbersButton, NumbersPanel, useNumbers } from "../plan/Numbers";
 
 function Fix({ ctx, candidate }: { ctx: Context; candidate: Candidate }) {
-  const { t, tx } = useApp();
-  const [open, setOpen] = useState(false);
-  const panelId = useId();
+  const { tx } = useApp();
+  const numbers = useNumbers();
   const id = candidate.action.id;
   return (
     <li className="border-t border-line py-6">
       <h3 className="text-lg font-semibold leading-snug">{tx(`action.${id}.title`)}</h3>
       <p className="mt-1 max-w-prose">{tx(`action.${id}.detail`)}</p>
-      <button
-        type="button"
-        className="link mt-2 min-h-11 font-medium"
-        aria-expanded={open}
-        aria-controls={panelId}
-        onClick={() => setOpen((v) => !v)}
-      >
-        {open ? t("plan.hideNumbers") : t("plan.numbers")}
-      </button>
-      <div id={panelId} hidden={!open}>
-        {open && (
-          <Suspense
-            fallback={<p className="mt-4 text-sm text-muted">{t("plan.loadingNumbers")}</p>}
-          >
-            <ImpactPanel ctx={ctx} candidate={candidate} time={timeFor(ctx, candidate.action)} />
-          </Suspense>
-        )}
-      </div>
+      <NumbersButton numbers={numbers} className="mt-2" />
+      <NumbersPanel
+        numbers={numbers}
+        ctx={ctx}
+        candidate={candidate}
+        time={timeFor(ctx, candidate.action)}
+      />
     </li>
   );
 }

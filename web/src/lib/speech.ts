@@ -2,7 +2,7 @@ import type { Language } from "@shared/profile";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /** Indian English and Hindi, so "agarbatti" and "AQI" both come through. */
-export const SPEECH_LANG: Record<Language, string> = { en: "en-IN", hi: "hi-IN" };
+const SPEECH_LANG: Record<Language, string> = { en: "en-IN", hi: "hi-IN" };
 
 /** The slice of the Web Speech recogniser this app uses; TypeScript ships only its events. */
 type Recognizer = {

@@ -4,6 +4,7 @@ import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { $ZodError } from "zod/v4/core";
 import { InvalidReply } from "../ai/structured";
 import { UpstreamError } from "../air/source";
+import { issueLines } from "../issues";
 import { LlmUnavailable } from "../llm/llm";
 import { logger } from "../log";
 
@@ -43,7 +44,7 @@ const BY_STATUS: Partial<Record<number, ErrorCode>> = {
 export const onError: ErrorHandler = (err, c) => {
   // The base class, so schemas from zod/mini (shared with the browser) are caught too.
   if (err instanceof $ZodError) {
-    const detail = err.issues.map((i) => `${i.path.join(".") || "body"}: ${i.message}`).join("; ");
+    const detail = issueLines(err.issues, "body").join("; ");
     return apiError(c, 400, "bad_request", `Invalid request. ${detail}`.slice(0, 300));
   }
   if (err instanceof LlmUnavailable || err instanceof InvalidReply) {
@@ -66,13 +67,8 @@ export const onError: ErrorHandler = (err, c) => {
     );
   }
   if (err instanceof HTTPException) {
-    const status = err.status as ContentfulStatusCode;
-    return apiError(
-      c,
-      status,
-      BY_STATUS[status] ?? "bad_request",
-      err.message || "Request refused.",
-    );
+    const code = BY_STATUS[err.status] ?? "bad_request";
+    return apiError(c, err.status, code, err.message || "Request refused.");
   }
   logger.error({ id: c.get("requestId"), error: err.name, message: err.message });
   return apiError(c, 500, "internal", "Something went wrong on our side.");

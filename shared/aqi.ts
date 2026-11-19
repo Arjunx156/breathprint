@@ -10,6 +10,11 @@ export type Pollutant = "pm25" | "pm10";
 /** 0 is the cleanest band and 5 the worst, on either scale. */
 export type Level = 0 | 1 | 2 | 3 | 4 | 5;
 
+/** One value for each of the six levels, cleanest first. */
+type PerLevel<T> = readonly [T, T, T, T, T, T];
+
+const LEVELS: PerLevel<Level> = [0, 1, 2, 3, 4, 5];
+
 type Band = { cLow: number; cHigh: number; iLow: number; iHigh: number };
 
 const band = (cLow: number, cHigh: number, iLow: number, iHigh: number): Band => ({
@@ -60,7 +65,7 @@ const BREAKPOINTS: Record<Scale, Record<Pollutant, readonly Band[]>> = {
 };
 
 /** Category names per scale, cleanest first; the index is the Level. */
-export const CATEGORIES: Record<Scale, readonly string[]> = {
+const CATEGORIES: Record<Scale, PerLevel<string>> = {
   IN: ["good", "satisfactory", "moderate", "poor", "veryPoor", "severe"],
   US: ["good", "moderate", "usg", "unhealthy", "veryUnhealthy", "hazardous"],
 };
@@ -78,30 +83,24 @@ function truncate(scale: Scale, pollutant: Pollutant, c: number): number {
  */
 export function subIndex(scale: Scale, pollutant: Pollutant, concentration: number): number {
   const c = truncate(scale, pollutant, Math.max(0, concentration));
-  const bands = BREAKPOINTS[scale][pollutant];
-  const last = bands[bands.length - 1] as Band;
-  if (c > last.cHigh) return 500;
-  const hit = bands.find((b) => c <= b.cHigh) ?? last;
-  const lo = Math.min(c, hit.cHigh);
+  const hit = BREAKPOINTS[scale][pollutant].find((b) => c <= b.cHigh);
+  if (!hit) return 500;
   const value =
-    ((hit.iHigh - hit.iLow) / (hit.cHigh - hit.cLow)) * (Math.max(lo, hit.cLow) - hit.cLow) +
+    ((hit.iHigh - hit.iLow) / (hit.cHigh - hit.cLow)) * (Math.max(c, hit.cLow) - hit.cLow) +
     hit.iLow;
   return Math.round(value);
 }
 
-/** Which band an index value sits in. */
-export function levelOf(index: number): Level {
-  const tops = [50, 100, 150, 200, 300] as const;
-  const i = tops.findIndex((top) => index <= top);
-  return (i === -1 ? 5 : i) as Level;
-}
+/** The highest index in each band but the last. India's scale is 100-wide above Moderate. */
+const TOPS: Record<Scale, readonly number[]> = {
+  US: [50, 100, 150, 200, 300],
+  IN: [50, 100, 200, 300, 400],
+};
 
-/** India's scale is 100-wide above Moderate, so its bands need their own tops. */
+/** Which band an index value sits in; past the last top is the worst band. */
 export function levelOnScale(scale: Scale, index: number): Level {
-  if (scale === "US") return levelOf(index);
-  const tops = [50, 100, 200, 300, 400] as const;
-  const i = tops.findIndex((top) => index <= top);
-  return (i === -1 ? 5 : i) as Level;
+  const i = TOPS[scale].findIndex((top) => index <= top);
+  return LEVELS[i] ?? 5;
 }
 
 export type AqiReading = {
@@ -122,7 +121,7 @@ export function aqi(scale: Scale, pm25: number, pm10: number | null): AqiReading
     scale,
     value,
     level,
-    category: CATEGORIES[scale][level] as string,
+    category: CATEGORIES[scale][level],
     dominant: coarse > fine ? "pm10" : "pm25",
   };
 }
@@ -133,7 +132,7 @@ export function aqi(scale: Scale, pm25: number, pm10: number | null): AqiReading
  * family switches the display scale.
  */
 export function healthLevel(pm25: number): Level {
-  return levelOf(subIndex("US", "pm25", pm25));
+  return levelOnScale("US", subIndex("US", "pm25", pm25));
 }
 
 /**

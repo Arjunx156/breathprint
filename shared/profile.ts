@@ -20,7 +20,6 @@ export const LANGUAGES = ["en", "hi"] as const;
 export const EXERCISE = ["none", "morning", "evening"] as const;
 
 export type AgeGroup = (typeof AGE_GROUPS)[number];
-export type Condition = (typeof CONDITIONS)[number];
 export type TravelMode = (typeof TRAVEL_MODES)[number];
 export type Language = (typeof LANGUAGES)[number];
 
@@ -86,10 +85,6 @@ const SENSITIVE_GROUPS: ReadonlySet<AgeGroup> = new Set(["infant", "child", "old
 /** People whose lungs or hearts take more harm from the same air. */
 export function isSensitive(member: Member): boolean {
   return SENSITIVE_GROUPS.has(member.group) || member.conditions.length > 0;
-}
-
-export function sensitiveMembers(profile: Profile): Member[] {
-  return profile.members.filter(isSensitive);
 }
 
 export function hasCombustionHeating(profile: Profile): boolean {
