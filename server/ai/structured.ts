@@ -62,6 +62,9 @@ export function proseIssues(words: string, allowed: readonly number[], lang: Lan
   return issues;
 }
 
+/** A checked reply, which model gave it, and whether it took a second try. */
+export type Structured<T> = { value: T; model: string; repaired: boolean };
+
 /**
  * Asks for structured output, checks it with `parse`, and on failure asks
  * once more with the problems listed. A second failure throws InvalidReply.
@@ -71,7 +74,7 @@ export async function structured<T>(
   req: LlmRequest,
   parse: (text: string) => Parsed<T>,
   signal?: AbortSignal,
-): Promise<{ value: T; model: string; repaired: boolean }> {
+): Promise<Structured<T>> {
   const first = await llm.generate(req, signal);
   const checked = parse(first.text);
   if (checked.ok) return { value: checked.value, model: first.model, repaired: false };

@@ -1,9 +1,7 @@
-import { EXERCISE, type Member, TRAVEL_MODES, type Trip } from "@shared/profile";
+import { EXERCISE, MAX_TRIP_KM, type Member, TRAVEL_MODES, type Trip } from "@shared/profile";
 import { useApp } from "../../app/state";
 import { Choice, Select, TextField, Toggle } from "../../components/fields";
 import { type StepProps, useMemberLabel } from "./steps";
-
-const MAX_KM = 80;
 
 type TripProps = {
   legend: string;
@@ -41,11 +39,11 @@ function TripFields({ legend, trip, fallback, members, onChange }: TripProps) {
               type="number"
               inputMode="decimal"
               min={0}
-              max={MAX_KM}
+              max={MAX_TRIP_KM}
               step={0.5}
               value={String(trip.km)}
               onChange={(v) =>
-                onChange({ ...trip, km: Math.min(MAX_KM, Math.max(0, Number(v) || 0)) })
+                onChange({ ...trip, km: Math.min(MAX_TRIP_KM, Math.max(0, Number(v) || 0)) })
               }
             />
             <TextField

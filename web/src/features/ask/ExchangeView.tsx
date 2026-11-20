@@ -1,11 +1,10 @@
 import { type Block, readAnswer, textsOf } from "@shared/answer";
 import { useApp } from "../../app/state";
-import type { useReadAloud } from "../../lib/speech";
+import type { Voice } from "../../lib/speech";
 import type { Exchange } from "./exchange";
 import { Cited, Library } from "./Sources";
 
 /** Read-aloud controls shared by every answer. */
-export type Voice = ReturnType<typeof useReadAloud>;
 
 function ReadAloud({ x, blocks, voice }: { x: Exchange; blocks: Block[]; voice: Voice }) {
   const { t } = useApp();

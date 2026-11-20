@@ -31,8 +31,18 @@ export function classify(err: unknown, timedOut: boolean): Failure {
   return "unavailable";
 }
 
+/** One attempt's abort signal and timer. */
+export type Attempt = {
+  signal: AbortSignal;
+  /** True when the timer, not the caller, ended the attempt. */
+  timedOut: () => boolean;
+  /** Restarts the timer, so a stream that keeps sending stays alive. */
+  arm: (ms: number) => void;
+  stop: () => void;
+};
+
 /** Aborts one attempt when its time is up or the caller hangs up, and knows which it was. */
-export function attemptSignal(ms: number, outer?: AbortSignal) {
+export function attemptSignal(ms: number, outer?: AbortSignal): Attempt {
   const controller = new AbortController();
   let fired = false;
   let id: ReturnType<typeof setTimeout> | undefined;
@@ -58,8 +68,6 @@ export function attemptSignal(ms: number, outer?: AbortSignal) {
   };
 }
 
-/** One attempt's abort signal and timer. */
-export type Attempt = ReturnType<typeof attemptSignal>;
 /** Writes the attempt's one log line, once it knows how it ended. */
 export type Recorder = (outcome: "ok" | Failure, usage?: Usage) => void;
 

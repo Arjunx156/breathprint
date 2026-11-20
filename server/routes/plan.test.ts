@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { today } from "@shared/engine";
+import { severeDay } from "@shared/fixtures";
 import { MEERA } from "@shared/profile";
-import { severeDay } from "@shared/testing";
-import { post, testApp, withModel } from "../testing";
+import { post, testApp, withModel } from "../test/app";
 
 /** A reply the checker accepts: the rule plan's own steps with plain reasons. */
 function goodPlan(

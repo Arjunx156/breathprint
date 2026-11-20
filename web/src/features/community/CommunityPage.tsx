@@ -1,3 +1,4 @@
+import { DEFAULT_HOUSEHOLDS } from "@shared/community";
 import type { Language, Place } from "@shared/profile";
 import { type SubmitEvent, useMemo, useRef, useState } from "react";
 import { useApp } from "../../app/state";
@@ -22,12 +23,12 @@ const NOTE = {
   template: "community.draft",
 } as const;
 
-/** The form opens on a WhatsApp message for a society of 120 households, in the page's language. */
+/** The form opens on a WhatsApp message for a typical housing society, in the page's language. */
 function useAdvisoryForm(pageLang: Language) {
   const [form, setForm] = useState<Form>({
     audience: "society",
     channel: "whatsapp",
-    rawHouseholds: "120",
+    rawHouseholds: String(DEFAULT_HOUSEHOLDS),
     lang: pageLang,
   });
   const [invalid, setInvalid] = useState(false);

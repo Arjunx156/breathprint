@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { MEERA, type Trip } from "../profile";
-import { cleanDay, severeDay, withHome } from "../testing";
+import { cleanDay, severeDay } from "../fixtures";
+import { MEERA, type Trip, withHome } from "../profile";
 import { actionById, CATALOGUE, rankActions } from "./catalogue";
 
 const ids = (ctx: ReturnType<typeof severeDay>) => rankActions(ctx).map((c) => c.action.id);

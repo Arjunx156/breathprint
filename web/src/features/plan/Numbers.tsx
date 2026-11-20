@@ -8,13 +8,13 @@ const loadPanel = () => import("./ImpactPanel");
 const ImpactPanel = lazy(() => loadPanel().then((m) => ({ default: m.ImpactPanel })));
 
 /** Whether an action's numbers are showing, and the id that ties the button to them. */
-export function useNumbers() {
+export function useNumbers(): Numbers {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   return { open, panelId, toggle: () => setOpen((v) => !v) };
 }
 
-type Numbers = ReturnType<typeof useNumbers>;
+type Numbers = { open: boolean; panelId: string; toggle: () => void };
 
 /** Shows or hides the numbers, and starts fetching them as soon as a pointer or focus arrives. */
 export function NumbersButton({ numbers, className }: { numbers: Numbers; className?: string }) {

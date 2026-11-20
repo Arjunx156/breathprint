@@ -45,7 +45,7 @@ Everything that reaches the outside world sits behind a small type, so tests swa
 | Port                                           | In production                                     | In tests and the demo                                                                                    |
 | ---------------------------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `AirSource` in `server/air/source.ts`          | Open-Meteo, cached per grid cell for half an hour | `server/air/fixture.ts`, a fixed severe day in Delhi                                                     |
-| `Geocoder` in `server/geocode.ts`              | Open-Meteo place search                           | a stub in `server/testing.ts`                                                                            |
+| `Geocoder` in `server/geocode.ts`              | Open-Meteo place search                           | a stub in `server/test/app.ts`                                                                           |
 | `Llm` in `server/llm/llm.ts`                   | Gemini, or Ollama for local work                  | a scripted model in `server/llm/fake.ts`, and saved real answers for the demo in `server/ai/recorded.ts` |
 | `ClientIp` in `server/middleware/rateLimit.ts` | `x-real-ip` on Vercel, the socket under Bun       | the same header, set by each test                                                                        |
 

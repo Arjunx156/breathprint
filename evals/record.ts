@@ -1,19 +1,24 @@
-import { AUDIENCES, CHANNELS, collective, typicalHousehold } from "@shared/community";
+import { advisoryRequest, readAdvisory } from "@server/ai/advisory";
+import { chatRequest } from "@server/ai/chat";
+import { contextFor } from "@server/ai/grounding";
+import { ungrounded } from "@server/ai/guard";
+import { personalPlan } from "@server/ai/planner";
+import { readScan, scanRequest } from "@server/ai/scan";
+import { structured } from "@server/ai/structured";
+import { fixtureSource } from "@server/air/fixture";
+import { loadEnv } from "@server/env";
+import { llmFromEnv } from "@server/llm/config";
+import { SILENT } from "@server/llm/llm";
+import { photoId } from "@server/routes/scan";
+import {
+  AUDIENCES,
+  CHANNELS,
+  collective,
+  DEFAULT_HOUSEHOLDS,
+  typicalHousehold,
+} from "@shared/community";
 import { t } from "@shared/i18n";
 import { LANGUAGES, MEERA } from "@shared/profile";
-import { advisoryRequest, readAdvisory } from "../server/ai/advisory";
-import { chatRequest } from "../server/ai/chat";
-import { contextFor } from "../server/ai/grounding";
-import { ungrounded } from "../server/ai/guard";
-import { personalPlan } from "../server/ai/planner";
-import { readScan, scanRequest } from "../server/ai/scan";
-import { structured } from "../server/ai/structured";
-import { fixtureSource } from "../server/air/fixture";
-import { loadEnv } from "../server/env";
-import { llmFromEnv } from "../server/llm/config";
-import { SILENT } from "../server/llm/llm";
-import { photoId } from "../server/routes/scan";
-import { HOUSEHOLDS } from "./jobs";
 import { knownIds } from "./scorers";
 
 /*
@@ -83,7 +88,7 @@ for (const lang of LANGUAGES) {
     for (const channel of CHANNELS) {
       await take(`advisory:${lang}:${audience}:${channel}`, async () => {
         const ctx = await contextFor(air, typicalHousehold(MEERA.place, audience), true);
-        const together = collective(ctx.air, ctx.profile.place, audience, HOUSEHOLDS);
+        const together = collective(ctx.air, ctx.profile.place, audience, DEFAULT_HOUSEHOLDS);
         const call = advisoryRequest(ctx, { audience, channel, lang }, together);
         const { value } = await structured(llm, call.req, readAdvisory(call));
         return JSON.stringify(value);

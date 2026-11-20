@@ -1,4 +1,4 @@
-import { coarse, type Language, type Place } from "@shared/profile";
+import { coarse, type Language, type Place, SEARCH_CHARS } from "@shared/profile";
 import { MINUTE_MS, SECOND_MS } from "@shared/time";
 import { useEffect, useState } from "react";
 import { useApp } from "../../app/state";
@@ -39,7 +39,7 @@ function usePlaceSearch(query: string, lang: Language): Search {
   const [search, setSearch] = useState<Search>({ status: "idle" });
   useEffect(() => {
     const q = query.trim();
-    if (q.length < 2) return setSearch({ status: "idle" });
+    if (q.length < SEARCH_CHARS.min) return setSearch({ status: "idle" });
     const controller = new AbortController();
     const timer = setTimeout(() => {
       setSearch({ status: "searching" });
@@ -122,7 +122,7 @@ export function PlaceStep({ place, onPlace }: Choose) {
           type="search"
           value={query}
           onChange={setQuery}
-          maxLength={80}
+          maxLength={SEARCH_CHARS.max}
           autoComplete="off"
         />
         <p role="status" className="mt-2 text-sm text-muted">

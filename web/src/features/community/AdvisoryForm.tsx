@@ -1,9 +1,14 @@
-import { AUDIENCES, type Audience, CHANNELS, type Channel } from "@shared/community";
+import {
+  AUDIENCES,
+  type Audience,
+  CHANNELS,
+  type Channel,
+  MAX_HOUSEHOLDS,
+} from "@shared/community";
 import { GRID_KM, LANGUAGES, type Language } from "@shared/profile";
 import type { SubmitEvent } from "react";
 import { useApp } from "../../app/state";
 import { Choice, TextField } from "../../components/fields";
-import { MAX_HOUSEHOLDS } from "./advisory";
 
 /** What the form holds; households stay as typed until they're checked. */
 export type Form = { audience: Audience; channel: Channel; rawHouseholds: string; lang: Language };

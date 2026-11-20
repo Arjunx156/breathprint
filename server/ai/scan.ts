@@ -49,7 +49,7 @@ function noteIssues(sightings: Scan["sightings"], lang: Language): string[] {
 }
 
 /** Reads a reply as a scan: the closed list only, each kind once, short notes in words. */
-export function readScan(lang: Language) {
+export function readScan(lang: Language): (reply: string) => Parsed<Scan> {
   return (reply: string): Parsed<Scan> => {
     const shaped = parseShaped(reply, ScanSchema, "scan");
     if (!shaped.ok) return shaped;

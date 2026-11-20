@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { t } from "@shared/i18n";
 import { MEERA } from "@shared/profile";
 import type { ChatEvent } from "@shared/replies";
-import { post, testApp, withModel } from "../testing";
+import { post, testApp, withModel } from "../test/app";
 
 const planBody = { profile: MEERA, lang: "en", demo: true };
 

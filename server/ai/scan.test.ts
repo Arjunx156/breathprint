@@ -3,7 +3,7 @@ import { PHOTO_LIMIT } from "../app";
 import { inTurn, scriptedLlm } from "../llm/fake";
 import type { LlmRequest } from "../llm/types";
 import { photoId } from "../routes/scan";
-import { testApp } from "../testing";
+import { testApp } from "../test/app";
 import { recorded } from "./recorded";
 
 /** Enough of a JPEG for the route: its start-of-image marker and a little more. */

@@ -9,8 +9,8 @@ import {
   numbersIn,
   optionFacts,
   optionsFor,
-  outdoorCalls,
 } from "./grounding";
+import { outdoorCalls } from "./outdoors";
 import { block, chatSystem } from "./prompts";
 
 const EMERGENCY: Record<string, string> = { IN: "call 112" };

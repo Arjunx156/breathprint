@@ -1,10 +1,16 @@
-import { AGE_GROUPS, CONDITIONS, type Member, memberId, type Trip } from "@shared/profile";
+import {
+  AGE_GROUPS,
+  CONDITIONS,
+  MAX_MEMBERS,
+  MAX_NAME_CHARS,
+  type Member,
+  memberId,
+  type Trip,
+} from "@shared/profile";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import { useApp } from "../../app/state";
 import { Select, TextField, Toggle } from "../../components/fields";
 import { type StepProps, useMemberLabel } from "./steps";
-
-const MAX_MEMBERS = 12;
 
 function withName(member: Member, name: string): Member {
   const { name: _old, ...rest } = member;
@@ -25,7 +31,7 @@ function MemberFields({
         <TextField
           label={t("setup.name")}
           value={m.name ?? ""}
-          maxLength={40}
+          maxLength={MAX_NAME_CHARS}
           autoComplete="off"
           onChange={(name) => onChange(withName(m, name))}
         />

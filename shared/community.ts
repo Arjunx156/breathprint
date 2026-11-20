@@ -11,6 +11,10 @@ import { type Range, scale } from "./range";
 export const AUDIENCES = ["society", "school", "workplace"] as const;
 /** Where an advisory will be posted, which sets its length. */
 export const CHANNELS = ["whatsapp", "notice"] as const;
+/** The form opens on a typical housing society; the evals score the same figure. */
+export const DEFAULT_HOUSEHOLDS = 120;
+/** The most households one advisory speaks for; the server refuses more. */
+export const MAX_HOUSEHOLDS = 10_000;
 export type Audience = (typeof AUDIENCES)[number];
 export type Channel = (typeof CHANNELS)[number];
 

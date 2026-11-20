@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { actionById, rankActions } from "./actions/catalogue";
 import { checkPlan } from "./checker";
+import { cleanDay, severeDay } from "./fixtures";
 import {
   alternativesFor,
   buildRulePlan,
@@ -11,8 +12,7 @@ import {
   selectSteps,
   timeFor,
 } from "./plan";
-import { isSensitive, MEERA } from "./profile";
-import { cleanDay, severeDay, withHome } from "./testing";
+import { isSensitive, MEERA, withHome } from "./profile";
 
 const ctx = severeDay();
 const ranked = rankActions(ctx);

@@ -1,4 +1,4 @@
-import type { LlmRequest } from "./types";
+import type { LlmRequest } from "../llm/types";
 
 /*
  * A stand-in for fetch, so the adapter tests see exactly what each provider

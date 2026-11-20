@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { PHOTO, restoreFetch, type Sent, serve, signal } from "./fetchStub";
+import { PHOTO, restoreFetch, type Sent, serve, signal } from "../test/fetchStub";
 import { ollama } from "./ollama";
 import type { Chunk, ProviderError } from "./types";
 

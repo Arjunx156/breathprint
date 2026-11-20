@@ -1,10 +1,10 @@
-import { fixtureSource } from "./air/fixture";
-import { createApp, type Deps } from "./app";
-import { loadEnv } from "./env";
-import { inTurn, scriptedLlm } from "./llm/fake";
-import { createLlm, type Llm, SILENT } from "./llm/llm";
-import type { LlmRequest } from "./llm/types";
-import { fromHeader } from "./middleware/rateLimit";
+import { fixtureSource } from "../air/fixture";
+import { createApp, type Deps } from "../app";
+import { loadEnv } from "../env";
+import { inTurn, scriptedLlm } from "../llm/fake";
+import { createLlm, type Llm, SILENT } from "../llm/llm";
+import type { LlmRequest } from "../llm/types";
+import { fromHeader } from "../middleware/rateLimit";
 
 /** A model client with nothing configured: every call fails fast as offline. */
 export const offlineLlm = (): Llm =>

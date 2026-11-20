@@ -33,12 +33,21 @@ export type AgeGroup = (typeof AGE_GROUPS)[number];
 export type TravelMode = (typeof TRAVEL_MODES)[number];
 export type Language = (typeof LANGUAGES)[number];
 
+/** The most people one household holds; setup offers no more and the schema takes no more. */
+export const MAX_MEMBERS = 12;
+/** A member's name, which stays in the browser, fits a first name and a little more. */
+export const MAX_NAME_CHARS = 40;
+/** The longest daily trip, each way, that setup and the schema accept. */
+export const MAX_TRIP_KM = 80;
+/** A place search needs a couple of letters and fits a locality and its city. */
+export const SEARCH_CHARS = { min: 2, max: 60 } as const;
+
 const time = z.string().check(z.regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use 24-hour HH:MM"));
 
 /** One person in the household; the name never leaves the browser. */
 export const MemberSchema = z.object({
   id: z.string().check(z.regex(/^[a-z0-9-]{1,24}$/)),
-  name: z.optional(z.string().check(z.trim(), z.maxLength(40))),
+  name: z.optional(z.string().check(z.trim(), z.maxLength(MAX_NAME_CHARS))),
   group: z.enum(AGE_GROUPS),
   conditions: z._default(z.array(z.enum(CONDITIONS)).check(z.maxLength(4)), []),
   outdoorWork: z._default(z.boolean(), false),
@@ -47,11 +56,11 @@ export const MemberSchema = z.object({
 /** A daily trip there and back, and who makes it. */
 export const TripSchema = z.object({
   mode: z.enum(TRAVEL_MODES),
-  km: z.number().check(z.gte(0), z.lte(80)),
+  km: z.number().check(z.gte(0), z.lte(MAX_TRIP_KM)),
   leaveAt: time,
   returnAt: time,
   /** Ids of members who make this trip. */
-  who: z.array(z.string()).check(z.maxLength(12)),
+  who: z.array(z.string()).check(z.maxLength(MAX_MEMBERS)),
 });
 
 /** A place, rounded to the forecast grid before it reaches the server. */
@@ -67,7 +76,7 @@ export const PlaceSchema = z.object({
 export const ProfileSchema = z.object({
   version: z.literal(1),
   place: PlaceSchema,
-  members: z.array(MemberSchema).check(z.minLength(1), z.maxLength(12)),
+  members: z.array(MemberSchema).check(z.minLength(1), z.maxLength(MAX_MEMBERS)),
   home: z.object({
     tightness: z.enum(TIGHTNESS),
     purifier: z.boolean(),
@@ -209,4 +218,9 @@ export function memberId(taken: readonly string[]): string {
     const id = `p${n}`;
     if (!taken.includes(id)) return id;
   }
+}
+
+/** A copy of a profile with some home fields changed, for a what-if that varies one thing. */
+export function withHome(profile: Profile, home: Partial<Profile["home"]>): Profile {
+  return { ...profile, home: { ...profile.home, ...home } };
 }

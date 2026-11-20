@@ -1,6 +1,13 @@
-import type { AirSnapshot, Hour } from "./air";
+import type { Context } from "./actions/types";
+import { type AirSnapshot, type AirSummary, type Hour, summarize } from "./air";
 import { itemAt } from "./list";
+import { MEERA, type Profile } from "./profile";
 import { DAY_MS, HOUR_MS } from "./time";
+
+/** The demo's PM2.5 level, in µg/m³ before the day's shape: severe on both scales. */
+const SEVERE_BASE = 285;
+/** The same morning shape at a level WHO would call moderate. */
+const CLEAN_BASE = 28;
 
 /**
  * A Delhi winter day's PM2.5 shape relative to its base level: high through the
@@ -21,7 +28,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
  */
 export function delhiSevereSnapshot(
   day: string,
-  base = 285,
+  base = SEVERE_BASE,
   dayTrend = [0.96, 1, 1.04, 0.92],
 ): AirSnapshot {
   const start = new Date(new Date(`${day}T00:00:00Z`).getTime() - DAY_MS);
@@ -57,3 +64,18 @@ export function delhiMorning(day: string): number {
 
 /** The day the demo's fixed Delhi forecast describes. */
 export const DEMO_DAY = "2026-11-18";
+
+/** The demo's forecast as it reads at 08:00 on the demo day, at the demo's level or another. */
+export function demoAir(base = SEVERE_BASE): AirSummary {
+  return summarize(delhiSevereSnapshot(DEMO_DAY, base), delhiMorning(DEMO_DAY));
+}
+
+/** Meera's family, or a variation of it, on the demo's severe Delhi morning. */
+export function severeDay(profile: Profile = MEERA, base = SEVERE_BASE): Context {
+  return { profile, air: demoAir(base) };
+}
+
+/** The same family and morning, on a moderate day. */
+export function cleanDay(profile: Profile = MEERA): Context {
+  return severeDay(profile, CLEAN_BASE);
+}

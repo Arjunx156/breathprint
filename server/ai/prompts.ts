@@ -1,6 +1,6 @@
 import { DATA_TAGS } from "@shared/answer";
 import type { Language } from "@shared/profile";
-import type { Outdoors } from "./grounding";
+import type { Outdoors } from "./outdoors";
 
 /** Bumped whenever a prompt changes, so cached answers from the old one are not reused. */
 export const PROMPT_VERSION = "2026-11-18.16";

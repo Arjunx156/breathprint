@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { CATALOGUE } from "../actions/catalogue";
 import { today } from "../engine";
+import { severeDay } from "../fixtures";
 import { DayPlanSchema } from "../plan";
 import { LANGUAGES, MEERA } from "../profile";
-import { severeDay } from "../testing";
 import { en } from "./en";
 import { isMessageKey, type MessageKey, names, placeholders, t } from "./index";
 

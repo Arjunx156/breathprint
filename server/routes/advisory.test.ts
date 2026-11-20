@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { MEERA } from "@shared/profile";
 import { loadEnv } from "../env";
-import { post, testApp, withModel } from "../testing";
+import { post, testApp, withModel } from "../test/app";
 
 describe("community advisory", () => {
   const advisory = {

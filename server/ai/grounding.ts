@@ -1,11 +1,9 @@
-import { exertionCeiling } from "@shared/actions/activity";
 import { type Candidate, rankActions } from "@shared/actions/catalogue";
 import type { Context } from "@shared/actions/types";
 import { summarize } from "@shared/air";
-import { healthLevel } from "@shared/aqi";
 import { THRESHOLDS } from "@shared/factors";
-import { DEMO_DAY, delhiMorning, delhiSevereSnapshot } from "@shared/fixtures";
-import { clock, dayOf } from "@shared/format";
+import { severeDay } from "@shared/fixtures";
+import { clock } from "@shared/format";
 import { isMessageKey, t, tx } from "@shared/i18n";
 import { ruleReason } from "@shared/i18n/reason";
 import { CARDS } from "@shared/knowledge/cards";
@@ -13,8 +11,8 @@ import { search } from "@shared/knowledge/search";
 import { selectSteps, timeFor } from "@shared/plan";
 import { forModel, isSensitive, type Profile } from "@shared/profile";
 import { sourceOf } from "@shared/sources";
-import { DAY_MS } from "@shared/time";
 import type { AirSource } from "../air/source";
+import { airingCall, dayName, inWords, outdoorCalls } from "./outdoors";
 
 /**
  * The air and household a model is told about. The forecast is the server's
@@ -29,85 +27,9 @@ export async function contextFor(
 ): Promise<Context> {
   const safe = forModel(profile);
   if (demo) {
-    return { profile: safe, air: summarize(delhiSevereSnapshot(DEMO_DAY), delhiMorning(DEMO_DAY)) };
+    return severeDay(safe);
   }
   return { profile: safe, air: summarize(await air.snapshot(safe.place.lat, safe.place.lon), now) };
-}
-
-const round = (x: number) => Math.round(x);
-
-/** The forecast runs past midnight, so a window's hours alone don't say which day it is. */
-function dayName(time: string, now: string): string {
-  const days = (Date.parse(dayOf(time)) - Date.parse(dayOf(now))) / DAY_MS;
-  return ["today", "tomorrow"][days] ?? dayOf(time);
-}
-
-type Members = Context["profile"]["members"];
-type Hours = { from: string; to: string };
-
-/** The engine's call on exercise outside for one group: go now, wait for a window, or stay in. */
-export type Outdoors =
-  | { kind: "now" }
-  | { kind: "wait"; hours: Hours }
-  | { kind: "indoors"; tomorrow: Hours | null };
-
-/**
- * The engine's call on walks, play and sport outdoors for each group. It is
- * the ceiling the plan checker enforces, so a chat answer and the day's plan
- * never disagree, and the model never judges a level itself.
- */
-export function outdoorCalls(ctx: Context): Record<string, Outdoors> {
-  const air = ctx.air;
-  const call = (people: Members): Outdoors => {
-    const ok = (pm25: number) => healthLevel(pm25) <= exertionCeiling(people);
-    if (ok(air.current.pm25)) return { kind: "now" };
-    const on = (day: string) => {
-      const found = air.windows.find(
-        (win) => dayName(win.start, air.now) === day && ok(win.meanPm25),
-      );
-      return found ? { from: clock(found.start), to: clock(found.end) } : null;
-    };
-    const today = on("today");
-    return today ? { kind: "wait", hours: today } : { kind: "indoors", tomorrow: on("tomorrow") };
-  };
-  const members = ctx.profile.members;
-  const sensitive = members.filter(isSensitive);
-  const rest = members.filter((m) => !isSensitive(m));
-  if (sensitive.length === 0) return { everyone: call(members) };
-  return rest.length === 0
-    ? { sensitive: call(sensitive) }
-    : { sensitive: call(sensitive), everyoneElse: call(rest) };
-}
-
-/** A call in words the model passes on. */
-function said(o: Outdoors): string {
-  switch (o.kind) {
-    case "now":
-      return "fine now";
-    case "wait":
-      return `wait until ${o.hours.from} to ${o.hours.to} today`;
-    case "indoors":
-      return o.tomorrow
-        ? `indoors all day today; tomorrow from ${o.tomorrow.from} to ${o.tomorrow.to}`
-        : "indoors all day today";
-  }
-}
-
-/** Good or moderate: open up whenever suits, though the window is still cleaner. */
-const AIR_FREELY = 1;
-
-/**
- * The engine's call on opening the windows, timed like the plan's own airing
- * step: inside the first clean window, and never in a peak.
- */
-function airingCall(ctx: Context): string {
-  const air = ctx.air;
-  const fine = healthLevel(air.current.pm25) <= AIR_FREELY;
-  const clean = air.windows[0];
-  if (!clean) return fine ? "fine now" : "keep them shut today; no hour is cleaner than the rest";
-  if (air.now >= clean.start && air.now < clean.end) return `open now, until ${clock(clean.end)}`;
-  const hours = `${clock(clean.start)} to ${clock(clean.end)} ${dayName(clean.start, air.now)}`;
-  return fine ? `fine now, cleanest from ${hours}` : `keep them shut now; open them from ${hours}`;
 }
 
 /** Today's air in the terms the app shows: the chosen AQI scale, PM2.5 and the clean windows. */
@@ -119,7 +41,7 @@ export function airFacts(ctx: Context) {
     day: dayName(win.start, air.now),
     from: clock(win.start),
     to: clock(win.end),
-    meanPm25: round(win.meanPm25),
+    meanPm25: Math.round(win.meanPm25),
   });
   return {
     place: ctx.profile.place.name,
@@ -130,12 +52,12 @@ export function airFacts(ctx: Context) {
       category: tx("en", `aqi.${scale}.${reading.category}`),
     },
     healthLevel: air.current.health,
-    pm25Now: round(air.current.pm25),
+    pm25Now: Math.round(air.current.pm25),
     whoDailyGuideline: THRESHOLDS.whoDaily,
-    today: { meanPm25: round(air.today.mean), maxPm25: round(air.today.max) },
-    tomorrowMeanPm25: air.tomorrow ? round(air.tomorrow.mean) : null,
+    today: { meanPm25: Math.round(air.today.mean), maxPm25: Math.round(air.today.max) },
+    tomorrowMeanPm25: air.tomorrow ? Math.round(air.tomorrow.mean) : null,
     outdoorExercise: Object.fromEntries(
-      Object.entries(outdoorCalls(ctx)).map(([who, call]) => [who, said(call)]),
+      Object.entries(outdoorCalls(ctx)).map(([who, call]) => [who, inWords(call)]),
     ),
     airing: airingCall(ctx),
     cleanWindows: air.windows.map(span),
@@ -169,7 +91,10 @@ const MAX_OPTIONS = 16;
  * The actions a model may choose from: anything safety-critical, the rule
  * plan's own picks (so a passing plan always exists), then the best of the rest.
  */
-export function optionsFor(ctx: Context, ranked: readonly Candidate[] = rankActions(ctx)) {
+export function optionsFor(
+  ctx: Context,
+  ranked: readonly Candidate[] = rankActions(ctx),
+): Candidate[] {
   const safety = ranked.filter((c) => c.action.safety);
   return [...new Set([...safety, ...selectSteps(ctx, ranked), ...ranked])].slice(
     0,
@@ -214,7 +139,7 @@ export function cardFacts(question: string, options: readonly Candidate[]) {
     id: c.id,
     title: c.title,
     body: c.body,
-    sources: c.sources.map((s) => `${sourceOf(s).publisher} ${sourceOf(s).year}`),
+    sources: c.sources.map(sourceOf).map((s) => `${s.publisher} ${s.year}`),
   }));
 }
 

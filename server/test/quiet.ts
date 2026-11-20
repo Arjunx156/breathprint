@@ -1,4 +1,4 @@
-import { redirectLogs } from "./log";
+import { redirectLogs } from "../log";
 
 // Preloaded by `bun test` (see bunfig.toml): the API tests make hundreds of
 // requests, and their access lines would bury the results. Tests that care

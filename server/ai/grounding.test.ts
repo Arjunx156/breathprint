@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import { cleanDay, severeDay } from "@shared/fixtures";
 import { defaultProfile, forModel, MEERA } from "@shared/profile";
-import { cleanDay, severeDay } from "@shared/testing";
 import { chatRequest, indoorStep } from "./chat";
 import { airFacts } from "./grounding";
 

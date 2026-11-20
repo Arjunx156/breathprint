@@ -1,4 +1,10 @@
-import { AUDIENCES, CHANNELS, collective, typicalHousehold } from "@shared/community";
+import {
+  AUDIENCES,
+  CHANNELS,
+  collective,
+  MAX_HOUSEHOLDS,
+  typicalHousehold,
+} from "@shared/community";
 import { coarse, LANGUAGES, PlaceSchema } from "@shared/profile";
 import type { AdvisoryReply } from "@shared/replies";
 import { SLOT_MS, slotOf } from "@shared/time";
@@ -18,7 +24,7 @@ const AdvisoryBody = z.object({
   lang: z.enum(LANGUAGES),
   audience: z.enum(AUDIENCES),
   channel: z.enum(CHANNELS),
-  households: z.number().int().min(1).max(10_000),
+  households: z.number().int().min(1).max(MAX_HOUSEHOLDS),
   place: PlaceSchema,
   demo: z.boolean().default(false),
 });

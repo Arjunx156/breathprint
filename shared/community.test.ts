@@ -9,8 +9,8 @@ import {
   templateAdvisory,
   typicalHousehold,
 } from "./community";
+import { cleanDay, severeDay } from "./fixtures";
 import { LANGUAGES, ProfileSchema } from "./profile";
-import { cleanDay, severeDay } from "./testing";
 
 const place = { name: "Rohini, Delhi", lat: 28.7, lon: 77.1, country: "IN" };
 const air = severeDay().air;

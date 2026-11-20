@@ -1,6 +1,7 @@
 import { type Pick, picker } from "../factors";
 import type { MessageKey } from "../i18n";
 import type { TravelMode, Trip } from "../profile";
+import type { Range } from "../range";
 import { impact, ranged, short } from "./models";
 import type { Impact } from "./types";
 
@@ -58,8 +59,11 @@ export function carKmImpact(km: (p: Pick) => number, label: MessageKey): Impact 
   });
 }
 
+/** Per day, for a round trip; null where the mode burns nothing and costs nothing to run. */
+export type Savings = { co2kg: Range | null; pm25g: Range | null; inrPerDay: Range | null };
+
 /** What leaving a motor vehicle at home saves the street and the wallet; nothing for other modes. */
-export function motorSavings(trip: Trip) {
+export function motorSavings(trip: Trip): Savings {
   if (!motorTrip(trip)) return { co2kg: null, pm25g: null, inrPerDay: null };
   const km = roundTrip(trip);
   return {

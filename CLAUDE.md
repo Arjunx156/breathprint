@@ -13,10 +13,10 @@ A smog-season assistant for families and communities, built for PromptWars 6. It
 ## Layout
 
 - `shared/`: pure TypeScript engine, imported by both sides. AQI, air summary, exposure, factors with sources, action catalogue, planner and checker, knowledge cards, i18n. No I/O.
-- `server/`: Hono API. `app.ts` composes middleware and routes; `main.ts` wires real upstreams; `serve.ts` (Bun) and `vercel.ts` (Vercel) are entries and choose where the client IP comes from. `testing.ts` builds the app on fixtures for tests.
+- `server/`: Hono API. `app.ts` composes middleware and routes; `main.ts` wires real upstreams; `serve.ts` (Bun) and `vercel.ts` (Vercel) are entries and choose where the client IP comes from. `test/` holds the test harness: the app on fixtures, a fetch stub for the provider adapters, and the preload that quiets the logger.
 - `server/ai/`: the four Gemini jobs (plan, chat, advisory, scan), their prompts, grounding packets and the figure guard.
 - `web/`: React app built by Vite into `dist/public`; `web/public/sw.js` is the offline worker, stamped with the precache list at build time by `scripts/sw.ts`.
-- `web/test/`: the happy-dom page, render helpers and speech fakes for component tests. `bunfig.toml` preloads React DOM with a DOM up, because Bun evaluates CommonJS deps before a test file's own imports, and `server/quiet.ts` to silence the logger.
+- `web/test/`: the happy-dom page, render helpers and speech fakes for component tests. `bunfig.toml` preloads React DOM with a DOM up, because Bun evaluates CommonJS deps before a test file's own imports, and `server/test/quiet.ts` to silence the logger.
 - `docs/`: `architecture.md`, the blog (served at `/blog/`), `security.md` and `accessibility.md`. The Vercel firewall rule they describe lives in the Vercel project, not in this repo.
 - `evals/`: cases, pure scorers, the runner and the demo recorder.
 - `scripts/build.ts`: writes `.vercel/output` (static, one function, routes and headers), plus robots and sitemap from `scripts/site.ts`.

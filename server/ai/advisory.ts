@@ -81,7 +81,10 @@ export function advisoryRequest(
 }
 
 /** Reads a reply as an advisory, rejecting any figure not in the data or words in the wrong language. */
-export function readAdvisory({ allowed, lang }: Omit<AdvisoryCall, "req">) {
+export function readAdvisory({
+  allowed,
+  lang,
+}: Omit<AdvisoryCall, "req">): (reply: string) => Parsed<Advisory> {
   return (reply: string): Parsed<Advisory> => {
     const shaped = parseShaped(reply, AdvisorySchema, "advisory");
     if (!shaped.ok) return shaped;

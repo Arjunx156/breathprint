@@ -7,7 +7,14 @@ import type { Llm } from "../llm/llm";
 import type { LlmRequest } from "../llm/types";
 import { airFacts, householdFacts, numbersIn, optionFacts, optionsFor } from "./grounding";
 import { block, plannerSystem } from "./prompts";
-import { type Parsed, parseShaped, proseIssues, structured, verdict } from "./structured";
+import {
+  type Parsed,
+  parseShaped,
+  proseIssues,
+  type Structured,
+  structured,
+  verdict,
+} from "./structured";
 
 /** The reply's shape, with ids limited to today's options and this household. */
 function planSchema(actionIds: readonly string[], memberIds: readonly string[]) {
@@ -93,7 +100,10 @@ function normalize(steps: readonly PlanStep[], options: readonly Candidate[]): P
  * shape, the safety and coverage checks in shared/plan, any figure that was
  * not in the data, and words in the wrong language.
  */
-export function readPlan(ctx: Context, { options, allowed, lang }: Omit<PlannerCall, "req">) {
+export function readPlan(
+  ctx: Context,
+  { options, allowed, lang }: Omit<PlannerCall, "req">,
+): (text: string) => Parsed<PlanReply["plan"]> {
   return (text: string): Parsed<PlanReply["plan"]> => {
     const shaped = parseShaped(text, DayPlanSchema, "plan");
     if (!shaped.ok) return shaped;
@@ -108,7 +118,12 @@ export function readPlan(ctx: Context, { options, allowed, lang }: Omit<PlannerC
 }
 
 /** A plan written by the model for this household and checked like the rule plan is. */
-export async function personalPlan(llm: Llm, ctx: Context, lang: Language, signal?: AbortSignal) {
+export async function personalPlan(
+  llm: Llm,
+  ctx: Context,
+  lang: Language,
+  signal?: AbortSignal,
+): Promise<Structured<PlanReply["plan"]>> {
   const call = plannerRequest(ctx, lang);
   return structured(llm, call.req, readPlan(ctx, call), signal);
 }

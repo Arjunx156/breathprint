@@ -95,7 +95,17 @@ function voiceFor(lang: Language): SpeechSynthesisVoice | null {
  * Reads text aloud one piece at a time; some browsers cut a single long
  * utterance off after about fifteen seconds.
  */
-export function useReadAloud(lang: Language) {
+/** Read-aloud for answers: which one is being read, and how to start and stop. */
+export type Voice = {
+  supported: boolean;
+  /** The id of the answer being read, or null. */
+  reading: string | null;
+  read: (id: string, pieces: readonly string[]) => void;
+  stop: () => void;
+};
+
+/** Reads an answer aloud in the page language, one piece at a time, and stops on request. */
+export function useReadAloud(lang: Language): Voice {
   const [supported] = useState(() => typeof window !== "undefined" && "speechSynthesis" in window);
   const [reading, setReading] = useState<string | null>(null);
 

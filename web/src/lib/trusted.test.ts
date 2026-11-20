@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { CONTENT_SECURITY_POLICY } from "../../../server/headers";
+import { CONTENT_SECURITY_POLICY } from "@server/headers";
 import { POLICY_NAME, type TrustedTypes, WORKER_URL, workerUrl } from "./trusted";
 
 /** Records the policy the page makes, and wraps what it vouches for. */

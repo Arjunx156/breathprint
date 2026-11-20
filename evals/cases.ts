@@ -1,7 +1,6 @@
 import type { Audience, Channel } from "@shared/community";
-import { defaultProfile, type Language, MEERA, type Profile } from "@shared/profile";
+import { defaultProfile, type Language, MEERA, type Profile, withHome } from "@shared/profile";
 import type { Room, Sighting } from "@shared/scan";
-import { withHome } from "@shared/testing";
 
 /*
  * The households, days and questions the model is scored on. Each case names

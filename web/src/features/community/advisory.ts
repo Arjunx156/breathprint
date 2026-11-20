@@ -5,6 +5,7 @@ import {
   type Channel,
   type Collective,
   collective,
+  MAX_HOUSEHOLDS,
   templateAdvisory,
 } from "@shared/community";
 import { short } from "@shared/format";
@@ -22,9 +23,6 @@ export type Written = Inputs & {
   /** Gemini, a saved demo reply, Breathprint's own after Gemini failed, or the live draft. */
   by: "model" | "recorded" | "fallback" | "template";
 };
-
-/** The most households the form accepts. */
-export const MAX_HOUSEHOLDS = 10_000;
 
 /** Sends only the area, rounded to the forecast grid; no household goes with it. */
 export async function fetchAdvisory(

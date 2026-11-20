@@ -1,8 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { type Browser, chromium } from "@playwright/test";
-import { summarize } from "@shared/air";
 import { aqi } from "@shared/aqi";
-import { DEMO_DAY, delhiMorning, delhiSevereSnapshot } from "@shared/fixtures";
+import { demoAir } from "@shared/fixtures";
 
 /**
  * Renders the favicon PNGs and the 1200×630 social card from HTML, so they
@@ -56,7 +55,7 @@ async function card(): Promise<string> {
   const font = await readFile(
     "node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2",
   );
-  const summary = summarize(delhiSevereSnapshot(DEMO_DAY), delhiMorning(DEMO_DAY));
+  const summary = demoAir();
   const top = Math.max(...summary.series.map((h) => h.pm25 ?? 0));
   const bars = summary.series
     .map((h) => {

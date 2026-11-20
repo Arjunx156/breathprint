@@ -1,19 +1,19 @@
+import { advisoryRequest, readAdvisory } from "@server/ai/advisory";
+import { chatRequest, indoorStep } from "@server/ai/chat";
+import { airFacts } from "@server/ai/grounding";
+import { ungrounded } from "@server/ai/guard";
+import { personalPlan } from "@server/ai/planner";
+import { DANGER_SIGNS } from "@server/ai/prompts";
+import { readScan, scanRequest } from "@server/ai/scan";
+import { InvalidReply, structured } from "@server/ai/structured";
+import { scriptedLlm } from "@server/llm/fake";
+import type { Llm } from "@server/llm/llm";
+import { LlmUnavailable } from "@server/llm/types";
 import { cleanText } from "@shared/answer";
-import { type Advisory, collective, typicalHousehold } from "@shared/community";
+import { type Advisory, collective, DEFAULT_HOUSEHOLDS, typicalHousehold } from "@shared/community";
+import { cleanDay, severeDay } from "@shared/fixtures";
 import { forModel, type Language, MEERA, type Profile } from "@shared/profile";
 import { sightingsOf } from "@shared/scan";
-import { cleanDay, severeDay } from "@shared/testing";
-import { advisoryRequest, readAdvisory } from "../server/ai/advisory";
-import { chatRequest, indoorStep } from "../server/ai/chat";
-import { airFacts } from "../server/ai/grounding";
-import { ungrounded } from "../server/ai/guard";
-import { personalPlan } from "../server/ai/planner";
-import { DANGER_SIGNS } from "../server/ai/prompts";
-import { readScan, scanRequest } from "../server/ai/scan";
-import { InvalidReply, structured } from "../server/ai/structured";
-import { scriptedLlm } from "../server/llm/fake";
-import type { Llm } from "../server/llm/llm";
-import { LlmUnavailable } from "../server/llm/types";
 import type { AdvisoryCase, Air, Case, ChatCase, ChatExpect, PlanCase, ScanCase } from "./cases";
 import {
   brief,
@@ -42,8 +42,6 @@ export type Outcome =
 
 type Scored = { model: string; checks: Check[] };
 
-/** Matches the advisory form's default, so the recorded figures are the ones a judge sees. */
-export const HOUSEHOLDS = 120;
 const WHATSAPP_CHARS = 700;
 
 /** The fixture's morning at a lower level: too much for sensitive people until noon. */
@@ -127,7 +125,7 @@ const advisoryText = (a: Advisory) =>
 
 async function advisory(llm: Llm, c: AdvisoryCase): Promise<Scored> {
   const ctx = severeDay(forModel(typicalHousehold(MEERA.place, c.audience)));
-  const together = collective(ctx.air, ctx.profile.place, c.audience, HOUSEHOLDS);
+  const together = collective(ctx.air, ctx.profile.place, c.audience, DEFAULT_HOUSEHOLDS);
   const call = advisoryRequest(ctx, c, together);
   const { value, model, repaired } = await structured(llm, call.req, readAdvisory(call));
   const words = advisoryText(value);

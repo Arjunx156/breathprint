@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { summarize } from "@shared/air";
 import type { Collective } from "@shared/community";
-import { DEMO_DAY, delhiMorning, delhiSevereSnapshot } from "@shared/fixtures";
+import { demoAir } from "@shared/fixtures";
 import { MEERA } from "@shared/profile";
 import {
   draftOf,
@@ -35,7 +34,7 @@ describe("community advisory", () => {
   });
 
   test("drafts its own advisory, counting the households only once the count is valid", () => {
-    const summary = summarize(delhiSevereSnapshot(DEMO_DAY), delhiMorning(DEMO_DAY));
+    const summary = demoAir();
     const ask = { audience: "society", channel: "whatsapp", lang: "en" } as const;
     const counted = draftOf({ ...ask, households: 120 }, summary, MEERA);
     expect(counted).toMatchObject({ ...ask, households: 120, by: "template" });

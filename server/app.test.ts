@@ -1,12 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { AirSnapshotSchema } from "@shared/air";
+import { SEARCH_CHARS } from "@shared/profile";
 import { fixtureSource } from "./air/fixture";
 import { type AirSource, UpstreamError } from "./air/source";
 import { JSON_LIMIT } from "./app";
 import { loadEnv } from "./env";
 import type { Geocoder } from "./geocode";
 import { CONTENT_SECURITY_POLICY } from "./headers";
-import { testApp } from "./testing";
+import { testApp } from "./test/app";
 
 const env = loadEnv({ RATE_LIMIT_PER_MIN: "5" });
 const places: Geocoder = async (q) => [
@@ -76,8 +77,12 @@ describe("geocode", () => {
     expect(res.headers.get("cache-control")).toContain("s-maxage=86400");
   });
 
-  test("needs at least two characters", async () => {
-    expect((await get("/api/geocode?q=R")).status).toBe(400);
+  test("takes any search the setup field allows, and nothing outside it", async () => {
+    const of = (n: number) => get(`/api/geocode?q=${"a".repeat(n)}`);
+    expect((await of(SEARCH_CHARS.min - 1)).status).toBe(400);
+    expect((await of(SEARCH_CHARS.min)).status).toBe(200);
+    expect((await of(SEARCH_CHARS.max)).status).toBe(200);
+    expect((await of(SEARCH_CHARS.max + 1)).status).toBe(400);
   });
 });
 

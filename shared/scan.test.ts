@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { defaultProfile, MEERA } from "./profile";
+import { severeDay } from "./fixtures";
+import { defaultProfile, MEERA, withHome } from "./profile";
 import {
   distinctSightings,
   homeAfter,
@@ -10,7 +11,6 @@ import {
   sightingsOf,
   withSightings,
 } from "./scan";
-import { severeDay, withHome } from "./testing";
 
 const scan = (room: Scan["room"], ...kinds: Scan["sightings"][number]["kind"][]): Scan => ({
   room,
