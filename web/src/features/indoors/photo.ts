@@ -6,6 +6,7 @@ import { client, replyOf } from "../../lib/api";
 const MAX_SIDE = 1280;
 const QUALITY = 0.82;
 
+/** A photo ready to send: a preview URL and the re-encoded JPEG. */
 export type Photo = { url: string; data: string; sample: boolean };
 
 async function base64(blob: Blob): Promise<string> {
@@ -44,6 +45,7 @@ export async function samplePhoto(): Promise<Photo> {
   return { url, data: await base64(await res.blob()), sample: true };
 }
 
+/** Sends a photo to /api/scan and reads the sightings back. */
 export async function scanPhoto(
   photo: Photo,
   lang: Language,

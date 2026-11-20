@@ -1,8 +1,8 @@
+import type { Language } from "@shared/profile";
+import { type ChatEvent, MAX_CHARS, MAX_MESSAGES } from "@shared/replies";
 import { Hono } from "hono";
 import { stream } from "hono/streaming";
 import { z } from "zod";
-import type { Language } from "../../shared/profile";
-import { type ChatEvent, MAX_CHARS, MAX_MESSAGES } from "../../shared/replies";
 import { chatRequest, indoorStep } from "../ai/chat";
 import { contextFor } from "../ai/grounding";
 import { ungrounded } from "../ai/guard";
@@ -38,6 +38,7 @@ async function answer(llm: Llm, req: Parameters<Llm["stream"]>[0], saved: string
 
 const savedKey = (lang: Language, question: string) => `chat:${lang}:${question}`;
 
+/** POST /api/chat: a grounded answer, streamed as NDJSON events. */
 export function chatRoutes({ llm, air }: { llm: Llm; air: AirSource }) {
   return new Hono().post("/", valid("json", ChatBody), async (c) => {
     const { profile, lang, demo, messages } = c.req.valid("json");

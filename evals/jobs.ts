@@ -1,3 +1,8 @@
+import { cleanText } from "@shared/answer";
+import { type Advisory, collective, typicalHousehold } from "@shared/community";
+import { forModel, type Language, MEERA, type Profile } from "@shared/profile";
+import { sightingsOf } from "@shared/scan";
+import { cleanDay, severeDay } from "@shared/testing";
 import { advisoryRequest, readAdvisory } from "../server/ai/advisory";
 import { chatRequest, indoorStep } from "../server/ai/chat";
 import { airFacts } from "../server/ai/grounding";
@@ -9,11 +14,6 @@ import { InvalidReply, structured } from "../server/ai/structured";
 import { scriptedLlm } from "../server/llm/fake";
 import type { Llm } from "../server/llm/llm";
 import { LlmUnavailable } from "../server/llm/types";
-import { cleanText } from "../shared/answer";
-import { type Advisory, collective, typicalHousehold } from "../shared/community";
-import { forModel, type Language, MEERA, type Profile } from "../shared/profile";
-import { sightingsOf } from "../shared/scan";
-import { cleanDay, severeDay } from "../shared/testing";
 import type { AdvisoryCase, Air, Case, ChatCase, ChatExpect, PlanCase, ScanCase } from "./cases";
 import {
   brief,
@@ -35,6 +35,7 @@ import {
   withinLength,
 } from "./scorers";
 
+/** What one case produced: the checks it passed, or why it could not run. */
 export type Outcome =
   | { id: string; status: "scored"; model: string; checks: Check[]; score: number }
   | { id: string; status: "skipped"; reason: string };

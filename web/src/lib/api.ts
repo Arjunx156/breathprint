@@ -25,6 +25,7 @@ const ErrorBodySchema = z.object({ error: z.object({ code: z.string() }) });
 
 type Reply = { ok: boolean; status: number; json(): Promise<unknown> };
 
+/** A refused reply as an ApiError, with the server's code when it sent one. */
 export async function failure(res: Omit<Reply, "ok">): Promise<ApiError> {
   const body = ErrorBodySchema.safeParse(await res.json().catch(() => null));
   return new ApiError(res.status, body.success ? body.data.error.code : "network");
@@ -38,6 +39,7 @@ export async function replyOf<T>(res: Reply, schema: { parse(data: unknown): T }
 
 const PlacesSchema = z.object({ places: z.array(PlaceSchema) });
 
+/** The forecast for a place, checked against the snapshot schema. */
 export async function fetchAir(
   lat: number,
   lon: number,
@@ -50,6 +52,7 @@ export async function fetchAir(
   return replyOf(res, AirSnapshotSchema);
 }
 
+/** Places matching a name, checked against the place schema. */
 export async function searchPlaces(
   q: string,
   lang: Language,

@@ -16,6 +16,7 @@ import { geocodeRoutes } from "./routes/geocode";
 import { planRoutes } from "./routes/plan";
 import { MAX_PHOTO_BYTES, scanRoutes } from "./routes/scan";
 
+/** Everything the app reaches the outside world through, so tests can swap each one. */
 export type Deps = {
   env: Env;
   air: AirSource;
@@ -67,4 +68,5 @@ export function createApp({ env, air, geocode, llm, clientIp }: Deps) {
     .route("/api/scan", scanRoutes({ llm }));
 }
 
+/** The API's routes and types, for the browser's typed client. */
 export type AppType = ReturnType<typeof createApp>;

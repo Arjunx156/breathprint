@@ -1,8 +1,10 @@
+import { titleOf } from "@shared/knowledge/cards";
 import { cardById, search } from "@shared/knowledge/search";
 import { type SourceId, sourceOf } from "@shared/sources";
 import { useMemo } from "react";
 import { Link } from "wouter";
 import { useApp } from "../../app/state";
+import { ExternalLink } from "../../components/ExternalLink";
 
 function SourceLinks({ ids }: { ids: readonly SourceId[] }) {
   return ids.map((id, i) => {
@@ -10,9 +12,9 @@ function SourceLinks({ ids }: { ids: readonly SourceId[] }) {
     return (
       <span key={id}>
         {i > 0 && <span aria-hidden="true"> · </span>}
-        <a className="link" href={source.url} target="_blank" rel="noopener noreferrer">
+        <ExternalLink href={source.url}>
           {source.publisher}, {source.year}
-        </a>
+        </ExternalLink>
       </span>
     );
   });
@@ -38,7 +40,7 @@ export function Cited({
               if (!card) return null;
               return (
                 <li key={id}>
-                  <span className="block">{lang === "hi" ? card.titleHi : card.title}</span>
+                  <span className="block">{titleOf(card, lang)}</span>
                   <SourceLinks ids={card.sources} />
                 </li>
               );
@@ -75,7 +77,7 @@ export function Library({ question }: { question: string }) {
       <ul className="mt-6 space-y-7">
         {hits.map(({ card }) => (
           <li key={card.id} className="max-w-prose">
-            <h3 className="font-semibold">{lang === "hi" ? card.titleHi : card.title}</h3>
+            <h3 className="font-semibold">{titleOf(card, lang)}</h3>
             <p className="mt-1" lang="en">
               {card.body}
             </p>

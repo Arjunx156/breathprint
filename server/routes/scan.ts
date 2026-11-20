@@ -1,9 +1,9 @@
 import { createHash } from "node:crypto";
+import { LANGUAGES } from "@shared/profile";
+import type { ScanReply } from "@shared/scan";
+import { DAY_MS } from "@shared/time";
 import { Hono } from "hono";
 import { z } from "zod";
-import { LANGUAGES } from "../../shared/profile";
-import type { ScanReply } from "../../shared/scan";
-import { DAY_MS } from "../../shared/time";
 import { PROMPT_VERSION } from "../ai/prompts";
 import { keyOf, liveOrRecorded } from "../ai/recorded";
 import { readScan, scanRequest } from "../ai/scan";

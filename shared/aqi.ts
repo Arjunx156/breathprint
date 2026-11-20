@@ -4,7 +4,9 @@
  * linearly inside a breakpoint band and report the worst pollutant.
  */
 
+/** India's National AQI or the US AQI. */
 export type Scale = "IN" | "US";
+/** The particle sizes both scales read. */
 export type Pollutant = "pm25" | "pm10";
 
 /** 0 is the cleanest band and 5 the worst, on either scale. */
@@ -111,6 +113,7 @@ export function levelOnScale(scale: Scale, index: number): Level {
   return LEVELS[i] ?? 5;
 }
 
+/** An index on one scale, with its category and the pollutant that set it. */
 export type AqiReading = {
   scale: Scale;
   value: number;

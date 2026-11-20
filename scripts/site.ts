@@ -5,6 +5,7 @@
  */
 const TRAILING_SLASHES = /\/+$/;
 
+/** The site's own origin: set, Vercel's production URL, or local. */
 export function siteUrl(env: Record<string, string | undefined> = process.env): string {
   if (env.SITE_URL) return env.SITE_URL.replace(TRAILING_SLASHES, "");
   if (env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`;
@@ -17,10 +18,12 @@ export const PRODUCTION_URL = "https://breathprint-zeta.vercel.app";
 /** Every page worth indexing: the app's front page and the blog; the rest is per household. */
 const PAGES = ["/", "/blog/"];
 
+/** Lets crawlers in everywhere but the API. */
 export function robotsTxt(site: string): string {
   return `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${site}/sitemap.xml\n`;
 }
 
+/** Every page a visitor can land on. */
 export function sitemapXml(site: string): string {
   const urls = PAGES.map((p) => `  <url><loc>${site}${p}</loc></url>`).join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;

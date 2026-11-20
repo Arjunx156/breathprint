@@ -53,6 +53,7 @@ function filterImpact(ctx: Context, cadr: FactorId, watts: FactorId, build?: Fac
   });
 }
 
+/** Run the family's own purifier in the room where its most sensitive members sleep. */
 export const purifierNight: ActionDef = {
   id: "purifier-night",
   group: "bedroomFilter",
@@ -67,6 +68,7 @@ export const purifierNight: ActionDef = {
   impact: (ctx) => filterImpact(ctx, "purifierCadr", "purifierWatts"),
 };
 
+/** Build a box-fan purifier for the bedroom, for a home without one. */
 export const diyPurifier: ActionDef = {
   id: "diy-purifier",
   group: "bedroomFilter",
@@ -99,6 +101,7 @@ function airingExcess(ctx: Context, people: readonly Member[], outdoor: number, 
   return total(people.map((m) => exposed(m, delta, AIRING_HOURS + decay, "rest")));
 }
 
+/** Air the house in the clean window instead of the morning, when the morning is clearly dirtier. */
 export const ventilateWindow: ActionDef = {
   id: "ventilate-window",
   ledgers: ["protect"],
@@ -144,6 +147,7 @@ const TIGHTER: Record<Context["profile"]["home"]["tightness"], FactorId | null> 
   tight: null,
 };
 
+/** Tighten a leaky or average home by one step, so less of the street's air gets in. */
 export const sealGaps: ActionDef = {
   id: "seal-gaps",
   ledgers: ["protect"],
@@ -180,6 +184,7 @@ export const sealGaps: ActionDef = {
   },
 };
 
+/** Heat one room on a timer instead of several: the kWh, CO2 and rupees an electric heater saves. */
 export const heatOneRoom: ActionDef = {
   id: "heat-one-room",
   ledgers: ["prevent"],
@@ -204,6 +209,7 @@ export const heatOneRoom: ActionDef = {
     }),
 };
 
+/** Mop and wipe instead of sweeping on an unhealthy day, so settled dust stays down. */
 export const wetCleaning: ActionDef = {
   id: "wet-cleaning",
   ledgers: ["protect"],

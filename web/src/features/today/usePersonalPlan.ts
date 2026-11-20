@@ -6,6 +6,7 @@ import { z } from "zod/mini";
 import { client, replyOf } from "../../lib/api";
 import { KEYS, load, save } from "../../lib/storage";
 
+/** Where the model's plan has got to: not asked, on its way, ready or failed. */
 export type PersonalPlan =
   | { status: "off" }
   | { status: "loading" }

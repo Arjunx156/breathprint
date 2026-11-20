@@ -9,6 +9,7 @@ const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 const text = (max: number) => z.string().check(z.trim(), z.minLength(1), z.maxLength(max));
 
+/** One step of a plan: an action, a time, who it is for and why. */
 export const PlanStepSchema = z.object({
   actionId: z.string().check(z.minLength(1), z.maxLength(40)),
   time: z.string().check(z.regex(HHMM)),
@@ -16,6 +17,7 @@ export const PlanStepSchema = z.object({
   reason: text(300),
 });
 
+/** A plan as the model writes it, before the server checks it. */
 export const DayPlanSchema = z.object({
   headline: text(160),
   steps: z.array(PlanStepSchema).check(z.minLength(1), z.maxLength(8)),
@@ -23,6 +25,7 @@ export const DayPlanSchema = z.object({
 
 export type PlanStep = z.infer<typeof PlanStepSchema>;
 export type DayPlanBody = z.infer<typeof DayPlanSchema>;
+/** A plan, and whether the rules or the model chose it. */
 export type DayPlan = DayPlanBody & { source: "rules" | "ai" };
 
 /** What /api/plan answers: a plan the model chose, already checked by the server. */
@@ -34,6 +37,7 @@ export const PlanReplySchema = z.object({
 
 export type PlanReply = z.infer<typeof PlanReplySchema>;
 
+/** More steps than this and a family stops reading. */
 export const MAX_STEPS = 8;
 const MAX_PROTECT = 6;
 const MAX_PREVENT = 2;
@@ -125,6 +129,7 @@ export function selectSteps(ctx: Context, ranked: readonly Candidate[]): Candida
   return [...new Set([...safety, ...gaps, ...protect, ...prevent])].slice(0, MAX_STEPS);
 }
 
+/** Writes a step's one-line reason, in the family's language. */
 export type Reasoner = (ctx: Context, candidate: Candidate, time: string) => string;
 
 /** A day plan from the rules alone: the selected steps, timed, reasoned and in clock order. */

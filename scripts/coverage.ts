@@ -25,6 +25,7 @@ export const ENTRY_POINTS: ReadonlySet<string> = new Set([
 ]);
 
 type Count = [hit: number, found: number];
+/** Hit and found counts for lines and functions. */
 export type Totals = { lines: Count; functions: Count };
 
 /** An lcov record is a tag, a colon, then the value, which may hold colons of its own. */
@@ -53,6 +54,7 @@ export function totals(lcov: string, prefix: string): Totals {
   return sum;
 }
 
+/** A count as a percentage; nothing to cover counts as covered. */
 export const percent = ([hit, found]: Count) => (found ? (hit / found) * 100 : 100);
 
 const NOT_SOURCE = /\.(test|e2e)\.tsx?$|\.d\.ts$/;

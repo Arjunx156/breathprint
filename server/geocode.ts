@@ -1,5 +1,5 @@
+import { coarse, type Place } from "@shared/profile";
 import { z } from "zod";
-import { coarse, type Place } from "../shared/profile";
 import { UpstreamError } from "./air/source";
 
 const ENDPOINT = "https://geocoding-api.open-meteo.com/v1/search";
@@ -20,6 +20,7 @@ const ResponseSchema = z.object({
     .default([]),
 });
 
+/** Finds places by name, rounded to the forecast grid. */
 export type Geocoder = (query: string, lang: "en" | "hi") => Promise<Place[]>;
 
 /** Place search through Open-Meteo's keyless geocoder, rounded to the forecast grid. */

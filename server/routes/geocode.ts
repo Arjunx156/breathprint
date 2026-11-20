@@ -1,6 +1,6 @@
+import { LANGUAGES } from "@shared/profile";
 import { Hono } from "hono";
 import { z } from "zod";
-import { LANGUAGES } from "../../shared/profile";
 import type { Geocoder } from "../geocode";
 import { valid } from "../validate";
 
@@ -9,6 +9,7 @@ const SearchQuery = z.object({
   lang: z.enum(LANGUAGES).default("en"),
 });
 
+/** GET /api/geocode: places by name, for setup. */
 export function geocodeRoutes(geocode: Geocoder) {
   return new Hono().get("/", valid("query", SearchQuery), async (c) => {
     const { q, lang } = c.req.valid("query");

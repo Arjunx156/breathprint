@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { useApp } from "../app/state";
 
+/** The page for a path the app doesn't have, with one way home. */
 export function NotFound() {
   const { t } = useApp();
   return (

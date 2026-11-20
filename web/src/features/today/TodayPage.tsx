@@ -67,6 +67,7 @@ function Day({ profile, summary, offline }: Air) {
   );
 }
 
+/** Today: the air, the 48-hour ribbon and the day's plan. */
 export function TodayPage() {
   return <AirPage page={Day} />;
 }

@@ -30,7 +30,9 @@ const DATA_TAG = new Set<string>(DATA_TAGS);
  * grows at the end, so these stay put and can key what's on screen.
  */
 export type Line = { line: number; text: string };
+/** A paragraph, or a list of lines that started with a dash. */
 export type Block = ({ kind: "p" } & Line) | { kind: "list"; line: number; items: Line[] };
+/** A chat answer as the page draws it: its blocks, and the cards and actions it cites. */
 export type Answer = { blocks: Block[]; cards: string[]; actions: string[] };
 
 /**

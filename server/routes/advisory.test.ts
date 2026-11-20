@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { MEERA } from "../../shared/profile";
+import { MEERA } from "@shared/profile";
 import { loadEnv } from "../env";
 import { post, testApp, withModel } from "../testing";
 

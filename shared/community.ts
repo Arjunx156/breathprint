@@ -7,7 +7,9 @@ import { t, tx } from "./i18n";
 import { defaultProfile, type Language, type Place, type Profile } from "./profile";
 import { type Range, scale } from "./range";
 
+/** Who an advisory speaks for. */
 export const AUDIENCES = ["society", "school", "workplace"] as const;
+/** Where an advisory will be posted, which sets its length. */
 export const CHANNELS = ["whatsapp", "notice"] as const;
 export type Audience = (typeof AUDIENCES)[number];
 export type Channel = (typeof CHANNELS)[number];
@@ -89,6 +91,7 @@ export function typicalHousehold(place: Place, audience: Audience): Profile {
 
 const RangeSchema = z.object({ low: z.number(), mid: z.number(), high: z.number() });
 
+/** What many households doing the plan's prevent steps keep out of the shared air. */
 export const CollectiveSchema = z.object({
   actionId: z.string(),
   households: z.number(),

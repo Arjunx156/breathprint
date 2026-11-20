@@ -34,6 +34,7 @@ function document(card: Card): Doc {
   return { card, terms, length: words.length };
 }
 
+/** A BM25 index over the cards: their terms, average length and document frequencies. */
 export type Index = { docs: Doc[]; avgLength: number; df: Map<string, number> };
 
 function buildIndex(cards: readonly Card[]): Index {
@@ -57,6 +58,7 @@ function bm25(index: Index, doc: Doc, query: readonly string[]): number {
   return score;
 }
 
+/** A card and how well it matched. */
 export type Hit = { card: Card; score: number };
 
 const DEFAULT_INDEX = buildIndex(CARDS);

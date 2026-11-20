@@ -8,6 +8,7 @@ import {
   type Provider,
 } from "./types";
 
+/** How the model chain is set up. */
 export type LlmOptions = {
   /** Null when nothing is configured: every call fails fast as "offline". */
   provider: Provider | null;
@@ -29,6 +30,7 @@ export const SILENT = {
   sleep: () => Promise.resolve(),
 } as const satisfies Pick<LlmOptions, "log" | "sleep">;
 
+/** The one way the server asks a model anything. */
 export type Llm = {
   ready: boolean;
   generate(req: LlmRequest, signal?: AbortSignal): Promise<{ text: string; model: string }>;

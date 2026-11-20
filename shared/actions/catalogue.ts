@@ -32,6 +32,7 @@ import {
 import { carRecirculate, maskCommute, maskSchoolRun } from "./tripProtect";
 import type { ActionDef, Context, Cost, Impact } from "./types";
 
+/** Every action Breathprint can suggest, safety first; the planner and the checker read only this. */
 export const CATALOGUE: readonly ActionDef[] = [
   heaterSafety,
   cleanerCooking,
@@ -69,6 +70,7 @@ export function actionById(id: string): ActionDef | undefined {
   return BY_ID.get(id);
 }
 
+/** An action that fits this family today, with its impact and its rank. */
 export type Candidate = {
   action: ActionDef;
   impact: Impact;

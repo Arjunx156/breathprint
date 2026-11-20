@@ -1,19 +1,19 @@
-import { exertionCeiling } from "../../shared/actions/activity";
-import { type Candidate, rankActions } from "../../shared/actions/catalogue";
-import type { Context } from "../../shared/actions/types";
-import { summarize } from "../../shared/air";
-import { healthLevel } from "../../shared/aqi";
-import { THRESHOLDS } from "../../shared/factors";
-import { DEMO_DAY, delhiMorning, delhiSevereSnapshot } from "../../shared/fixtures";
-import { clock, dayOf } from "../../shared/format";
-import { isMessageKey, t, tx } from "../../shared/i18n";
-import { ruleReason } from "../../shared/i18n/reason";
-import { CARDS } from "../../shared/knowledge/cards";
-import { search } from "../../shared/knowledge/search";
-import { selectSteps, timeFor } from "../../shared/plan";
-import { forModel, isSensitive, type Profile } from "../../shared/profile";
-import { sourceOf } from "../../shared/sources";
-import { DAY_MS } from "../../shared/time";
+import { exertionCeiling } from "@shared/actions/activity";
+import { type Candidate, rankActions } from "@shared/actions/catalogue";
+import type { Context } from "@shared/actions/types";
+import { summarize } from "@shared/air";
+import { healthLevel } from "@shared/aqi";
+import { THRESHOLDS } from "@shared/factors";
+import { DEMO_DAY, delhiMorning, delhiSevereSnapshot } from "@shared/fixtures";
+import { clock, dayOf } from "@shared/format";
+import { isMessageKey, t, tx } from "@shared/i18n";
+import { ruleReason } from "@shared/i18n/reason";
+import { CARDS } from "@shared/knowledge/cards";
+import { search } from "@shared/knowledge/search";
+import { selectSteps, timeFor } from "@shared/plan";
+import { forModel, isSensitive, type Profile } from "@shared/profile";
+import { sourceOf } from "@shared/sources";
+import { DAY_MS } from "@shared/time";
 import type { AirSource } from "../air/source";
 
 /**

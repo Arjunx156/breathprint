@@ -36,7 +36,7 @@ export default defineConfig({
   root: "web",
   plugins: [lazyHindi(), react(), tailwindcss(), site()],
   resolve: {
-    alias: { "@shared": at("./shared"), "@web": at("./web/src") },
+    alias: { "@shared": at("./shared") },
   },
   build: {
     outDir: at("./dist/public"),

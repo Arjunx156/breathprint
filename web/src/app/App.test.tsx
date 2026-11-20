@@ -4,7 +4,7 @@ import { t } from "@shared/i18n";
 import { fireEvent, waitFor } from "@testing-library/react";
 import { withPage } from "../../test/dom";
 import { renderDemo, renderWith, stubFetch } from "../../test/render";
-import { PageBoundary } from "./App";
+import { PageBoundary } from "./PageBoundary";
 import { pageTitle } from "./usePageChange";
 
 withPage();
@@ -46,6 +46,13 @@ describe("App", () => {
     expect(await view.findByRole("link", { name: t("hi", "nav.today") })).toBeTruthy();
     await waitFor(() => expect(document.documentElement.lang).toBe("hi"));
     await waitFor(() => expect(document.title).toBe(`${t("hi", "nav.settings")} · Breathprint`));
+  });
+
+  test("a link that leaves the app says it opens a new tab", () => {
+    const view = renderDemo("/indoors");
+    const data = view.getByRole("link", { name: `Open-Meteo ${en("ui.newTab")}` });
+    expect(data.getAttribute("target")).toBe("_blank");
+    expect(data.getAttribute("rel")).toBe("noopener noreferrer");
   });
 
   test("each page names itself in the tab, and the lost page says it's lost", () => {

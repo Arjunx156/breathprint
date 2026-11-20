@@ -1,3 +1,6 @@
+import { AUDIENCES, CHANNELS, collective, typicalHousehold } from "@shared/community";
+import { t } from "@shared/i18n";
+import { LANGUAGES, MEERA } from "@shared/profile";
 import { advisoryRequest, readAdvisory } from "../server/ai/advisory";
 import { chatRequest } from "../server/ai/chat";
 import { contextFor } from "../server/ai/grounding";
@@ -10,9 +13,6 @@ import { loadEnv } from "../server/env";
 import { llmFromEnv } from "../server/llm/config";
 import { SILENT } from "../server/llm/llm";
 import { photoId } from "../server/routes/scan";
-import { AUDIENCES, CHANNELS, collective, typicalHousehold } from "../shared/community";
-import { t } from "../shared/i18n";
-import { LANGUAGES, MEERA } from "../shared/profile";
 import { HOUSEHOLDS } from "./jobs";
 import { knownIds } from "./scorers";
 

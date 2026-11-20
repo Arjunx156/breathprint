@@ -1,3 +1,4 @@
+import type { Language } from "../profile";
 import type { SourceId } from "../sources";
 
 /**
@@ -16,6 +17,10 @@ export type Card = {
   actions: readonly string[];
 };
 
+/** A card's title in the reader's language; bodies stay English, as the sources are. */
+export const titleOf = (card: Card, lang: Language) => (lang === "hi" ? card.titleHi : card.title);
+
+/** The cited cards chat answers draw on, each tied to the actions it explains. */
 export const CARDS: readonly Card[] = [
   {
     id: "mask-fit",

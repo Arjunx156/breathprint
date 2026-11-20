@@ -33,6 +33,7 @@ const price = z
   .transform((s) => s.split(",").map(Number))
   .pipe(z.tuple([z.number().min(0), z.number().min(0)]));
 
+/** Every setting the server reads, validated at boot with safe defaults. */
 export const EnvSchema = z
   .object({
     LLM_PROVIDER: optional(z.enum(["gemini", "ollama", "fake"])),

@@ -4,9 +4,12 @@
  * ids, outcomes and timings; never a body, a query or an address.
  */
 export type Level = "info" | "warn" | "error";
+/** The values on one log line. */
 export type Fields = Readonly<Record<string, unknown>>;
+/** Where log lines go. */
 export type Sink = (level: Level, fields: Fields) => void;
 
+/** One JSON line per event, errors to stderr. */
 export const toConsole: Sink = (level, fields) => {
   const line = JSON.stringify({ level, ...fields });
   if (level === "error") console.error(line);
@@ -16,6 +19,7 @@ export const toConsole: Sink = (level, fields) => {
 
 let sink: Sink = toConsole;
 
+/** The server's only logger. */
 export const logger = {
   info: (fields: Fields) => sink("info", fields),
   warn: (fields: Fields) => sink("warn", fields),

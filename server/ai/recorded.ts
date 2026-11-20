@@ -9,6 +9,7 @@ import type { Parsed } from "./structured";
  */
 const RECORDED: Readonly<Record<string, string>> = replies;
 
+/** A saved real answer for the demo, so it survives a dead network. */
 export function recorded(key: string): string | undefined {
   return RECORDED[key];
 }

@@ -2,6 +2,7 @@ import { type ChangeEvent, useId } from "react";
 import { useApp } from "../../app/state";
 import { type Photo, preparePhoto, samplePhoto } from "./photo";
 
+/** The photo about to be scanned. */
 export function PhotoPreview({ photo }: { photo: Photo }) {
   const { t } = useApp();
   return (

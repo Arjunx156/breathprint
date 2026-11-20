@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
+import { DAY_MS, MINUTE_MS, SECOND_MS } from "@shared/time";
 import type { Context, MiddlewareHandler } from "hono";
-import { DAY_MS, MINUTE_MS, SECOND_MS } from "../../shared/time";
 import { apiError } from "./errors";
 
 type Window = { count: number; resetAt: number };

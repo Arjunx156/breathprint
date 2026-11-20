@@ -11,6 +11,7 @@ import type { Impact } from "./types";
 
 const pickMid = picker("mid");
 
+/** The modes that burn fuel or run a meter. */
 export type Motor = "car" | "twoWheeler" | "auto";
 const MOTOR: ReadonlySet<TravelMode> = new Set<TravelMode>(["car", "twoWheeler", "auto"]);
 

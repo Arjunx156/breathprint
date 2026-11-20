@@ -22,6 +22,7 @@ export function exertionCeiling(people: readonly Member[]): number {
   return people.some(isSensitive) ? 1 : 2;
 }
 
+/** Exercise indoors when the air at the usual hour is unhealthy for sensitive people. */
 export const exerciseIndoors: ActionDef = {
   id: "exercise-indoors",
   group: "exercise",
@@ -54,6 +55,7 @@ export const exerciseIndoors: ActionDef = {
   },
 };
 
+/** Move a walk or run into today's clean window, when that window is clean enough for every exerciser. */
 export const exerciseWindow: ActionDef = {
   id: "exercise-window",
   group: "exercise",
@@ -96,6 +98,7 @@ export const exerciseWindow: ActionDef = {
   },
 };
 
+/** Indoor play for the children when the air at five in the evening is unhealthy for sensitive groups. */
 export const playIndoors: ActionDef = {
   id: "play-indoors",
   ledgers: ["protect"],
@@ -126,6 +129,7 @@ export const playIndoors: ActionDef = {
   },
 };
 
+/** Bag the leaves and rubbish a household burns: the grams of PM2.5 the street no longer gets. */
 export const noWasteBurning: ActionDef = {
   id: "no-waste-burning",
   ledgers: ["prevent"],
@@ -149,6 +153,7 @@ export const noWasteBurning: ActionDef = {
     }),
 };
 
+/** Report open burning nearby on an unhealthy day; advice with no figure of its own. */
 export const reportBurning: ActionDef = {
   id: "report-burning",
   ledgers: ["prevent"],
@@ -163,6 +168,7 @@ export const reportBurning: ActionDef = {
   impact: () => impact({}),
 };
 
+/** Keep an angithi, kerosene or gas heater out of sleeping rooms. Always in the plan when one is used. */
 export const heaterSafety: ActionDef = {
   id: "heater-safety",
   ledgers: ["protect"],
@@ -177,6 +183,7 @@ export const heaterSafety: ActionDef = {
   impact: () => impact({}),
 };
 
+/** A cleaner fuel, or cooking outside, for a biomass or kerosene stove. Always in the plan when one is used. */
 export const cleanerCooking: ActionDef = {
   id: "cleaner-cooking",
   ledgers: ["protect", "prevent"],
@@ -192,6 +199,7 @@ export const cleanerCooking: ActionDef = {
   impact: () => impact({}),
 };
 
+/** Lid on and exhaust on while cooking, for any flame without a chimney. */
 export const cookingVent: ActionDef = {
   id: "cooking-vent",
   ledgers: ["protect"],
@@ -205,6 +213,7 @@ export const cookingVent: ActionDef = {
   impact: () => impact({}),
 };
 
+/** Smoke outside and away from the door, in a home where someone smokes. */
 export const smokeOutside: ActionDef = {
   id: "smoke-outside",
   ledgers: ["protect"],

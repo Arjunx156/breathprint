@@ -9,6 +9,7 @@ import { AdvisorySchema, CollectiveSchema } from "./community";
 
 /** Six exchanges is enough memory for a question and its follow-ups. */
 export const MAX_MESSAGES = 12;
+/** The longest chat message the server accepts. */
 export const MAX_CHARS = 600;
 
 /** One line of the chat stream. */
@@ -25,6 +26,7 @@ export const ChatEventSchema = z.discriminatedUnion("type", [
 
 export type ChatEvent = z.infer<typeof ChatEventSchema>;
 
+/** What /api/advisory answers: the advisory and the engine's shared-air figure. */
 export const AdvisoryReplySchema = z.object({
   advisory: AdvisorySchema,
   collective: z.nullable(CollectiveSchema),

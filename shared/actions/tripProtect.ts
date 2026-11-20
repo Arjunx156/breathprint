@@ -53,6 +53,7 @@ const openTrip = (ctx: Context, trip: Trip | null): trip is Trip =>
   OPEN_MODES.has(trip.mode) &&
   healthLevel(pm25At(ctx.air, trip.leaveAt)) >= LEVEL.sensitive;
 
+/** N95 masks on an open-air school run, when the air at leaving time is unhealthy for sensitive groups. */
 export const maskSchoolRun: ActionDef = {
   id: "mask-school-run",
   ledgers: ["protect"],
@@ -66,6 +67,7 @@ export const maskSchoolRun: ActionDef = {
   impact: (ctx) => onTrip(ctx.profile.schoolRun, (trip) => maskImpact(ctx, trip)),
 };
 
+/** An N95 on an open-air commute, on the same terms as the school run. */
 export const maskCommute: ActionDef = {
   id: "mask-commute",
   ledgers: ["protect"],
@@ -110,6 +112,7 @@ function recirculateImpact(ctx: Context): Impact {
   });
 }
 
+/** Windows up and air on recirculate, on every car trip the household makes. */
 export const carRecirculate: ActionDef = {
   id: "car-recirculate",
   ledgers: ["protect"],

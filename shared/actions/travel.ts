@@ -87,6 +87,7 @@ function switchImpact(ctx: Context, trip: Trip & { mode: Motor }, sw: Switch): I
   });
 }
 
+/** Take the metro instead of a car, two-wheeler or auto, for a commute of at least METRO_MIN_KM. */
 export const commuteMetro: ActionDef = {
   id: "commute-metro",
   group: "commute",
@@ -104,6 +105,7 @@ export const commuteMetro: ActionDef = {
   },
 };
 
+/** Take the bus instead of a motor vehicle, for a commute of at least BUS_MIN_KM. */
 export const commuteBus: ActionDef = {
   id: "commute-bus",
   group: "commute",
@@ -124,6 +126,7 @@ export const commuteBus: ActionDef = {
 const drivesCar = (ctx: Context) =>
   ctx.profile.commute?.mode === "car" || ctx.profile.schoolRun?.mode === "car";
 
+/** Share the drive to work with one colleague. */
 export const carpool: ActionDef = {
   id: "carpool",
   group: "commute",
@@ -141,6 +144,7 @@ export const carpool: ActionDef = {
     ),
 };
 
+/** Start a school-run rota with two other families. */
 export const schoolCarpool: ActionDef = {
   id: "school-carpool",
   ledgers: ["prevent"],
@@ -157,6 +161,7 @@ export const schoolCarpool: ActionDef = {
     ),
 };
 
+/** Do the day's car errands in one trip. */
 export const combineErrands: ActionDef = {
   id: "combine-errands",
   ledgers: ["prevent"],
@@ -172,6 +177,7 @@ export const combineErrands: ActionDef = {
 
 const MINUTES_PER_HOUR = 60;
 
+/** Turn the engine off at long signals instead of idling. */
 export const engineOff: ActionDef = {
   id: "engine-off",
   ledgers: ["prevent"],
@@ -215,6 +221,7 @@ function stayHomeImpact(ctx: Context, trip: Trip): Impact {
   });
 }
 
+/** Skip the commute on a very unhealthy day, for anyone whose work allows it. */
 export const workFromHome: ActionDef = {
   id: "work-from-home",
   group: "commute",

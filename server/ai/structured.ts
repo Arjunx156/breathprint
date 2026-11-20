@@ -1,5 +1,5 @@
-import { inScript } from "../../shared/i18n/script";
-import type { Language } from "../../shared/profile";
+import { inScript } from "@shared/i18n/script";
+import type { Language } from "@shared/profile";
 import { issueLines, type SchemaIssue } from "../issues";
 import type { Llm } from "../llm/llm";
 import type { LlmRequest } from "../llm/types";
@@ -7,6 +7,7 @@ import { logger } from "../log";
 import { ungrounded } from "./guard";
 import { REPAIR_PROMPT, wrongLanguage } from "./prompts";
 
+/** A reply that passed its checks, or the issues to send back. */
 export type Parsed<T> = { ok: true; value: T } | { ok: false; issues: readonly string[] };
 
 /** Anything with zod's safeParse, from zod or zod/mini. */

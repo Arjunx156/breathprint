@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { today } from "../../shared/engine";
-import { MEERA } from "../../shared/profile";
-import { severeDay } from "../../shared/testing";
+import { today } from "@shared/engine";
+import { MEERA } from "@shared/profile";
+import { severeDay } from "@shared/testing";
 import { post, testApp, withModel } from "../testing";
 
 /** A reply the checker accepts: the rule plan's own steps with plain reasons. */

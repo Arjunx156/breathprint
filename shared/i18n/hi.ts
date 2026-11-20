@@ -193,6 +193,7 @@ export const hi: Record<keyof typeof en, string> = {
   "ui.pageFailedLead":
     "हर पन्ने को एक बार इंटरनेट चाहिए, फिर वह ऑफ़लाइन भी चलता है। कनेक्शन देखें और फिर कोशिश करें।",
   "ui.retry": "फिर कोशिश करें",
+  "ui.newTab": "(नए टैब में खुलता है)",
   "nav.label": "मुख्य",
   "nav.today": "आज",
   "nav.ask": "पूछें",

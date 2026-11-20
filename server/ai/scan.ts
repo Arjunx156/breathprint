@@ -1,6 +1,6 @@
-import { inScript } from "../../shared/i18n/script";
-import type { Language } from "../../shared/profile";
-import { distinctSightings, ROOMS, type Scan, ScanSchema, SIGHTINGS } from "../../shared/scan";
+import { inScript } from "@shared/i18n/script";
+import type { Language } from "@shared/profile";
+import { distinctSightings, ROOMS, type Scan, ScanSchema, SIGHTINGS } from "@shared/scan";
 import type { InlineImage, LlmRequest } from "../llm/types";
 import { scanSystem, wrongLanguage } from "./prompts";
 import { type Parsed, parseShaped, verdict } from "./structured";

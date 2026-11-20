@@ -13,7 +13,9 @@ import { coarse, type Language, type Profile } from "@shared/profile";
 import { type AdvisoryReply, AdvisoryReplySchema } from "@shared/replies";
 import { client, replyOf } from "../../lib/api";
 
+/** What the advisory form asks for. */
 export type Inputs = { audience: Audience; channel: Channel; households: number; lang: Language };
+/** An advisory ready to show, and who wrote it. */
 export type Written = Inputs & {
   advisory: Advisory;
   collective: Collective | null;
@@ -21,6 +23,7 @@ export type Written = Inputs & {
   by: "model" | "recorded" | "fallback" | "template";
 };
 
+/** The most households the form accepts. */
 export const MAX_HOUSEHOLDS = 10_000;
 
 /** Sends only the area, rounded to the forecast grid; no household goes with it. */

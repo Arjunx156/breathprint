@@ -12,6 +12,7 @@ export const restoreFetch = () => {
   globalThis.fetch = real;
 };
 
+/** A request the stub received. */
 export type Sent = { url: string; body: Record<string, unknown> };
 
 /** Answers every request with `respond()` and keeps what was sent. */
@@ -46,4 +47,5 @@ const { schema: _schema, ...plain } = PHOTO;
 /** The same request as plain text, with no schema. */
 export const TEXT: LlmRequest = plain;
 
+/** A signal that never aborts. */
 export const signal = () => new AbortController().signal;

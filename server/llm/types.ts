@@ -4,6 +4,7 @@ export type InlineImage = { mime: "image/jpeg"; data: string };
 /** One message in a conversation; "model" is the assistant's side. */
 export type Turn = { role: "user" | "model"; text: string; images?: readonly InlineImage[] };
 
+/** One request to a model, the same for every provider. */
 export type LlmRequest = {
   /** Which job is asking, for the log line: plan, chat, advisory. */
   job: string;
@@ -15,6 +16,7 @@ export type LlmRequest = {
   temperature: number;
 };
 
+/** Tokens in and out, for the log line. */
 export type Usage = { input: number; output: number };
 
 /** Some text from a model, with token counts when the provider reports them. */

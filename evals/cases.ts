@@ -1,7 +1,7 @@
-import type { Audience, Channel } from "../shared/community";
-import { defaultProfile, type Language, MEERA, type Profile } from "../shared/profile";
-import type { Room, Sighting } from "../shared/scan";
-import { withHome } from "../shared/testing";
+import type { Audience, Channel } from "@shared/community";
+import { defaultProfile, type Language, MEERA, type Profile } from "@shared/profile";
+import type { Room, Sighting } from "@shared/scan";
+import { withHome } from "@shared/testing";
 
 /*
  * The households, days and questions the model is scored on. Each case names
@@ -11,11 +11,13 @@ import { withHome } from "../shared/testing";
 /** Severe all day; poor in the morning but fine by noon; clean. */
 export type Air = "severe" | "poor" | "clean";
 
+/** A household and a day to plan. */
 export type PlanCase = { id: string; job: "plan"; profile: Profile; air: Air; lang: Language };
 
 /** What a chat answer must show beyond the checks every answer gets. */
 export type ChatExpect = "cites" | "emergency" | "noLeak" | "brief" | "window";
 
+/** A question, and what a good answer must show. */
 export type ChatCase = {
   id: string;
   job: "chat";
@@ -32,6 +34,7 @@ export type ChatCase = {
   offTopic?: readonly string[];
 };
 
+/** An advisory to write, for an audience and a channel. */
 export type AdvisoryCase = {
   id: string;
   job: "advisory";
@@ -51,6 +54,7 @@ export type ScanCase = {
   never: readonly Sighting[];
 };
 
+/** One eval case for one of the four model jobs. */
 export type Case = PlanCase | ChatCase | AdvisoryCase | ScanCase;
 
 const place = MEERA.place;
@@ -195,4 +199,5 @@ const scans: ScanCase[] = [
   scan("brazier", "hi", { rooms: ANY_ROOM, sees: ["angithi"], never: ["incense", "smoking"] }),
 ];
 
+/** Every case `just eval` runs. */
 export const CASES: readonly Case[] = [...plans, ...chats, ...advisories, ...scans];

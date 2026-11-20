@@ -3,6 +3,7 @@ import { rupees, short, sig } from "@shared/format";
 import { CIGARETTE_EXPOSURE } from "@shared/i18n/reason";
 import { useApp } from "../../app/state";
 
+/** The day's breathprint, summed over the steps marked done. */
 export type Totals = { cig: number; co2: number; pm: number; inrPerDay: number; inrOnce: number };
 
 /** Central figures summed over a set of steps; negatives (a running cost, a worse trip) count against. */

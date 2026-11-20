@@ -24,6 +24,7 @@ A smog-season assistant for families and communities, built for PromptWars 6. It
 
 ## Conventions
 
+- Every side imports the engine as `@shared/…`; relative paths stay inside one side.
 - A number shown to a user comes from `shared/`, with a factor in `factors.ts` and a source in `sources.ts`. Copy uses `{placeholders}`, never literal figures.
 - New strings go in `shared/i18n/en.ts` and `hi.ts`; the type system rejects a missing Hindi key.
 - Security headers live only in `server/headers.ts`. The CSP enforces Trusted Types: a script URL goes through the one policy in `web/src/lib/trusted.ts`, never a plain string.

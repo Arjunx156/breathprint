@@ -1,8 +1,11 @@
 import { z } from "zod/mini";
 import { oneDecimal } from "./format";
 
+/** Age groups, each with its own breathing rates. */
 export const AGE_GROUPS = ["infant", "child", "teen", "adult", "older"] as const;
+/** Conditions that make a member sensitive to smoke. */
 export const CONDITIONS = ["asthma", "copd", "heart", "pregnant"] as const;
+/** Ways a trip can be made, each with its own exposure and emissions. */
 export const TRAVEL_MODES = [
   "car",
   "twoWheeler",
@@ -13,11 +16,17 @@ export const TRAVEL_MODES = [
   "cycle",
   "none",
 ] as const;
+/** Cooking fuels, from the cleanest to the smokiest. */
 export const COOKING_FUELS = ["lpg", "png", "electric", "biomass", "kerosene"] as const;
+/** Heating; the combustion kinds carry a carbon monoxide risk. */
 export const HEATING = ["none", "electric", "angithi", "kerosene", "gasHeater"] as const;
+/** How much of the street's air a home lets in. */
 export const TIGHTNESS = ["leaky", "average", "tight"] as const;
+/** How much cost should weigh against benefit. */
 export const BUDGETS = ["tight", "moderate", "comfortable"] as const;
+/** The interface and the model both speak English and Hindi. */
 export const LANGUAGES = ["en", "hi"] as const;
+/** When the household usually exercises outdoors, if at all. */
 export const EXERCISE = ["none", "morning", "evening"] as const;
 
 export type AgeGroup = (typeof AGE_GROUPS)[number];
@@ -26,6 +35,7 @@ export type Language = (typeof LANGUAGES)[number];
 
 const time = z.string().check(z.regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use 24-hour HH:MM"));
 
+/** One person in the household; the name never leaves the browser. */
 export const MemberSchema = z.object({
   id: z.string().check(z.regex(/^[a-z0-9-]{1,24}$/)),
   name: z.optional(z.string().check(z.trim(), z.maxLength(40))),
@@ -34,6 +44,7 @@ export const MemberSchema = z.object({
   outdoorWork: z._default(z.boolean(), false),
 });
 
+/** A daily trip there and back, and who makes it. */
 export const TripSchema = z.object({
   mode: z.enum(TRAVEL_MODES),
   km: z.number().check(z.gte(0), z.lte(80)),
@@ -43,6 +54,7 @@ export const TripSchema = z.object({
   who: z.array(z.string()).check(z.maxLength(12)),
 });
 
+/** A place, rounded to the forecast grid before it reaches the server. */
 export const PlaceSchema = z.object({
   name: z.string().check(z.trim(), z.minLength(1), z.maxLength(80)),
   lat: z.number().check(z.gte(-90), z.lte(90)),
@@ -51,6 +63,7 @@ export const PlaceSchema = z.object({
   country: z.string().check(z.regex(/^[A-Z]{2}$/)),
 });
 
+/** A household as the browser keeps it: who lives there, the home and the trips. */
 export const ProfileSchema = z.object({
   version: z.literal(1),
   place: PlaceSchema,

@@ -58,6 +58,7 @@ export function attemptSignal(ms: number, outer?: AbortSignal) {
   };
 }
 
+/** One attempt's abort signal and timer. */
 export type Attempt = ReturnType<typeof attemptSignal>;
 /** Writes the attempt's one log line, once it knows how it ended. */
 export type Recorder = (outcome: "ok" | Failure, usage?: Usage) => void;

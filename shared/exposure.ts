@@ -11,6 +11,7 @@ export function dose(concentration: number, ratePerHour: number, hours: number):
   return Math.max(0, concentration) * ratePerHour * Math.max(0, hours);
 }
 
+/** One room as the box model sees it. */
 export type Room = {
   outdoor: number;
   airExchange: number;

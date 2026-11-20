@@ -1,5 +1,5 @@
-import type { AirSnapshot } from "../../shared/air";
-import { MINUTE_MS } from "../../shared/time";
+import type { AirSnapshot } from "@shared/air";
+import { MINUTE_MS } from "@shared/time";
 import { TtlCache } from "../cache";
 
 /** Anything that can give the hourly air for a grid cell: Open-Meteo, a fixture, a station network. */
@@ -8,6 +8,7 @@ export type AirSource = {
   snapshot(lat: number, lon: number, signal?: AbortSignal): Promise<AirSnapshot>;
 };
 
+/** An outside service failed or answered in a shape we don't expect. */
 export class UpstreamError extends Error {
   readonly service: string;
 

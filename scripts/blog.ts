@@ -8,6 +8,7 @@ const CODE_BLOCK = /```[\s\S]*?```/g;
 const SPACES = /\s+/;
 const FIRST_IMAGE = /<img ([^>]*?)\s*\/>/;
 
+/** The post as HTML, and its reading time. */
 export type BlogPage = { body: string; minutes: number };
 
 /** Reading time for the prose, leaving code blocks out of the count. */

@@ -12,6 +12,7 @@ import { hasCombustionIndoors, isSensitive } from "./profile";
  * construction, and the tests hold it to that.
  */
 
+/** Every way a plan can fail the checker. */
 export type IssueCode =
   | "unknownAction"
   | "duplicate"
@@ -23,6 +24,7 @@ export type IssueCode =
   | "sensitiveUncovered"
   | "safetyMissing";
 
+/** One failure, with a detail the repair prompt can quote back to the model. */
 export type PlanIssue = { code: IssueCode; detail: string };
 
 /** Who a step covers: the members it names, or everyone the action applies to. */

@@ -1,6 +1,7 @@
 import type { Member, Profile } from "@shared/profile";
 import { useApp } from "../../app/state";
 
+/** Setup's steps, in order. */
 export const STEPS = [
   "setup.place",
   "setup.household",

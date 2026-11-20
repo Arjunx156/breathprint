@@ -1,4 +1,4 @@
-import { DEMO_DAY, delhiSevereSnapshot } from "../../shared/fixtures";
+import { DEMO_DAY, delhiSevereSnapshot } from "@shared/fixtures";
 import type { AirSource } from "./source";
 
 /** The demo's severe Delhi spell for every cell: for tests, offline work and drills. */

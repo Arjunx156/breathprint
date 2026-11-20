@@ -105,6 +105,7 @@ function Results({ search, place, onPlace }: Choose & { search: Search }) {
   );
 }
 
+/** Setup's first step: find the place by name or by location. */
 export function PlaceStep({ place, onPlace }: Choose) {
   const { t, lang } = useApp();
   const [query, setQuery] = useState("");

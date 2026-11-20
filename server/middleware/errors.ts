@@ -8,6 +8,7 @@ import { issueLines } from "../issues";
 import { LlmUnavailable } from "../llm/types";
 import { logger } from "../log";
 
+/** Every error the API can answer with, for the page to act on. */
 export type ErrorCode =
   | "bad_request"
   | "not_found"
@@ -22,6 +23,7 @@ export type ErrorCode =
 /** The one error shape every route returns: a code to branch on, words to show, an id to quote. */
 export type ApiError = { error: { code: ErrorCode; message: string; requestId: string } };
 
+/** An error in the API's one envelope, with the request id to quote. */
 export function apiError(
   c: Context,
   status: ContentfulStatusCode,
@@ -74,5 +76,6 @@ export const onError: ErrorHandler = (err, c) => {
   return apiError(c, 500, "internal", "Something went wrong on our side.");
 };
 
+/** Any /api path with no route. */
 export const notFound: NotFoundHandler = (c) =>
   apiError(c, 404, "not_found", "There is nothing at this address.");

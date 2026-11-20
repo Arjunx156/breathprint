@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
+import { today } from "@shared/engine";
+import { forModel, MEERA } from "@shared/profile";
+import { severeDay } from "@shared/testing";
 import { inTurn, scriptedLlm } from "../server/llm/fake";
 import { offlineLlm } from "../server/testing";
-import { today } from "../shared/engine";
-import { forModel, MEERA } from "../shared/profile";
-import { severeDay } from "../shared/testing";
 import { CASES, type Case } from "./cases";
 import { overall, replaying, runCase, taped } from "./jobs";
 

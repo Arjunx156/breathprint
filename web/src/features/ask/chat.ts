@@ -2,6 +2,7 @@ import { forModel, type Language, type Profile } from "@shared/profile";
 import { type ChatEvent, ChatEventSchema, MAX_CHARS, MAX_MESSAGES } from "@shared/replies";
 import { client, failure } from "../../lib/api";
 
+/** One message of the conversation sent with a question. */
 export type Turn = { role: "user" | "model"; text: string };
 
 /** The most recent turns that fit the API's limits, ending on the question. */

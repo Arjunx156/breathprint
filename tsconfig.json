@@ -27,8 +27,7 @@
     "allowImportingTsExtensions": true,
     "paths": {
       "@shared/*": ["./shared/*"],
-      "@server/*": ["./server/*"],
-      "@web/*": ["./web/src/*"]
+      "@server/*": ["./server/*"]
     }
   },
   "include": [

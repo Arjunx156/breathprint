@@ -4,9 +4,13 @@ import type { Member, Profile } from "../profile";
 import type { Range } from "../range";
 import type { SourceId } from "../sources";
 
+/** Protect is what the family breathes; prevent is what the household adds to the street's air. */
 export type Ledger = "protect" | "prevent";
+/** Where an action happens, for grouping it on the page. */
 export type Category = "home" | "travel" | "activity" | "safety" | "community";
+/** What an action costs to start, from nothing to a purchase. */
 export type Cost = "free" | "low" | "medium" | "high";
+/** When in the day an action belongs; `timeFor` turns it into a clock time. */
 export type Timing =
   | "cleanWindow"
   | "morning"
@@ -22,6 +26,7 @@ export type Timing =
 /** One step of "how we worked this out": a translated label, the formula, the numbers. */
 export type MethodLine = { label: MessageKey; formula: string; result: string };
 
+/** What one action changes today, each figure a range from the low and high factors. */
 export type Impact = {
   /** Who the protect ledger covers. */
   people: string[];
@@ -42,8 +47,10 @@ export type Impact = {
   method: MethodLine[];
 };
 
+/** Everything an action is judged on: the household and today's air. */
 export type Context = { profile: Profile; air: AirSummary };
 
+/** One catalogue entry: when it applies, whom it covers and what it changes. */
 export type ActionDef = {
   id: string;
   /** Actions in one group are alternatives: a plan takes one and offers the rest as swaps. */
@@ -64,6 +71,7 @@ export type ActionDef = {
   impact: (ctx: Context) => Impact;
 };
 
+/** The impact of advice with nothing to count. */
 export const NO_IMPACT: Impact = {
   people: [],
   dose: null,

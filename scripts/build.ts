@@ -1,8 +1,8 @@
 import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
+import { itemAt } from "@shared/list";
 import { IMMUTABLE, SECURITY_HEADERS } from "../server/headers";
-import { itemAt } from "../shared/list";
 import { renderBlog } from "./blog";
 import { PRODUCTION_URL, robotsTxt, sitemapXml, siteUrl } from "./site";
 import { precacheList, stampWorker } from "./sw";

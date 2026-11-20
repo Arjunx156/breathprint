@@ -1,5 +1,5 @@
-import type { Place } from "../shared/profile";
-import { DAY_MS } from "../shared/time";
+import type { Place } from "@shared/profile";
+import { DAY_MS } from "@shared/time";
 import { fixtureSource } from "./air/fixture";
 import { openMeteo } from "./air/openMeteo";
 import { cached } from "./air/source";
@@ -28,6 +28,7 @@ function productionDeps(env: Env, clientIp: ClientIp): Deps {
   };
 }
 
+/** The app wired to the real forecast, geocoder and model. */
 export function productionApp(env: Env, clientIp: ClientIp) {
   return createApp(productionDeps(env, clientIp));
 }

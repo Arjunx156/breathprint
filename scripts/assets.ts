@@ -1,8 +1,8 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { type Browser, chromium } from "@playwright/test";
-import { summarize } from "../shared/air";
-import { aqi } from "../shared/aqi";
-import { DEMO_DAY, delhiMorning, delhiSevereSnapshot } from "../shared/fixtures";
+import { summarize } from "@shared/air";
+import { aqi } from "@shared/aqi";
+import { DEMO_DAY, delhiMorning, delhiSevereSnapshot } from "@shared/fixtures";
 
 /**
  * Renders the favicon PNGs and the 1200×630 social card from HTML, so they

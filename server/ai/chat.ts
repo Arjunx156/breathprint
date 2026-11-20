@@ -1,6 +1,6 @@
-import type { Context } from "../../shared/actions/types";
-import { markers } from "../../shared/answer";
-import type { Language } from "../../shared/profile";
+import type { Context } from "@shared/actions/types";
+import { markers } from "@shared/answer";
+import type { Language } from "@shared/profile";
 import type { LlmRequest, Turn } from "../llm/types";
 import {
   airFacts,

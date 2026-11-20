@@ -36,6 +36,7 @@ export function remove(key: string): void {
   }
 }
 
+/** Every key the app stores under, versioned so a new shape never reads an old one. */
 export const KEYS = {
   profile: "bp.profile.v1",
   done: "bp.done.v1",

@@ -1,8 +1,8 @@
+import type { PlanReply } from "@shared/plan";
+import { forModel, LANGUAGES, ProfileSchema } from "@shared/profile";
+import { SLOT_MS, slotOf } from "@shared/time";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { PlanReply } from "../../shared/plan";
-import { forModel, LANGUAGES, ProfileSchema } from "../../shared/profile";
-import { SLOT_MS, slotOf } from "../../shared/time";
 import { contextFor } from "../ai/grounding";
 import { personalPlan, plannerRequest, readPlan } from "../ai/planner";
 import { PROMPT_VERSION } from "../ai/prompts";
@@ -12,12 +12,14 @@ import { TtlCache } from "../cache";
 import type { Llm } from "../llm/llm";
 import { valid } from "../validate";
 
+/** A request for a personal plan: the household, the language and whether it is the demo. */
 export const AiBody = z.object({
   profile: ProfileSchema,
   lang: z.enum(LANGUAGES),
   demo: z.boolean().default(false),
 });
 
+/** POST /api/plan: the model's plan, checked, cached per household and slot. */
 export function planRoutes({ llm, air }: { llm: Llm; air: AirSource }) {
   const cache = new TtlCache<PlanReply>(SLOT_MS, 500);
 

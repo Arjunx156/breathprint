@@ -205,6 +205,7 @@ export const en = {
   "ui.pageFailedLead":
     "Each page needs the network once, then works offline. Check your connection and try again.",
   "ui.retry": "Try again",
+  "ui.newTab": "(opens in a new tab)",
   "nav.label": "Main",
   "nav.today": "Today",
   "nav.ask": "Ask",

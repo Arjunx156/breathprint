@@ -1,6 +1,7 @@
 /** A central estimate with the low and high ends of what the inputs allow. */
 export type Range = { low: number; mid: number; high: number };
 
+/** Which end of a factor's range to read. */
 export type Bound = "low" | "mid" | "high";
 
 /**

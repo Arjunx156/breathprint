@@ -1,4 +1,4 @@
-import type { Context } from "../../shared/actions/types";
+import type { Context } from "@shared/actions/types";
 import {
   type Advisory,
   AdvisorySchema,
@@ -7,10 +7,10 @@ import {
   type Channel,
   type Collective,
   SHARED_ACTION,
-} from "../../shared/community";
-import { short } from "../../shared/format";
-import { tx } from "../../shared/i18n";
-import type { Language } from "../../shared/profile";
+} from "@shared/community";
+import { short } from "@shared/format";
+import { tx } from "@shared/i18n";
+import type { Language } from "@shared/profile";
 import type { LlmRequest } from "../llm/types";
 import { airFacts, numbersIn } from "./grounding";
 import { advisorySystem, block } from "./prompts";
@@ -34,8 +34,10 @@ const AUDIENCE_NAME: Record<Audience, string> = {
   workplace: "a workplace",
 };
 
+/** A model request for an advisory, and what its reply is checked against. */
 export type AdvisoryCall = { req: LlmRequest; allowed: number[]; lang: Language };
 
+/** Builds the advisory request from the engine's facts, never from the client's figures. */
 export function advisoryRequest(
   ctx: Context,
   input: { audience: Audience; channel: Channel; lang: Language },

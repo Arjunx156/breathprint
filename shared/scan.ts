@@ -10,8 +10,10 @@ import type { Profile } from "./profile";
  * household and never puts a number on anything.
  */
 
+/** The rooms a scan can name, or notRoom for a photo of somewhere else. */
 export const ROOMS = ["kitchen", "bedroom", "living", "bathroom", "other", "notRoom"] as const;
 
+/** The closed list of things a scan may report seeing. */
 export const SIGHTINGS = [
   "incense",
   "mosquito-coil",
@@ -38,6 +40,7 @@ const SightingSchema = z.object({
   where: z.string().check(z.trim(), z.minLength(1), z.maxLength(WHERE_MAX)),
 });
 
+/** What the model reports from a photo. */
 export const ScanSchema = z.object({
   room: z.enum(ROOMS),
   sightings: z.array(SightingSchema).check(z.maxLength(SIGHTINGS.length)),
@@ -45,6 +48,7 @@ export const ScanSchema = z.object({
 
 export type Scan = z.infer<typeof ScanSchema>;
 
+/** What /api/scan answers: the sightings, and which model saw them. */
 export const ScanReplySchema = z.object({
   scan: ScanSchema,
   model: z.string(),
@@ -104,6 +108,7 @@ export function homeAfter(home: Home, kinds: readonly Sighting[]): Home {
   return kinds.includes("chimney") ? { ...next, chimney: true } : next;
 }
 
+/** One field of the household a scan would change. */
 export type Change = { field: keyof Home; from: Home[keyof Home]; to: Home[keyof Home] };
 
 /** What saving the scan would change in the household, field by field. */

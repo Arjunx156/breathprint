@@ -52,6 +52,7 @@ function burstImpact(
   );
 }
 
+/** Light the morning agarbatti on the balcony, not in the living room. */
 export const skipIncense: ActionDef = {
   id: "skip-incense",
   ledgers: ["protect", "prevent"],
@@ -72,6 +73,7 @@ export const skipIncense: ActionDef = {
     ),
 };
 
+/** Swap the mosquito coil for a net or a plug-in, for whoever sleeps beside it. */
 export const swapCoil: ActionDef = {
   id: "swap-coil",
   ledgers: ["protect", "prevent"],

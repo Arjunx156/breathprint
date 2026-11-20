@@ -1,8 +1,8 @@
-import type { Candidate } from "../../shared/actions/catalogue";
-import type { Context } from "../../shared/actions/types";
-import { checkPlan } from "../../shared/checker";
-import { DayPlanSchema, MAX_STEPS, type PlanReply, type PlanStep } from "../../shared/plan";
-import type { Language } from "../../shared/profile";
+import type { Candidate } from "@shared/actions/catalogue";
+import type { Context } from "@shared/actions/types";
+import { checkPlan } from "@shared/checker";
+import { DayPlanSchema, MAX_STEPS, type PlanReply, type PlanStep } from "@shared/plan";
+import type { Language } from "@shared/profile";
 import type { Llm } from "../llm/llm";
 import type { LlmRequest } from "../llm/types";
 import { airFacts, householdFacts, numbersIn, optionFacts, optionsFor } from "./grounding";
@@ -35,6 +35,7 @@ function planSchema(actionIds: readonly string[], memberIds: readonly string[]) 
   };
 }
 
+/** A plan request, the options the model may choose from, and the figures it may quote. */
 export type PlannerCall = {
   req: LlmRequest;
   options: Candidate[];
@@ -42,6 +43,7 @@ export type PlannerCall = {
   lang: Language;
 };
 
+/** Builds the plan request from the server's own reading of the day. */
 export function plannerRequest(ctx: Context, lang: Language): PlannerCall {
   const options = optionsFor(ctx);
   const packet = {

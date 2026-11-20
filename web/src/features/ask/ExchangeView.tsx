@@ -4,6 +4,7 @@ import type { useReadAloud } from "../../lib/speech";
 import type { Exchange } from "./exchange";
 import { Cited, Library } from "./Sources";
 
+/** Read-aloud controls shared by every answer. */
 export type Voice = ReturnType<typeof useReadAloud>;
 
 function ReadAloud({ x, blocks, voice }: { x: Exchange; blocks: Block[]; voice: Voice }) {
@@ -37,6 +38,7 @@ function Blocks({ blocks }: { blocks: readonly Block[] }) {
   );
 }
 
+/** One question and its answer, with its cards, actions and read-aloud. */
 export function ExchangeView({ x, voice }: { x: Exchange; voice: Voice }) {
   const { t } = useApp();
   const answer = readAnswer(x.answer);

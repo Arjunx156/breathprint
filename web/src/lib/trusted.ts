@@ -4,7 +4,9 @@
  * exist, so the only script URL this page can ever hand over is the worker's.
  */
 
+/** The one policy the CSP allows. */
 export const POLICY_NAME = "breathprint";
+/** The one script URL the policy allows. */
 export const WORKER_URL = "/sw.js";
 
 type Rules = { createScriptURL(url: string): string };

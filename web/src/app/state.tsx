@@ -33,11 +33,15 @@ const Ctx = createContext<AppState | null>(null);
 
 const today = () => new Date().toLocaleDateString("en-CA");
 
+/** Demo mode lasts for the tab, so a reload keeps it and a new visit starts fresh. */
+const DEMO_KEY = "bp.demo";
+const DEMO_PERSONA = "meera";
+
 function demoRequested(): boolean {
   try {
-    if (new URLSearchParams(location.search).get("demo") === "meera")
-      sessionStorage.setItem("bp.demo", "meera");
-    return sessionStorage.getItem("bp.demo") === "meera";
+    if (new URLSearchParams(location.search).get("demo") === DEMO_PERSONA)
+      sessionStorage.setItem(DEMO_KEY, DEMO_PERSONA);
+    return sessionStorage.getItem(DEMO_KEY) === DEMO_PERSONA;
   } catch {
     // Session storage blocked: run the app as usual, not the demo.
     return false;
@@ -116,7 +120,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const exitDemo = useCallback(() => {
     try {
-      sessionStorage.removeItem("bp.demo");
+      sessionStorage.removeItem(DEMO_KEY);
     } catch {
       // Session storage blocked; leaving demo mode in memory is enough.
     }
@@ -144,6 +148,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return <Ctx.Provider value={value}>{booted && children}</Ctx.Provider>;
 }
 
+/** The household, language and helpers every page shares. */
 export function useApp(): AppState {
   const state = useContext(Ctx);
   if (!state) throw new Error("useApp needs an AppProvider above it");

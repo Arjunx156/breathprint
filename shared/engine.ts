@@ -4,6 +4,7 @@ import { headline, ruleReason } from "./i18n/reason";
 import { buildRulePlan, type DayPlan } from "./plan";
 import type { Language } from "./profile";
 
+/** The ranked actions for today and the plan built from them. */
 export type Today = { ranked: Candidate[]; plan: DayPlan };
 
 /**

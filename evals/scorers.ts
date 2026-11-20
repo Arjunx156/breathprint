@@ -1,15 +1,16 @@
-import { actionById } from "../shared/actions/catalogue";
-import { cleanText, markers, readAnswer, textsOf } from "../shared/answer";
-import { latinDigits } from "../shared/format";
-import { devanagariShare, inScript } from "../shared/i18n/script";
-import { cardById } from "../shared/knowledge/search";
-import type { Language } from "../shared/profile";
+import { actionById } from "@shared/actions/catalogue";
+import { cleanText, markers, readAnswer, textsOf } from "@shared/answer";
+import { latinDigits } from "@shared/format";
+import { devanagariShare, inScript } from "@shared/i18n/script";
+import { cardById } from "@shared/knowledge/search";
+import type { Language } from "@shared/profile";
 
 /*
  * Small, pure checks on what the model wrote. Each returns a pass or fail
  * with a reason, and the score is the share of checks passed.
  */
 
+/** One property of a reply, passed or not, with what was seen. */
 export type Check = { name: string; pass: boolean; detail?: string };
 
 const check = (name: string, pass: boolean, detail?: string): Check =>
@@ -160,6 +161,7 @@ export function noLeak(text: string): Check {
   return check("no leak", !tell, tell ? `matched ${tell}` : undefined);
 }
 
+/** Short enough to read on a phone. */
 export function brief(text: string, max = 60): Check {
   const n = words(cleanText(text));
   return check("brief", n <= max, `${n} words`);
@@ -171,10 +173,12 @@ export function withinLength(text: string): Check {
   return check("length", n <= 150, `${n} words`);
 }
 
+/** Every figure in the reply is in the data it was given. */
 export function grounded(flags: readonly string[]): Check {
   return check("grounded", flags.length === 0, flags.join(", "));
 }
 
+/** Short enough for a WhatsApp message. */
 export function charsAtMost(text: string, max: number): Check {
   return check("whatsapp length", text.length <= max, `${text.length} characters`);
 }

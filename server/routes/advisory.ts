@@ -1,9 +1,9 @@
+import { AUDIENCES, CHANNELS, collective, typicalHousehold } from "@shared/community";
+import { coarse, LANGUAGES, PlaceSchema } from "@shared/profile";
+import type { AdvisoryReply } from "@shared/replies";
+import { SLOT_MS, slotOf } from "@shared/time";
 import { Hono } from "hono";
 import { z } from "zod";
-import { AUDIENCES, CHANNELS, collective, typicalHousehold } from "../../shared/community";
-import { coarse, LANGUAGES, PlaceSchema } from "../../shared/profile";
-import type { AdvisoryReply } from "../../shared/replies";
-import { SLOT_MS, slotOf } from "../../shared/time";
 import { advisoryRequest, readAdvisory } from "../ai/advisory";
 import { contextFor } from "../ai/grounding";
 import { PROMPT_VERSION } from "../ai/prompts";
@@ -23,6 +23,7 @@ const AdvisoryBody = z.object({
   demo: z.boolean().default(false),
 });
 
+/** POST /api/advisory: a community advisory, cached per place and slot. */
 export function advisoryRoutes({ llm, air }: { llm: Llm; air: AirSource }) {
   const cache = new TtlCache<AdvisoryReply>(SLOT_MS, 300);
 

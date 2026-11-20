@@ -61,8 +61,10 @@ export const INHALATION = {
   },
 } as const satisfies Record<AgeGroup, Record<string, number>>;
 
+/** How hard someone is breathing, which sets their inhalation rate. */
 export type Activity = keyof (typeof INHALATION)["adult"];
 
+/** Every figure the engine uses, each with a low, central and high value, a unit and a source. */
 export const FACTORS = {
   // Indoor air, single-zone mass balance.
   penetration: f(

@@ -29,6 +29,7 @@ function recognizerClass(): RecognizerClass | null {
   return globalThis.SpeechRecognition ?? globalThis.webkitSpeechRecognition ?? null;
 }
 
+/** Why dictation stopped, in words the page can explain. */
 export type DictationError = "blocked" | "silence" | "failed";
 
 function errorOf(code: string): DictationError {

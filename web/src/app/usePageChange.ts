@@ -10,6 +10,7 @@ const TITLES: Readonly<Record<string, MessageKey>> = {
   "/settings": "nav.settings",
 };
 
+/** The tab title for a path. */
 export function pageTitle(path: string, t: (key: MessageKey) => string): string {
   if (path === "/") return t("app.title");
   return `${t(TITLES[path] ?? "notFound.title")} · ${t("app.name")}`;

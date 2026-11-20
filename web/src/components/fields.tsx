@@ -52,6 +52,7 @@ export function Choice<T extends string>({
 
 type SelectProps<T extends string> = Omit<ChoiceProps<T>, "hideLegend">;
 
+/** A set of radio buttons under a legend, for a short list of choices. */
 export function Select<T extends string>({
   legend,
   options,
@@ -81,6 +82,7 @@ export function Select<T extends string>({
   );
 }
 
+/** A labelled checkbox with an optional hint. */
 export function Toggle({
   label,
   checked,
@@ -129,6 +131,7 @@ type TextProps = {
   autoComplete?: string;
 };
 
+/** A labelled input with its hint and error wired to it for screen readers. */
 export function TextField({ label, hint, error, onChange, type = "text", ...rest }: TextProps) {
   const id = useId();
   const hintId = `${id}-hint`;

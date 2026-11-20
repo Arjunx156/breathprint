@@ -7,6 +7,7 @@ import type { Range } from "@shared/range";
 import { sourceOf } from "@shared/sources";
 import type { ReactNode } from "react";
 import { useApp } from "../../app/state";
+import { ExternalLink } from "../../components/ExternalLink";
 
 /** Smallest change worth a line; below this the engine's rounding is noise. */
 const NOTICEABLE = { dose: 0.5, co2: 0.005, pm: 0.0005, inr: 0.5 };
@@ -132,9 +133,7 @@ function Sources({ ids }: { ids: Candidate["action"]["sources"] }) {
           const s = sourceOf(id);
           return (
             <li key={id}>
-              <a className="link" href={s.url} target="_blank" rel="noopener noreferrer">
-                {s.title}
-              </a>
+              <ExternalLink href={s.url}>{s.title}</ExternalLink>
               <span className="text-muted">
                 , {s.publisher} {s.year}
               </span>

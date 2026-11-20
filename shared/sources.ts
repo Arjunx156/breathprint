@@ -6,6 +6,7 @@ export type Source = {
   url: string;
 };
 
+/** Every source a factor or card cites, with its link. */
 export const SOURCES = {
   epaAqi2024: {
     title:

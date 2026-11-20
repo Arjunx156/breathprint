@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchAir } from "./api";
 import { KEYS, load, save } from "./storage";
 
+/** The forecast for the page: waiting, here (perhaps from the offline copy), or failed. */
 export type AirState =
   | { status: "loading" }
   | { status: "error"; retry: () => void }

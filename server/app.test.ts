@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { AirSnapshotSchema } from "../shared/air";
+import { AirSnapshotSchema } from "@shared/air";
 import { fixtureSource } from "./air/fixture";
 import { type AirSource, UpstreamError } from "./air/source";
 import { JSON_LIMIT } from "./app";

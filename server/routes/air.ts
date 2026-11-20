@@ -1,6 +1,6 @@
+import { coarse } from "@shared/profile";
 import { Hono } from "hono";
 import { z } from "zod";
-import { coarse } from "../../shared/profile";
 import type { AirSource } from "../air/source";
 import { valid } from "../validate";
 
@@ -12,6 +12,7 @@ const CellQuery = z.object({
 /** The CDN keeps a cell for 30 minutes and serves it stale for an hour while it refreshes. */
 const CELL_CACHE = "public, max-age=300, s-maxage=1800, stale-while-revalidate=3600";
 
+/** GET /api/air: the forecast for a grid cell, cached at the CDN. */
 export function airRoutes(source: AirSource) {
   return new Hono().get("/", valid("query", CellQuery), async (c) => {
     const { lat, lon } = c.req.valid("query");

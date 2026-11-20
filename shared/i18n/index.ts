@@ -3,7 +3,9 @@ import type { Language, Member } from "../profile";
 import { en } from "./en";
 import { hi } from "./hi";
 
+/** Every string the interface shows; Hindi must have each one too. */
 export type MessageKey = keyof typeof en;
+/** Values for a string's {placeholders}. */
 export type Vars = Readonly<Record<string, string | number>>;
 
 const MESSAGES: Record<Language, Readonly<Record<MessageKey, string>>> = { en, hi };

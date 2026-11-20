@@ -8,6 +8,7 @@ import { pm25Of, windowsForDay } from "./windows";
 const localHour = z.string().check(z.regex(/^\d{4}-\d{2}-\d{2}T\d{2}:00$/));
 const reading = z.nullable(z.number().check(z.gte(0), z.lte(5000)));
 
+/** One forecast hour in local time; a reading is null where the model has a gap. */
 export const HourSchema = z.object({
   time: localHour,
   pm25: reading,
@@ -16,6 +17,7 @@ export const HourSchema = z.object({
   o3: reading,
 });
 
+/** A forecast as the server fetches it and the browser keeps it for offline use. */
 export const AirSnapshotSchema = z.object({
   lat: z.number(),
   lon: z.number(),
@@ -39,6 +41,7 @@ export type Window = {
   quality: "clean" | "better" | "peak";
 };
 
+/** Everything the plan and the pages need from one forecast, at one instant. */
 export type AirSummary = {
   source: AirSnapshot["source"];
   fetchedAt: string;

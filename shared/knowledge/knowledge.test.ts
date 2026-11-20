@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { actionById } from "../actions/catalogue";
-import { CARDS } from "./cards";
+import { itemAt } from "../list";
+import { CARDS, titleOf } from "./cards";
 import { cardById, search, tokenize } from "./search";
 
 const top = (q: string) => search(q, 3).map((h) => h.card.id);
@@ -20,6 +21,12 @@ describe("cards", () => {
 
   test("looks cards up by id", () => {
     expect(cardById("mask-fit")?.sources).toContain("cherrie2018");
+  });
+
+  test("titles follow the reader's language", () => {
+    const card = itemAt(CARDS, 0);
+    expect(titleOf(card, "en")).toBe(card.title);
+    expect(titleOf(card, "hi")).toBe(card.titleHi);
   });
 });
 

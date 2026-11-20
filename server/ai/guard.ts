@@ -1,4 +1,4 @@
-import { latinDigits } from "../../shared/format";
+import { latinDigits } from "@shared/format";
 
 /** Units that make a number a claim worth checking, in English and Hindi. */
 const UNIT =
@@ -9,6 +9,7 @@ const FIGURE = new RegExp(
   "giu",
 );
 
+/** A number found in a reply, as written and as read. */
 export type Figure = { text: string; value: number };
 
 /** Numbers that come with a unit or a currency, which are the ones a family would act on. */

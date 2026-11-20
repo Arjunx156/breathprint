@@ -1,6 +1,6 @@
+import { type AirSnapshot, AirSnapshotSchema } from "@shared/air";
+import { oneDecimal } from "@shared/format";
 import { z } from "zod";
-import { type AirSnapshot, AirSnapshotSchema } from "../../shared/air";
-import { oneDecimal } from "../../shared/format";
 import { type AirSource, UpstreamError } from "./source";
 
 const ENDPOINT = "https://air-quality-api.open-meteo.com/v1/air-quality";

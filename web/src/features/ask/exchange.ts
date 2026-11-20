@@ -11,6 +11,7 @@ export type Exchange = {
   recorded: boolean;
 };
 
+/** A question just asked, waiting for its answer. */
 export function asked(id: number, question: string): Exchange {
   return { id, question, answer: "", state: "streaming", flags: [], recorded: false };
 }

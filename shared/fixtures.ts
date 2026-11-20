@@ -55,4 +55,5 @@ export function delhiMorning(day: string): number {
   return new Date(`${day}T08:00:00+05:30`).getTime();
 }
 
+/** The day the demo's fixed Delhi forecast describes. */
 export const DEMO_DAY = "2026-11-18";
