@@ -1,5 +1,6 @@
 import { type PlanReply, PlanReplySchema } from "@shared/plan";
 import { forModel, type Language, type Profile } from "@shared/profile";
+import { slotOf } from "@shared/time";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { z } from "zod/mini";
 import { client, replyOf } from "../../lib/api";
@@ -11,8 +12,6 @@ export type PersonalPlan =
   | { status: "ready"; key: string; reply: PlanReply }
   | { status: "failed"; retry: () => void };
 
-/** The server keeps one plan per household per three-hour slot; so does the browser. */
-const SLOT_MS = 3 * 3_600_000;
 const SavedSchema = z.object({ key: z.string(), reply: PlanReplySchema });
 
 /** Replies fetched during this visit, so moving between pages never asks twice. */
@@ -30,7 +29,7 @@ function fnv1a(text: string): string {
 function planKey(profile: Profile, lang: Language, demo: boolean, now: number): string {
   // The display scale and the consent flag don't change which plan fits.
   const { scale: _scale, ai: _ai, ...household } = forModel(profile);
-  return fnv1a(JSON.stringify([household, lang, demo ? "demo" : Math.floor(now / SLOT_MS)]));
+  return fnv1a(JSON.stringify([household, lang, demo ? "demo" : slotOf(now)]));
 }
 
 /** Sends the household as a model may see it: no names, the place rounded to the grid. */

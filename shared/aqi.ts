@@ -15,6 +15,14 @@ type PerLevel<T> = readonly [T, T, T, T, T, T];
 
 const LEVELS: PerLevel<Level> = [0, 1, 2, 3, 4, 5];
 
+/** The levels the planning rules act on, named as the US AQI names its bands. */
+export const LEVEL = {
+  /** Unhealthy for sensitive groups: masks, indoor play and purifiers start here. */
+  sensitive: 2,
+  unhealthy: 3,
+  veryUnhealthy: 4,
+} as const satisfies Record<string, Level>;
+
 type Band = { cLow: number; cHigh: number; iLow: number; iHigh: number };
 
 const band = (cLow: number, cHigh: number, iLow: number, iHigh: number): Band => ({

@@ -1,7 +1,8 @@
 import { z } from "zod/mini";
 import { actionById } from "./actions/catalogue";
-import { type AirSummary, clockOf, dayOf } from "./air";
+import type { AirSummary } from "./air";
 import type { Scale } from "./aqi";
+import { clock, dayOf } from "./format";
 import { t, tx } from "./i18n";
 import { defaultProfile, type Language, type Place, type Profile } from "./profile";
 import { type Range, scale } from "./range";
@@ -145,8 +146,8 @@ export function templateAdvisory(
     situation: window
       ? t(lang, "advisory.situation", {
           ...vars,
-          from: clockOf(window.start),
-          to: clockOf(window.end),
+          from: clock(window.start),
+          to: clock(window.end),
         })
       : t(lang, "advisory.situationFlat", vars),
     do: AUDIENCE_ACTIONS[audience].slice(0, 4).map((id) => tx(lang, `action.${id}.title`)),

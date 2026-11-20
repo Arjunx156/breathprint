@@ -109,6 +109,7 @@ export type Change = { field: keyof Home; from: Home[keyof Home]; to: Home[keyof
 /** What saving the scan would change in the household, field by field. */
 export function homeChanges(home: Home, kinds: readonly Sighting[]): Change[] {
   const next = homeAfter(home, kinds);
+  // Object.keys reads as string[]; next is spread only from home and TELLS, so every key is a Home field.
   return (Object.keys(next) as (keyof Home)[])
     .filter((field) => next[field] !== home[field])
     .map((field) => ({ field, from: home[field], to: next[field] }));

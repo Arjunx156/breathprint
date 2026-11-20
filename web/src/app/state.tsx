@@ -39,6 +39,7 @@ function demoRequested(): boolean {
       sessionStorage.setItem("bp.demo", "meera");
     return sessionStorage.getItem("bp.demo") === "meera";
   } catch {
+    // Session storage blocked: run the app as usual, not the demo.
     return false;
   }
 }

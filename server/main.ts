@@ -1,4 +1,5 @@
 import type { Place } from "../shared/profile";
+import { DAY_MS } from "../shared/time";
 import { fixtureSource } from "./air/fixture";
 import { openMeteo } from "./air/openMeteo";
 import { cached } from "./air/source";
@@ -9,8 +10,6 @@ import type { Geocoder } from "./geocode";
 import { openMeteoGeocoder } from "./geocode";
 import { llmFromEnv } from "./llm/config";
 import type { ClientIp } from "./middleware/rateLimit";
-
-const DAY_MS = 86_400_000;
 
 function cachedGeocoder(geocode: Geocoder): Geocoder {
   const cache = new TtlCache<Place[]>(DAY_MS, 2000);

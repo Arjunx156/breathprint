@@ -1,7 +1,9 @@
 import { z } from "zod/mini";
 import { type AqiReading, aqi, healthLevel, type Level, nowcast } from "./aqi";
-import { THRESHOLDS } from "./factors";
-import { isNonEmpty, itemAt, lastOf, type NonEmpty } from "./list";
+import { dayOf, hourOf, oneDecimal } from "./format";
+import { itemAt, mean } from "./list";
+import { SECOND_MS } from "./time";
+import { pm25Of, windowsForDay } from "./windows";
 
 const localHour = z.string().check(z.regex(/^\d{4}-\d{2}-\d{2}T\d{2}:00$/));
 const reading = z.nullable(z.number().check(z.gte(0), z.lte(5000)));
@@ -60,27 +62,11 @@ export type AirSummary = {
   series: { time: string; pm25: number | null }[];
 };
 
-/** Hours when people are awake to open a window, walk or play. */
-const WAKING = { from: 6, to: 22 };
-/** A day whose spread is under a quarter of its mean has no window worth naming. */
-const FLAT_RATIO = 0.25;
-
-const round1 = (x: number) => Math.round(x * 10) / 10;
-
-function mean(xs: readonly number[]): number {
-  return xs.length === 0 ? 0 : xs.reduce((a, b) => a + b, 0) / xs.length;
-}
-
 /** Local wall-clock hour for an instant, in the YYYY-MM-DDTHH:00 form the snapshot uses. */
 export function localHourOf(nowMs: number, utcOffsetSeconds: number): string {
-  const local = new Date(nowMs + utcOffsetSeconds * 1000);
+  const local = new Date(nowMs + utcOffsetSeconds * SECOND_MS);
   return `${local.toISOString().slice(0, 13)}:00`;
 }
-
-/** The hour of day, 0 to 23, from a YYYY-MM-DDTHH:MM time. */
-export const hourOf = (time: string) => Number(time.slice(11, 13));
-/** The YYYY-MM-DD date from a YYYY-MM-DDTHH:MM time. */
-export const dayOf = (time: string) => time.slice(0, 10);
 
 function indexOfNow(hours: readonly Hour[], now: string): number {
   const exact = hours.findIndex((h) => h.time === now);
@@ -89,84 +75,8 @@ function indexOfNow(hours: readonly Hour[], now: string): number {
   return Math.max(0, before);
 }
 
-const pm25Of = (hours: readonly { pm25: number | null }[]) =>
-  hours.map((h) => h.pm25).filter((v): v is number => v !== null);
 const pm10Of = (hours: readonly Hour[]) =>
   hours.map((h) => h.pm10).filter((v): v is number => v !== null);
-
-/** Unbroken stretches of hours that pass `keep`. */
-function runs(hours: readonly Hour[], keep: (h: Hour) => boolean): NonEmpty<Hour>[] {
-  const out: NonEmpty<Hour>[] = [];
-  let current: Hour[] = [];
-  for (const h of hours) {
-    if (keep(h)) {
-      current.push(h);
-    } else if (isNonEmpty(current)) {
-      out.push(current);
-      current = [];
-    }
-  }
-  if (isNonEmpty(current)) out.push(current);
-  return out;
-}
-
-function nextHour(time: string): string {
-  const d = new Date(`${time}:00Z`);
-  d.setUTCHours(d.getUTCHours() + 1);
-  return `${d.toISOString().slice(0, 13)}:00`;
-}
-
-/** A cleaner run is "clean" only when it is safe for the most sensitive; otherwise just "better". */
-function resolveQuality(quality: Window["quality"], meanPm25: number): Window["quality"] {
-  if (quality === "peak") return "peak";
-  return meanPm25 <= THRESHOLDS.sensitiveCaution ? "clean" : "better";
-}
-
-function toWindow(run: NonEmpty<Hour>, quality: Window["quality"]): Window {
-  const [first] = run;
-  const last = lastOf(run);
-  const meanPm25 = round1(mean(pm25Of(run)));
-  const resolved = resolveQuality(quality, meanPm25);
-  return {
-    start: first.time,
-    end: nextHour(last.time),
-    hours: run.length,
-    meanPm25,
-    quality: resolved,
-  };
-}
-
-type DayWindows = { windows: Window[]; peaks: Window[]; flat: boolean };
-
-/**
- * Finds the cleanest and dirtiest stretches of one day's waking hours.
- * Clean means under both 80% of the day's mean and the lowest third of its
- * range; peaks sit 20% above the mean. Only the best window and the worst
- * peak per day are kept, so the plan has one clear instruction.
- */
-export function windowsForDay(hours: readonly Hour[]): DayWindows {
-  const waking = hours.filter(
-    (h) => hourOf(h.time) >= WAKING.from && hourOf(h.time) < WAKING.to && h.pm25 !== null,
-  );
-  const values = pm25Of(waking);
-  if (values.length < 3) return { windows: [], peaks: [], flat: true };
-  const avg = mean(values);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  if (avg === 0 || (max - min) / avg < FLAT_RATIO) return { windows: [], peaks: [], flat: true };
-
-  const cleanBelow = Math.min(avg * 0.8, min + 0.35 * (max - min));
-  const peakAbove = avg * 1.2;
-  const best = runs(waking, (h) => (h.pm25 ?? Infinity) <= cleanBelow)
-    .map((r) => toWindow(r, "better"))
-    .sort((a, b) => a.meanPm25 - b.meanPm25 || b.hours - a.hours)
-    .slice(0, 1);
-  const worst = runs(waking, (h) => (h.pm25 ?? 0) >= peakAbove)
-    .map((r) => toWindow(r, "peak"))
-    .sort((a, b) => b.meanPm25 - a.meanPm25)
-    .slice(0, 1);
-  return { windows: best, peaks: worst, flat: false };
-}
 
 function groupByDay(hours: readonly Hour[]): Hour[][] {
   const days = new Map<string, Hour[]>();
@@ -219,13 +129,13 @@ export function summarize(snapshot: AirSnapshot, nowMs: number): AirSummary {
     now,
     current: currentReading(snapshot.hours, index),
     today: {
-      mean: round1(mean(todayValues)),
-      min: round1(todayValues.length > 0 ? Math.min(...todayValues) : 0),
-      max: round1(todayValues.length > 0 ? Math.max(...todayValues) : 0),
+      mean: oneDecimal(mean(todayValues)),
+      min: oneDecimal(todayValues.length > 0 ? Math.min(...todayValues) : 0),
+      max: oneDecimal(todayValues.length > 0 ? Math.max(...todayValues) : 0),
     },
     tomorrow:
       tomorrowValues.length >= 12
-        ? { mean: round1(mean(tomorrowValues)), health: healthLevel(mean(tomorrowValues)) }
+        ? { mean: oneDecimal(mean(tomorrowValues)), health: healthLevel(mean(tomorrowValues)) }
         : null,
     windows: perDay.flatMap((d) => d.windows),
     peaks: perDay.flatMap((d) => d.peaks),
@@ -241,13 +151,16 @@ export function pm25At(summary: AirSummary, clock: string): number {
   return hit?.pm25 ?? summary.today.mean;
 }
 
+/** The hours the overnight figures cover, across midnight. */
+const NIGHT = { from: 22, to: 6 };
+
 /** Mean PM2.5 over the coming night, 22:00 to 06:00. */
 export function overnightPm25(summary: AirSummary): number {
   const night = summary.series.filter((h) => {
     const hr = hourOf(h.time);
-    return (hr >= 22 || hr < 6) && h.pm25 !== null;
+    return (hr >= NIGHT.from || hr < NIGHT.to) && h.pm25 !== null;
   });
-  return night.length > 0 ? round1(mean(pm25Of(night))) : summary.today.mean;
+  return night.length > 0 ? oneDecimal(mean(pm25Of(night))) : summary.today.mean;
 }
 
 /** Whether a clock time falls inside one of the clean windows. */
@@ -261,6 +174,3 @@ export function inWindow(summary: AirSummary, clock: string): Window | null {
     }) ?? null
   );
 }
-
-/** The HH:MM clock time from a YYYY-MM-DDTHH:MM time. */
-export const clockOf = (time: string) => time.slice(11, 16);

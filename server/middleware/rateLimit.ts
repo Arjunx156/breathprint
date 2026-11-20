@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { Context, MiddlewareHandler } from "hono";
+import { DAY_MS, MINUTE_MS, SECOND_MS } from "../../shared/time";
 import { apiError } from "./errors";
 
 type Window = { count: number; resetAt: number };
@@ -53,7 +54,7 @@ export function ipHasher(now: () => number = Date.now): (ip: string) => string {
   let day = -1;
   let salt = "";
   return (ip) => {
-    const today = Math.floor(now() / 86_400_000);
+    const today = Math.floor(now() / DAY_MS);
     if (today !== day) {
       day = today;
       salt = randomBytes(16).toString("hex");
@@ -86,8 +87,8 @@ export function rateLimit({
 }: Options): MiddlewareHandler {
   return async (c, next) => {
     const t = now();
-    const window = store.hit(`${name}:${hash(ip(c) ?? "unknown")}`, 60_000, t);
-    const resetSeconds = Math.max(1, Math.ceil((window.resetAt - t) / 1000));
+    const window = store.hit(`${name}:${hash(ip(c) ?? "unknown")}`, MINUTE_MS, t);
+    const resetSeconds = Math.max(1, Math.ceil((window.resetAt - t) / SECOND_MS));
     c.header("RateLimit-Limit", String(perMinute));
     c.header("RateLimit-Remaining", String(Math.max(0, perMinute - window.count)));
     c.header("RateLimit-Reset", String(resetSeconds));

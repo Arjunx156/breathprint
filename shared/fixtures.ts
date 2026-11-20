@@ -1,4 +1,6 @@
 import type { AirSnapshot, Hour } from "./air";
+import { itemAt } from "./list";
+import { DAY_MS, HOUR_MS } from "./time";
 
 /**
  * A Delhi winter day's PM2.5 shape relative to its base level: high through the
@@ -22,11 +24,11 @@ export function delhiSevereSnapshot(
   base = 285,
   dayTrend = [0.96, 1, 1.04, 0.92],
 ): AirSnapshot {
-  const start = new Date(new Date(`${day}T00:00:00Z`).getTime() - 86_400_000);
+  const start = new Date(new Date(`${day}T00:00:00Z`).getTime() - DAY_MS);
   const hours: Hour[] = [];
   for (let i = 0; i < 24 * dayTrend.length; i++) {
-    const t = new Date(start.getTime() + i * 3_600_000);
-    const shape = DELHI_WINTER_SHAPE[i % 24] as number;
+    const t = new Date(start.getTime() + i * HOUR_MS);
+    const shape = itemAt(DELHI_WINTER_SHAPE, i % 24);
     const trend = dayTrend[Math.floor(i / 24)] ?? 1;
     const pm25 = Math.round(base * shape * trend * 10) / 10;
     hours.push({

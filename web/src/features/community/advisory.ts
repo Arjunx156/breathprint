@@ -82,22 +82,22 @@ export function togetherLine(lang: Language, c: Collective, audience: Audience):
 }
 
 /** The advisory as plain text, laid out to survive a paste into WhatsApp or an email. */
-export function plainText(w: Written, together: string | null, source: string): string {
+export function plainText(written: Written, together: string | null, source: string): string {
   const say = (key: "community.do" | "community.avoid" | "community.sensitive") =>
-    translate(w.lang, key);
-  const a = w.advisory;
+    translate(written.lang, key);
+  const { advisory } = written;
   return [
-    a.headline,
+    advisory.headline,
     "",
-    a.situation,
+    advisory.situation,
     "",
     `${say("community.do")}:`,
-    ...a.do.map((x) => `- ${x}`),
+    ...advisory.do.map((line) => `- ${line}`),
     "",
     `${say("community.avoid")}:`,
-    ...a.avoid.map((x) => `- ${x}`),
+    ...advisory.avoid.map((line) => `- ${line}`),
     "",
-    `${say("community.sensitive")}: ${a.sensitive}`,
+    `${say("community.sensitive")}: ${advisory.sensitive}`,
     ...(together ? ["", together] : []),
     "",
     source,

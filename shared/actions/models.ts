@@ -16,6 +16,7 @@ import { type Context, type Impact, NO_IMPACT } from "./types";
 export type { Exposure };
 
 const ZERO: Exposure = { exposure: 0, dose: 0 };
+const WATTS_PER_KW = 1000;
 
 /** Exposure and inhaled dose for one member breathing `deltaC` more PM2.5 for `hours`. */
 export function exposed(
@@ -110,12 +111,12 @@ const toMinutes = (clock: string) => Number(clock.slice(0, 2)) * 60 + Number(clo
 
 /** Whether a member is out on one of their trips at a given clock time. */
 function awayAt(profile: Profile, member: Member, clock: string): boolean {
-  const t = toMinutes(clock);
+  const minutes = toMinutes(clock);
   return [profile.commute, profile.schoolRun].some(
     (trip) =>
       trip?.who.includes(member.id) === true &&
-      t >= toMinutes(trip.leaveAt) &&
-      t < toMinutes(trip.returnAt),
+      minutes >= toMinutes(trip.leaveAt) &&
+      minutes < toMinutes(trip.returnAt),
   );
 }
 
@@ -175,12 +176,16 @@ export function airExchange(ctx: Context, pick: Pick): number {
 
 /** Running cost of an appliance for some hours, in rupees per day (negative). */
 export function runningCost(watts: FactorId, hours: number): Range {
-  return ranged((p) => (-(p(watts) * hours) / 1000) * p("electricityInrPerKwh"));
+  return ranged((p) => (-(p(watts) * hours) / WATTS_PER_KW) * p("electricityInrPerKwh"));
 }
 
 /** CO2 from an appliance's electricity, as a negative saving. */
 export function runningCo2(watts: FactorId, hours: number): Range {
-  return ranged((p) => (-(p(watts) * hours) / 1000) * p("gridCo2PerKwh"));
+  return ranged((p) => (-(p(watts) * hours) / WATTS_PER_KW) * p("gridCo2PerKwh"));
 }
+
+/** An action's impact on one of the household's trips, or none when there is no such trip. */
+export const onTrip = (trip: Trip | null, measure: (trip: Trip) => Impact): Impact =>
+  trip ? measure(trip) : impact({});
 
 export { short };

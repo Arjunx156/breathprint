@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { LANGUAGES } from "../../shared/profile";
 import type { ScanReply } from "../../shared/scan";
+import { DAY_MS } from "../../shared/time";
 import { PROMPT_VERSION } from "../ai/prompts";
 import { keyOf, liveOrRecorded } from "../ai/recorded";
 import { readScan, scanRequest } from "../ai/scan";
@@ -30,7 +31,6 @@ const ScanBody = z.object({
 const isJpeg = (b: Uint8Array) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
 
 /** A photo looks the same tomorrow, so a day is a safe time to remember what was in it. */
-const DAY_MS = 24 * 3_600_000;
 
 /** The short id saved demo replies are filed under: the photo's own hash. */
 export const photoId = (bytes: Uint8Array) =>

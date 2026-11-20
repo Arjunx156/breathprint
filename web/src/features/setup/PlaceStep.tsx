@@ -1,4 +1,5 @@
 import { coarse, type Language, type Place } from "@shared/profile";
+import { MINUTE_MS, SECOND_MS } from "@shared/time";
 import { useEffect, useState } from "react";
 import { useApp } from "../../app/state";
 import { TextField } from "../../components/fields";
@@ -20,6 +21,7 @@ function countryAt(lat: number, lon: number): string {
     const region = new Intl.Locale(navigator.language).maximize().region;
     return region && REGION.test(region) ? region : "US";
   } catch {
+    // Older browsers lack Intl.Locale; the US scale is the default outside India.
     return "US";
   }
 }
@@ -71,7 +73,7 @@ function useLocate(onPlace: (place: Place) => void) {
         setLocating("idle");
       },
       () => setLocating("failed"),
-      { timeout: 10_000, maximumAge: 10 * 60_000 },
+      { timeout: 10 * SECOND_MS, maximumAge: 10 * MINUTE_MS },
     );
   };
   return { locating, locate };

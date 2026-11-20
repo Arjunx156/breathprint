@@ -24,3 +24,12 @@ export const latinDigits = (text: string) =>
 
 /** HH:MM from a local YYYY-MM-DDTHH:MM time. */
 export const clock = (time: string) => time.slice(11, 16);
+
+/** The hour of day, 0 to 23, from a YYYY-MM-DDTHH:MM time. */
+export const hourOf = (time: string) => Number(time.slice(11, 13));
+
+/** The YYYY-MM-DD date from a YYYY-MM-DDTHH:MM time. */
+export const dayOf = (time: string) => time.slice(0, 10);
+
+/** Rounds to one decimal place, the precision every concentration is shown and stored at. */
+export const oneDecimal = (n: number) => Math.round(n * 10) / 10;

@@ -1,55 +1,46 @@
-import { pm25At } from "../air";
-import { healthLevel } from "../aqi";
-import { inhalationRate, legHours, OPEN_MODES } from "../exposure";
+import { healthLevel, LEVEL } from "../aqi";
 import { type FactorId, type Pick, picker } from "../factors";
-import type { MessageKey } from "../i18n";
-import type { Member, TravelMode, Trip } from "../profile";
+import type { Trip } from "../profile";
 import {
   impact,
   minus,
+  onTrip,
   protectImpact,
   ranged,
   short,
-  times,
   total,
   tripExposure,
   tripMembers,
 } from "./models";
 import type { ActionDef, Context, Impact } from "./types";
+import {
+  carKmImpact,
+  co2PerKm,
+  inrPerKm,
+  type Motor,
+  motorSavings,
+  motorTrip,
+  roundTrip,
+  wearPerKm,
+} from "./vehicles";
+
+/*
+ * Prevent actions for the household's trips: leave the car or bike for public
+ * transport, share it, drive it less, or skip the commute on the worst days.
+ * Masks and recirculation, which protect the people on the trip, are in
+ * tripProtect.ts.
+ */
 
 const pickMid = picker("mid");
 
-type Motor = "car" | "twoWheeler" | "auto";
-const MOTOR: ReadonlySet<TravelMode> = new Set<TravelMode>(["car", "twoWheeler", "auto"]);
+/** The shortest one-way commute, in km, each switch is offered for. */
+const METRO_MIN_KM = 3;
+const BUS_MIN_KM = 2;
 
-/** kg CO2 per km for a private or hired motor vehicle. */
-function co2PerKm(mode: Motor, p: Pick): number {
-  if (mode === "car") return p("petrolCo2PerLitre") / p("carKmPerLitre");
-  if (mode === "twoWheeler") return p("twoWheelerCo2PerKm");
-  return p("autoCo2PerKm");
-}
-
-/** g PM2.5 per km of tyre, brake and road wear. Autos are lighter than cars. */
-function wearPerKm(mode: Motor, p: Pick): number {
-  return mode === "car" ? p("carNonExhaustPm25PerKm") : p("twoWheelerNonExhaustPm25PerKm");
-}
-
-/** Rupees per km: fuel for owned vehicles, the meter for autos. */
-function inrPerKm(mode: Motor, p: Pick): number {
-  if (mode === "car") return p("petrolInrPerLitre") / p("carKmPerLitre");
-  if (mode === "twoWheeler") return p("petrolInrPerLitre") / p("twoWheelerKmPerLitre");
-  return p("autoInrPerKm");
-}
-
-const roundTrip = (trip: Trip) => trip.km * 2;
-
-function motorTrip(trip: Trip | null): trip is Trip & { mode: Motor } {
-  return trip !== null && MOTOR.has(trip.mode);
-}
-
-/** An action's impact on one of the household's trips, or none when there is no such trip. */
-const onTrip = (trip: Trip | null, measure: (trip: Trip) => Impact): Impact =>
-  trip ? measure(trip) : impact({});
+/** Share of car kilometres a carpool of two saves: each car drives every other day. */
+const CARPOOL_SAVES = 1 / 2;
+/** Share a school-run rota of three families saves: each drives one day in three. */
+const ROTA_SAVES = 2 / 3;
 
 type Switch = { to: "metro" | "bus"; co2: FactorId; fare: FactorId; wear: FactorId | null };
 
@@ -74,6 +65,7 @@ function switchImpact(ctx: Context, trip: Trip & { mode: Motor }, sw: Switch): I
   return protectImpact(ctx, commuters, model, {
     co2kg: ranged((p) => km * (co2PerKm(trip.mode, p) - p(sw.co2))),
     pm25g: ranged((p) => km * (wearPerKm(trip.mode, p) - (sw.wear ? p(sw.wear) : 0))),
+    // Two fares a day: out and back.
     inrPerDay: ranged((p) => km * inrPerKm(trip.mode, p) - 2 * p(sw.fare)),
     method: [
       {
@@ -105,7 +97,7 @@ export const commuteMetro: ActionDef = {
   sources: ["indiaGhg2015", "unepMetro2014", "oecd2020", "goel2015", "dmrcFares"],
   quantified: true,
   appliesTo: (ctx) => tripMembers(ctx, ctx.profile.commute),
-  eligible: (ctx) => motorTrip(ctx.profile.commute) && ctx.profile.commute.km >= 3,
+  eligible: (ctx) => motorTrip(ctx.profile.commute) && ctx.profile.commute.km >= METRO_MIN_KM,
   impact: (ctx) => {
     const trip = ctx.profile.commute;
     return motorTrip(trip) ? switchImpact(ctx, trip, SWITCHES.metro) : impact({});
@@ -122,28 +114,12 @@ export const commuteBus: ActionDef = {
   sources: ["indiaGhg2015", "oecd2020", "goel2015"],
   quantified: true,
   appliesTo: (ctx) => tripMembers(ctx, ctx.profile.commute),
-  eligible: (ctx) => motorTrip(ctx.profile.commute) && ctx.profile.commute.km >= 2,
+  eligible: (ctx) => motorTrip(ctx.profile.commute) && ctx.profile.commute.km >= BUS_MIN_KM,
   impact: (ctx) => {
     const trip = ctx.profile.commute;
     return motorTrip(trip) ? switchImpact(ctx, trip, SWITCHES.bus) : impact({});
   },
 };
-
-/** A share of a car's daily running that disappears: carpools, combined errands, rotas. */
-function carKmImpact(km: (p: Pick) => number, label: MessageKey): Impact {
-  return impact({
-    co2kg: ranged((p) => km(p) * co2PerKm("car", p)),
-    pm25g: ranged((p) => km(p) * wearPerKm("car", p)),
-    inrPerDay: ranged((p) => km(p) * inrPerKm("car", p)),
-    method: [
-      {
-        label,
-        formula: "km avoided × (CO2, wear and fuel per km)",
-        result: `${short(km(pickMid))} km`,
-      },
-    ],
-  });
-}
 
 const drivesCar = (ctx: Context) =>
   ctx.profile.commute?.mode === "car" || ctx.profile.schoolRun?.mode === "car";
@@ -160,7 +136,9 @@ export const carpool: ActionDef = {
   appliesTo: (ctx) => tripMembers(ctx, ctx.profile.commute),
   eligible: (ctx) => ctx.profile.commute?.mode === "car",
   impact: (ctx) =>
-    onTrip(ctx.profile.commute, (trip) => carKmImpact(() => roundTrip(trip) / 2, "method.carpool")),
+    onTrip(ctx.profile.commute, (trip) =>
+      carKmImpact(() => roundTrip(trip) * CARPOOL_SAVES, "method.carpool"),
+    ),
 };
 
 export const schoolCarpool: ActionDef = {
@@ -175,7 +153,7 @@ export const schoolCarpool: ActionDef = {
   eligible: (ctx) => ctx.profile.schoolRun?.mode === "car",
   impact: (ctx) =>
     onTrip(ctx.profile.schoolRun, (trip) =>
-      carKmImpact(() => (roundTrip(trip) * 2) / 3, "method.rota"),
+      carKmImpact(() => roundTrip(trip) * ROTA_SAVES, "method.rota"),
     ),
 };
 
@@ -192,6 +170,8 @@ export const combineErrands: ActionDef = {
   impact: () => carKmImpact((p) => p("errandKmAvoided"), "method.errands"),
 };
 
+const MINUTES_PER_HOUR = 60;
+
 export const engineOff: ActionDef = {
   id: "engine-off",
   ledgers: ["prevent"],
@@ -203,7 +183,8 @@ export const engineOff: ActionDef = {
   appliesTo: () => [],
   eligible: drivesCar,
   impact: () => {
-    const litres = (p: Pick) => (p("idleLitresPerHour") * p("idleMinutesPerDay")) / 60;
+    const litres = (p: Pick) =>
+      (p("idleLitresPerHour") * p("idleMinutesPerDay")) / MINUTES_PER_HOUR;
     return impact({
       co2kg: ranged((p) => litres(p) * p("petrolCo2PerLitre")),
       inrPerDay: ranged((p) => litres(p) * p("petrolInrPerLitre")),
@@ -217,17 +198,6 @@ export const engineOff: ActionDef = {
     });
   },
 };
-
-/** What leaving a motor vehicle at home saves the street and the wallet; nothing for other modes. */
-function motorSavings(trip: Trip) {
-  if (!motorTrip(trip)) return { co2kg: null, pm25g: null, inrPerDay: null };
-  const km = roundTrip(trip);
-  return {
-    co2kg: ranged((p) => km * co2PerKm(trip.mode, p)),
-    pm25g: ranged((p) => km * wearPerKm(trip.mode, p)),
-    inrPerDay: ranged((p) => km * inrPerKm(trip.mode, p)),
-  };
-}
 
 /** Both legs of a commute not made: the dose the commuters skip and what the vehicle doesn't burn. */
 function stayHomeImpact(ctx: Context, trip: Trip): Impact {
@@ -258,103 +228,6 @@ export const workFromHome: ActionDef = {
   eligible: (ctx) =>
     ctx.profile.commute !== null &&
     ctx.profile.commute.mode !== "none" &&
-    healthLevel(ctx.air.today.mean) >= 4,
+    healthLevel(ctx.air.today.mean) >= LEVEL.veryUnhealthy,
   impact: (ctx) => onTrip(ctx.profile.commute, (trip) => stayHomeImpact(ctx, trip)),
-};
-
-/** N95 or FFP2 on open-air legs. Infants never wear masks. */
-function maskImpact(ctx: Context, trip: Trip): Impact {
-  const people = tripMembers(ctx, trip, { masks: true });
-  const model = (p: Pick) =>
-    total(
-      people.map((m: Member) =>
-        times(tripExposure(ctx, m, trip, trip.mode, p), 1 - p("maskLeakage")),
-      ),
-    );
-  return protectImpact(ctx, people, model, {
-    inrPerDay: ranged((p) => -(p("n95Inr") * people.length) / 3),
-    method: [
-      {
-        label: "method.mask",
-        formula: "trip dose × (1 − inward leakage)",
-        result: `${short(pm25At(ctx.air, trip.leaveAt))} µg/m³ outside, ${Math.round((1 - pickMid("maskLeakage")) * 100)}% blocked`,
-      },
-    ],
-  });
-}
-
-const openTrip = (ctx: Context, trip: Trip | null): trip is Trip =>
-  trip !== null && OPEN_MODES.has(trip.mode) && healthLevel(pm25At(ctx.air, trip.leaveAt)) >= 2;
-
-export const maskSchoolRun: ActionDef = {
-  id: "mask-school-run",
-  ledgers: ["protect"],
-  category: "travel",
-  timing: "schoolRun",
-  cost: "low",
-  sources: ["cherrie2018", "goel2015", "epaEfh2011"],
-  quantified: true,
-  appliesTo: (ctx) => tripMembers(ctx, ctx.profile.schoolRun, { masks: true }),
-  eligible: (ctx) => openTrip(ctx, ctx.profile.schoolRun),
-  impact: (ctx) => onTrip(ctx.profile.schoolRun, (trip) => maskImpact(ctx, trip)),
-};
-
-export const maskCommute: ActionDef = {
-  id: "mask-commute",
-  ledgers: ["protect"],
-  category: "travel",
-  timing: "commute",
-  cost: "low",
-  sources: ["cherrie2018", "goel2015", "epaEfh2011"],
-  quantified: true,
-  appliesTo: (ctx) => tripMembers(ctx, ctx.profile.commute, { masks: true }),
-  eligible: (ctx) => openTrip(ctx, ctx.profile.commute),
-  impact: (ctx) => onTrip(ctx.profile.commute, (trip) => maskImpact(ctx, trip)),
-};
-
-export const carRecirculate: ActionDef = {
-  id: "car-recirculate",
-  ledgers: ["protect"],
-  category: "travel",
-  timing: "commute",
-  cost: "free",
-  sources: ["goel2015", "epaEfh2011"],
-  quantified: true,
-  appliesTo: (ctx) =>
-    [ctx.profile.commute, ctx.profile.schoolRun].flatMap((t) =>
-      t?.mode === "car" ? tripMembers(ctx, t) : [],
-    ),
-  eligible: drivesCar,
-  impact: (ctx) => {
-    const trips = [ctx.profile.commute, ctx.profile.schoolRun].filter(
-      (t): t is Trip => t?.mode === "car",
-    );
-    const people = [
-      ...new Map(trips.flatMap((t) => tripMembers(ctx, t)).map((m) => [m.id, m])).values(),
-    ];
-    const model = (p: Pick) =>
-      total(
-        trips.flatMap((t) =>
-          tripMembers(ctx, t).map((m) => {
-            const hours = legHours("car", t.km, p);
-            // Each leg takes `hours`, so summing both legs' air covers the round trip.
-            const ambient = pm25At(ctx.air, t.leaveAt) + pm25At(ctx.air, t.returnAt);
-            const delta = ambient * (p("ratioCarOpen") - p("ratioCarAc"));
-            return {
-              exposure: delta * hours,
-              dose: delta * hours * inhalationRate(m.group, "rest"),
-            };
-          }),
-        ),
-      );
-    return protectImpact(ctx, people, model, {
-      method: [
-        {
-          label: "method.recirculate",
-          formula: "C_out × (1.3 open − 0.5 recirculating) × time",
-          result: `${short(model(pickMid).dose)} µg`,
-        },
-      ],
-    });
-  },
 };

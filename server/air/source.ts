@@ -1,4 +1,5 @@
 import type { AirSnapshot } from "../../shared/air";
+import { MINUTE_MS } from "../../shared/time";
 import { TtlCache } from "../cache";
 
 /** Anything that can give the hourly air for a grid cell: Open-Meteo, a fixture, a station network. */
@@ -18,7 +19,7 @@ export class UpstreamError extends Error {
 }
 
 /** Forecasts update hourly at best, so half an hour per cell is plenty fresh. */
-const AIR_TTL_MS = 30 * 60_000;
+const AIR_TTL_MS = 30 * MINUTE_MS;
 
 /** Wraps a source so each grid cell is fetched at most once per TTL, however many ask. */
 export function cached(source: AirSource, ttlMs = AIR_TTL_MS): AirSource {

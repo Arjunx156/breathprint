@@ -3,7 +3,7 @@ import { z } from "zod";
 import { PROMPT_VERSION } from "../server/ai/prompts";
 import { loadEnv } from "../server/env";
 import { llmFromEnv } from "../server/llm/config";
-import type { LogLine } from "../server/llm/llm";
+import type { LogLine } from "../server/llm/types";
 import { CASES } from "./cases";
 import { type Outcome, overall, replaying, runCase, taped } from "./jobs";
 

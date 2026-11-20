@@ -7,6 +7,7 @@ function connection(c: Context) {
   try {
     return getConnInfo(c);
   } catch {
+    // getConnInfo throws outside Bun.serve: in tests, and on Vercel.
     return null;
   }
 }

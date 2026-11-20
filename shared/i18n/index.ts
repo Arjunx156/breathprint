@@ -1,3 +1,4 @@
+import { itemAt } from "../list";
 import type { Language, Member } from "../profile";
 import { en } from "./en";
 import { hi } from "./hi";
@@ -30,7 +31,7 @@ export function tx(lang: Language, key: string, vars?: Vars): string {
 
 /** Placeholder names a string expects, for checking translations agree. */
 export function placeholders(lang: Language, key: MessageKey): string[] {
-  return [...MESSAGES[lang][key].matchAll(/\{(\w+)\}/g)].map((m) => m[1] as string).sort();
+  return [...MESSAGES[lang][key].matchAll(/\{(\w+)\}/g)].map((m) => itemAt(m, 1)).sort();
 }
 
 /** "Kabir, Anya and Dadi", or "the whole family" when everyone is named. */

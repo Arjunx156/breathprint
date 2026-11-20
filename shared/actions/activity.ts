@@ -1,5 +1,5 @@
 import { pm25At } from "../air";
-import { healthLevel } from "../aqi";
+import { healthLevel, LEVEL } from "../aqi";
 import { type Pick, picker } from "../factors";
 import { clock } from "../format";
 import { hasCombustionHeating, isSensitive, type Member } from "../profile";
@@ -7,7 +7,8 @@ import { exposed, homeIndoor, impact, protectImpact, ranged, short, total } from
 import type { ActionDef, Context } from "./types";
 
 const pickMid = picker("mid");
-const EXERCISE_HOURS = 0.75;
+const EXERCISE_MINUTES = 45;
+const EXERCISE_HOURS = EXERCISE_MINUTES / 60;
 const PLAY_HOURS = 1;
 
 const exerciseClock = (ctx: Context) => (ctx.profile.exercise === "evening" ? "18:00" : "07:00");
@@ -32,7 +33,8 @@ export const exerciseIndoors: ActionDef = {
   quantified: true,
   appliesTo: exercisers,
   eligible: (ctx) =>
-    ctx.profile.exercise !== "none" && healthLevel(pm25At(ctx.air, exerciseClock(ctx))) >= 2,
+    ctx.profile.exercise !== "none" &&
+    healthLevel(pm25At(ctx.air, exerciseClock(ctx))) >= LEVEL.sensitive,
   impact: (ctx) => {
     const people = exercisers(ctx);
     const outdoor = pm25At(ctx.air, exerciseClock(ctx));
@@ -44,7 +46,7 @@ export const exerciseIndoors: ActionDef = {
       method: [
         {
           label: "method.exercise",
-          formula: "(roadside − indoor) × moderate breathing × 45 min",
+          formula: `(roadside − indoor) × moderate breathing × ${EXERCISE_MINUTES} min`,
           result: `${short(outdoor * pickMid("ratioWalk"))} → ${short(homeIndoor(ctx, outdoor, pickMid))} µg/m³`,
         },
       ],
@@ -64,30 +66,30 @@ export const exerciseWindow: ActionDef = {
   quantified: true,
   appliesTo: exercisers,
   eligible: (ctx) => {
-    const w = ctx.air.windows[0];
+    const clean = ctx.air.windows[0];
     return (
       ctx.profile.exercise !== "none" &&
-      w !== undefined &&
-      healthLevel(w.meanPm25) <= exertionCeiling(exercisers(ctx))
+      clean !== undefined &&
+      healthLevel(clean.meanPm25) <= exertionCeiling(exercisers(ctx))
     );
   },
   impact: (ctx) => {
-    const w = ctx.air.windows[0];
-    if (!w) return impact({});
+    const clean = ctx.air.windows[0];
+    if (!clean) return impact({});
     const people = exercisers(ctx);
     const usual = pm25At(ctx.air, exerciseClock(ctx));
     const model = (p: Pick) =>
       total(
         people.map((m) =>
-          exposed(m, (usual - w.meanPm25) * p("ratioWalk"), EXERCISE_HOURS, "moderate"),
+          exposed(m, (usual - clean.meanPm25) * p("ratioWalk"), EXERCISE_HOURS, "moderate"),
         ),
       );
     return protectImpact(ctx, people, model, {
       method: [
         {
           label: "method.exerciseShift",
-          formula: "(usual hour − clean window) × roadside ratio × 45 min",
-          result: `${short(usual)} → ${short(w.meanPm25)} µg/m³ at ${clock(w.start)}`,
+          formula: `(usual hour − clean window) × roadside ratio × ${EXERCISE_MINUTES} min`,
+          result: `${short(usual)} → ${short(clean.meanPm25)} µg/m³ at ${clock(clean.start)}`,
         },
       ],
     });
@@ -103,7 +105,8 @@ export const playIndoors: ActionDef = {
   sources: ["epaSchools", "epaEfh2011"],
   quantified: true,
   appliesTo: players,
-  eligible: (ctx) => players(ctx).length > 0 && healthLevel(pm25At(ctx.air, "17:00")) >= 2,
+  eligible: (ctx) =>
+    players(ctx).length > 0 && healthLevel(pm25At(ctx.air, "17:00")) >= LEVEL.sensitive,
   impact: (ctx) => {
     const people = players(ctx);
     const outdoor = pm25At(ctx.air, "17:00");
@@ -139,7 +142,7 @@ export const noWasteBurning: ActionDef = {
       method: [
         {
           label: "method.burning",
-          formula: "kg burned × 9.8 g PM2.5 per kg",
+          formula: `kg burned × ${pickMid("garbagePm25PerKg")} g PM2.5 per kg`,
           result: `${short(pickMid("wasteKgPerDay") * pickMid("garbagePm25PerKg"))} g`,
         },
       ],
@@ -155,7 +158,8 @@ export const reportBurning: ActionDef = {
   sources: ["akagi2011", "caqmGrap"],
   quantified: false,
   appliesTo: () => [],
-  eligible: (ctx) => healthLevel(ctx.air.today.mean) >= 3 && !ctx.profile.home.burnsWaste,
+  eligible: (ctx) =>
+    healthLevel(ctx.air.today.mean) >= LEVEL.unhealthy && !ctx.profile.home.burnsWaste,
   impact: () => impact({}),
 };
 

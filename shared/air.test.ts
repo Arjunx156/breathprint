@@ -1,14 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import {
-  type Hour,
-  inWindow,
-  localHourOf,
-  overnightPm25,
-  pm25At,
-  summarize,
-  windowsForDay,
-} from "./air";
+import { type Hour, inWindow, localHourOf, overnightPm25, pm25At, summarize } from "./air";
 import { DEMO_DAY, delhiMorning, delhiSevereSnapshot } from "./fixtures";
+import { windowsForDay } from "./windows";
 
 const hour = (h: number, pm25: number | null): Hour => ({
   time: `2026-11-18T${String(h).padStart(2, "0")}:00`,

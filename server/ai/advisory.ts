@@ -83,8 +83,14 @@ export function readAdvisory({ allowed, lang }: Omit<AdvisoryCall, "req">) {
   return (reply: string): Parsed<Advisory> => {
     const shaped = parseShaped(reply, AdvisorySchema, "advisory");
     if (!shaped.ok) return shaped;
-    const a = shaped.value;
-    const words = [a.headline, a.situation, ...a.do, ...a.avoid, a.sensitive].join("\n");
-    return verdict(a, proseIssues(words, allowed, lang));
+    const advisory = shaped.value;
+    const words = [
+      advisory.headline,
+      advisory.situation,
+      ...advisory.do,
+      ...advisory.avoid,
+      advisory.sensitive,
+    ].join("\n");
+    return verdict(advisory, proseIssues(words, allowed, lang));
   };
 }

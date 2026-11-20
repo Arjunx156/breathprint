@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { type AirSnapshot, AirSnapshotSchema } from "../../shared/air";
+import { oneDecimal } from "../../shared/format";
 import { type AirSource, UpstreamError } from "./source";
 
 const ENDPOINT = "https://air-quality-api.open-meteo.com/v1/air-quality";
@@ -23,10 +24,10 @@ type Response = z.infer<typeof ResponseSchema>;
 
 /** Negative or absurd model values become gaps rather than advice. */
 const clean = (v: number | null | undefined) =>
-  v === null || v === undefined || v < 0 || v > 5000 ? null : Math.round(v * 10) / 10;
+  v === null || v === undefined || v < 0 || v > 5000 ? null : oneDecimal(v);
 
 function toSnapshot(lat: number, lon: number, body: Response, fetchedAt: Date): AirSnapshot {
-  const h = body.hourly;
+  const hourly = body.hourly;
   return AirSnapshotSchema.parse({
     lat,
     lon,
@@ -34,12 +35,12 @@ function toSnapshot(lat: number, lon: number, body: Response, fetchedAt: Date): 
     utcOffsetSeconds: body.utc_offset_seconds,
     fetchedAt: fetchedAt.toISOString(),
     source: "open-meteo",
-    hours: h.time.map((time, i) => ({
+    hours: hourly.time.map((time, i) => ({
       time,
-      pm25: clean(h.pm2_5[i]),
-      pm10: clean(h.pm10[i]),
-      no2: clean(h.nitrogen_dioxide[i]),
-      o3: clean(h.ozone[i]),
+      pm25: clean(hourly.pm2_5[i]),
+      pm10: clean(hourly.pm10[i]),
+      no2: clean(hourly.nitrogen_dioxide[i]),
+      o3: clean(hourly.ozone[i]),
     })),
   });
 }

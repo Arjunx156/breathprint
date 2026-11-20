@@ -5,7 +5,16 @@
   "description": "A smog-season assistant that plans low-exposure, low-emission days for families and communities.",
   "author": "Arjun Krishnan <4rjunkrishnan@gmail.com>",
   "license": "MIT",
+  "homepage": "https://breathprint-zeta.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Arjunx156/breathprint.git"
+  },
   "type": "module",
+  "packageManager": "bun@1.4.3",
+  "engines": {
+    "bun": ">=1.4"
+  },
   "scripts": {
     "dev": "bun run scripts/dev.ts",
     "build": "bun run scripts/build.ts",

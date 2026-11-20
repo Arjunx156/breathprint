@@ -9,7 +9,11 @@ import { useEffect, useState } from "react";
  * import the real file and never come here.
  */
 
-/** @public Imported by shared/i18n in the browser build, through the alias in vite.config.ts. */
+/**
+ * @public Imported by shared/i18n in the browser build, through the alias in vite.config.ts.
+ * Typed as the whole table while it is still empty: `t` reads a missing Hindi
+ * string as English until loadHindi fills this in.
+ */
 export const hi = {} as Record<MessageKey, string>;
 
 let loading: Promise<void> | null = null;

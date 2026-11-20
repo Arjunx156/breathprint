@@ -37,3 +37,20 @@ export class ProviderError extends Error {
     this.status = status;
   }
 }
+
+/** Why a model call failed, which decides whether to retry, move on or stop. */
+export type Failure = "offline" | "quota" | "timeout" | "unavailable" | "refused";
+
+/** No model could answer. Routes catch this and fall back to the engine's own answer. */
+export class LlmUnavailable extends Error {
+  readonly reason: Failure;
+
+  constructor(reason: Failure, options?: ErrorOptions) {
+    super(`model unavailable: ${reason}`, options);
+    this.name = "LlmUnavailable";
+    this.reason = reason;
+  }
+}
+
+/** One structured log line; values only, never a prompt or a reply. */
+export type LogLine = Record<string, string | number | boolean>;

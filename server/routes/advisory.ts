@@ -3,6 +3,7 @@ import { z } from "zod";
 import { AUDIENCES, CHANNELS, collective, typicalHousehold } from "../../shared/community";
 import { coarse, LANGUAGES, PlaceSchema } from "../../shared/profile";
 import type { AdvisoryReply } from "../../shared/replies";
+import { SLOT_MS, slotOf } from "../../shared/time";
 import { advisoryRequest, readAdvisory } from "../ai/advisory";
 import { contextFor } from "../ai/grounding";
 import { PROMPT_VERSION } from "../ai/prompts";
@@ -22,8 +23,6 @@ const AdvisoryBody = z.object({
   demo: z.boolean().default(false),
 });
 
-const SLOT_MS = 3 * 3_600_000;
-
 export function advisoryRoutes({ llm, air }: { llm: Llm; air: AirSource }) {
   const cache = new TtlCache<AdvisoryReply>(SLOT_MS, 300);
 
@@ -32,7 +31,7 @@ export function advisoryRoutes({ llm, air }: { llm: Llm; air: AirSource }) {
     const { audience, channel, lang, households, demo } = body;
     const now = Date.now();
     const cell = [coarse(body.place.lat), coarse(body.place.lon)];
-    const slot = demo ? "demo" : Math.floor(now / SLOT_MS);
+    const slot = demo ? "demo" : slotOf(now);
     const key = keyOf([PROMPT_VERSION, lang, audience, channel, households, slot, cell]);
 
     const reply = await cache.getOrLoad(key, async (): Promise<AdvisoryReply> => {

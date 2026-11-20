@@ -5,7 +5,7 @@ import { $ZodError } from "zod/v4/core";
 import { InvalidReply } from "../ai/structured";
 import { UpstreamError } from "../air/source";
 import { issueLines } from "../issues";
-import { LlmUnavailable } from "../llm/llm";
+import { LlmUnavailable } from "../llm/types";
 import { logger } from "../log";
 
 export type ErrorCode =

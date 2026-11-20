@@ -2,6 +2,7 @@ import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promi
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { IMMUTABLE, SECURITY_HEADERS } from "../server/headers";
+import { itemAt } from "../shared/list";
 import { renderBlog } from "./blog";
 import { PRODUCTION_URL, robotsTxt, sitemapXml, siteUrl } from "./site";
 import { precacheList, stampWorker } from "./sw";
@@ -69,8 +70,8 @@ async function writeConfig() {
 /** Gzipped size of the scripts index.html loads up front. */
 async function initialJs(): Promise<{ file: string; gzip: number }[]> {
   const html = await readFile(join(STATIC, "index.html"), "utf8");
-  const files = [...html.matchAll(/(?:src|href)="\/(assets\/[^"]+\.js)"/g)].map(
-    (m) => m[1] as string,
+  const files = [...html.matchAll(/(?:src|href)="\/(assets\/[^"]+\.js)"/g)].map((m) =>
+    itemAt(m, 1),
   );
   return Promise.all(
     files.map(async (file) => ({

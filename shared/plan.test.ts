@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { actionById, rankActions } from "./actions/catalogue";
+import { checkPlan } from "./checker";
 import {
   alternativesFor,
   buildRulePlan,
-  checkPlan,
   type DayPlanBody,
   DayPlanSchema,
   MAX_STEPS,

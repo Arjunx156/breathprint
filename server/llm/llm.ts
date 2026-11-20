@@ -1,20 +1,12 @@
 import { logger } from "../log";
-import { type Chunk, type LlmRequest, type Provider, ProviderError, type Usage } from "./types";
-
-export type Failure = "offline" | "quota" | "timeout" | "unavailable" | "refused";
-
-/** No model could answer. Routes catch this and fall back to the engine's own answer. */
-export class LlmUnavailable extends Error {
-  readonly reason: Failure;
-
-  constructor(reason: Failure, options?: ErrorOptions) {
-    super(`model unavailable: ${reason}`, options);
-    this.name = "LlmUnavailable";
-    this.reason = reason;
-  }
-}
-
-export type LogLine = Record<string, string | number | boolean>;
+import { type Attempt, attemptSignal, classify, type Recorder, recorder, relay } from "./attempt";
+import {
+  type Failure,
+  type LlmRequest,
+  LlmUnavailable,
+  type LogLine,
+  type Provider,
+} from "./types";
 
 export type LlmOptions = {
   /** Null when nothing is configured: every call fails fast as "offline". */
@@ -61,49 +53,10 @@ function settle(options: LlmOptions): Settings {
   return { budgetMs: BUDGET_MS, price: [0, 0], log: defaultLog, sleep: wait, ...options };
 }
 
-/** What a failed attempt means for the next one. */
-function classify(err: unknown, timedOut: boolean): Failure {
-  if (timedOut) return "timeout";
-  if (!(err instanceof ProviderError)) return "unavailable";
-  if (err.status === 429) return "quota";
-  // A bad or missing key fails the same way on every model; stop asking.
-  if (err.status === 401 || err.status === 403) return "refused";
-  return "unavailable";
-}
-
-/** Aborts one attempt when its time is up or the caller hangs up, and knows which it was. */
-function attemptSignal(ms: number, outer?: AbortSignal) {
-  const controller = new AbortController();
-  let fired = false;
-  let id: ReturnType<typeof setTimeout> | undefined;
-  const arm = (after: number) => {
-    clearTimeout(id);
-    id = setTimeout(() => {
-      fired = true;
-      controller.abort();
-    }, after);
-  };
-  const onOuter = () => controller.abort();
-  outer?.addEventListener("abort", onOuter, { once: true });
-  arm(ms);
-  return {
-    signal: controller.signal,
-    timedOut: () => fired,
-    arm,
-    stop: () => {
-      clearTimeout(id);
-      outer?.removeEventListener("abort", onOuter);
-      controller.abort();
-    },
-  };
-}
-
-type Attempt = ReturnType<typeof attemptSignal>;
-type Recorder = (outcome: "ok" | Failure, usage?: Usage) => void;
 type Asked<T> = { ok: true; value: T } | { ok: false; failure: Failure };
 
 /** What one attempt on one model has to work with. */
-type Turn = {
+type Try = {
   provider: Provider;
   model: string;
   attempt: Attempt;
@@ -111,7 +64,7 @@ type Turn = {
   /** When the whole call's budget runs out, on the performance clock. */
   deadline: number;
 };
-type Ask<T> = (turn: Turn) => Promise<T>;
+type Ask<T> = (attempt: Try) => Promise<T>;
 
 /** One call as it walks the model chain. */
 type Call<T> = {
@@ -123,57 +76,14 @@ type Call<T> = {
   ask: Ask<T>;
 };
 
-/** One log line per attempt: model, outcome, tokens, time and cost, and never the text. */
-function recorder(s: Settings, req: LlmRequest, model: string, attempt: number): Recorder {
-  const started = performance.now();
-  return (outcome, usage = { input: 0, output: 0 }) => {
-    const usd = (usage.input * s.price[0] + usage.output * s.price[1]) / 1e6;
-    s.log({
-      llm: req.job,
-      provider: s.provider?.name ?? "none",
-      model,
-      attempt,
-      outcome,
-      ms: Math.round(performance.now() - started),
-      in: usage.input,
-      out: usage.output,
-      usd: Number(usd.toFixed(6)),
-    });
-  };
-}
-
-/** Passes a stream on piece by piece and logs once, however it ends. */
-async function* relay(
-  source: AsyncIterator<Chunk>,
-  first: IteratorResult<Chunk>,
-  attempt: Attempt,
-  record: Recorder,
-): AsyncGenerator<string> {
-  let usage: Usage | undefined;
-  try {
-    let next = first;
-    while (!next.done) {
-      usage = next.value.usage ?? usage;
-      if (next.value.text) yield next.value.text;
-      next = await source.next();
-    }
-    record("ok", usage);
-  } catch (err) {
-    const reason = classify(err, attempt.timedOut());
-    record(reason, usage);
-    throw new LlmUnavailable(reason, { cause: err });
-  } finally {
-    attempt.stop();
-  }
-}
-
 /** One attempt on one model, with its own timeout and log line. */
 async function once<T>(call: Call<T>, model: string, n: number): Promise<Asked<T>> {
   const { settings, provider, req, deadline, signal, ask } = call;
   const left = deadline - performance.now();
   if (left <= 0) return { ok: false, failure: "timeout" };
   const attempt = attemptSignal(Math.min(settings.timeoutMs, left), signal);
-  const record = recorder(settings, req, model, n);
+  const meter = { log: settings.log, price: settings.price, provider: provider.name };
+  const record = recorder(meter, req, model, n);
   try {
     return { ok: true, value: await ask({ provider, model, attempt, record, deadline }) };
   } catch (err) {

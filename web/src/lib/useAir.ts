@@ -1,6 +1,7 @@
 import { type AirSnapshot, AirSnapshotSchema, type AirSummary, summarize } from "@shared/air";
 import { DEMO_DAY, delhiMorning, delhiSevereSnapshot } from "@shared/fixtures";
 import { coarse, type Place } from "@shared/profile";
+import { MINUTE_MS } from "@shared/time";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchAir } from "./api";
 import { KEYS, load, save } from "./storage";
@@ -10,7 +11,7 @@ export type AirState =
   | { status: "error"; retry: () => void }
   | { status: "ready"; summary: AirSummary; offline: boolean };
 
-const REFRESH_MS = 5 * 60_000;
+const REFRESH_MS = 5 * MINUTE_MS;
 
 /** The current time, ticking every five minutes; frozen on the demo's morning. */
 function useNow(demo: boolean): number {

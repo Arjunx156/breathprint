@@ -7,12 +7,12 @@ import {
 import { type Chunk, type LlmRequest, type Provider, ProviderError, type Usage } from "./types";
 
 function usage(res: GenerateContentResponse): Usage | undefined {
-  const m = res.usageMetadata;
-  if (!m) return undefined;
+  const meta = res.usageMetadata;
+  if (!meta) return undefined;
   // Thinking tokens are billed as output.
   return {
-    input: m.promptTokenCount ?? 0,
-    output: (m.candidatesTokenCount ?? 0) + (m.thoughtsTokenCount ?? 0),
+    input: meta.promptTokenCount ?? 0,
+    output: (meta.candidatesTokenCount ?? 0) + (meta.thoughtsTokenCount ?? 0),
   };
 }
 
@@ -22,8 +22,8 @@ function asProviderError(err: unknown): ProviderError {
 }
 
 function chunk(res: GenerateContentResponse): Chunk {
-  const u = usage(res);
-  return u ? { text: res.text ?? "", usage: u } : { text: res.text ?? "" };
+  const used = usage(res);
+  return used ? { text: res.text ?? "", usage: used } : { text: res.text ?? "" };
 }
 
 /** Gemini through Google's own SDK. The chain in llm.ts owns retries, so the SDK makes one attempt. */

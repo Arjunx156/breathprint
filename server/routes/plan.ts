@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { PlanReply } from "../../shared/plan";
 import { forModel, LANGUAGES, ProfileSchema } from "../../shared/profile";
+import { SLOT_MS, slotOf } from "../../shared/time";
 import { contextFor } from "../ai/grounding";
 import { personalPlan, plannerRequest, readPlan } from "../ai/planner";
 import { PROMPT_VERSION } from "../ai/prompts";
@@ -17,16 +18,13 @@ export const AiBody = z.object({
   demo: z.boolean().default(false),
 });
 
-/** Forecasts move in hours, so one plan per household per three-hour slot is plenty. */
-const SLOT_MS = 3 * 3_600_000;
-
 export function planRoutes({ llm, air }: { llm: Llm; air: AirSource }) {
   const cache = new TtlCache<PlanReply>(SLOT_MS, 500);
 
   return new Hono().post("/", valid("json", AiBody), async (c) => {
     const { profile, lang, demo } = c.req.valid("json");
     const now = Date.now();
-    const slot = demo ? "demo" : Math.floor(now / SLOT_MS);
+    const slot = demo ? "demo" : slotOf(now);
     const key = keyOf([PROMPT_VERSION, lang, slot, forModel(profile)]);
     // Shared with anyone asking the same thing meanwhile, so one visitor
     // hanging up must not cancel it for the rest.

@@ -16,23 +16,20 @@ import {
   heatOneRoom,
   purifierNight,
   sealGaps,
-  skipIncense,
-  swapCoil,
   ventilateWindow,
   wetCleaning,
 } from "./home";
+import { skipIncense, swapCoil } from "./smoke";
 import {
   carpool,
-  carRecirculate,
   combineErrands,
   commuteBus,
   commuteMetro,
   engineOff,
-  maskCommute,
-  maskSchoolRun,
   schoolCarpool,
   workFromHome,
 } from "./travel";
+import { carRecirculate, maskCommute, maskSchoolRun } from "./tripProtect";
 import type { ActionDef, Context, Cost, Impact } from "./types";
 
 export const CATALOGUE: readonly ActionDef[] = [
@@ -80,8 +77,31 @@ export type Candidate = {
   score: number;
 };
 
+/** Whether a candidate protects anyone today: it lowers a dose, or it is advice with no number. */
+export const protects = (c: Candidate) =>
+  c.action.ledgers.includes("protect") &&
+  (c.impact.dose === null ? !c.action.quantified : c.impact.dose.mid > 0);
+/** Whether a candidate cuts what the household adds to the street's air. */
+export const prevents = (c: Candidate) =>
+  c.action.ledgers.includes("prevent") &&
+  ((c.impact.co2kg?.mid ?? 0) > 0 || (c.impact.pm25g?.mid ?? 0) > 0 || !c.action.quantified);
+
+/** Safety actions outrank everything else. */
+const SAFETY_SCORE = 10;
+/** Protection's share of a score: 40% on the cleanest day, 6 points more a level, never past 70%. */
+const PROTECT_SHARE = { base: 0.4, perLevel: 0.06, max: 0.7 };
+/** Protecting a sensitive member counts half as much again. */
+const SENSITIVE_BONUS = 0.5;
+/** A day's cut that earns full marks for prevention, split evenly between CO2 and PM2.5. */
+const FULL_CUT = { co2kg: 4, pm25g: 2 };
+/** Advice without a number still earns a little, so it isn't always last. */
+const QUALITATIVE_SCORE = 0.05;
 const COST_PENALTY: Record<Cost, number> = { free: 0, low: 0.02, medium: 0.08, high: 0.15 };
+/** How much cost matters for each budget. */
 const BUDGET_WEIGHT = { tight: 2, moderate: 1, comfortable: 0.5 } as const;
+
+/** Clamps `n` into [low, high]. */
+const clamp = (n: number, low: number, high: number) => Math.max(low, Math.min(high, n));
 
 /**
  * Orders actions by what they do for this family today. Protection weighs more
@@ -89,19 +109,23 @@ const BUDGET_WEIGHT = { tight: 2, moderate: 1, comfortable: 0.5 } as const;
  * never ignored. Safety actions always come first.
  */
 function score(ctx: Context, action: ActionDef, impact: Impact): number {
-  if (action.safety) return 10;
+  if (action.safety) return SAFETY_SCORE;
   const level = healthLevel(ctx.air.today.mean);
-  const protectWeight = Math.min(0.7, 0.4 + 0.06 * level);
+  const protectWeight = Math.min(
+    PROTECT_SHARE.max,
+    PROTECT_SHARE.base + PROTECT_SHARE.perLevel * level,
+  );
   const sensitiveShare =
     impact.people.length === 0
       ? 0
       : ctx.profile.members.filter((m) => impact.people.includes(m.id) && isSensitive(m)).length /
         impact.people.length;
-  const protect = Math.max(-1, Math.min(1, impact.doseShare ?? 0)) * (1 + 0.5 * sensitiveShare);
+  const protect = clamp(impact.doseShare ?? 0, -1, 1) * (1 + SENSITIVE_BONUS * sensitiveShare);
   const prevent =
-    Math.min(1, Math.max(0, impact.co2kg?.mid ?? 0) / 4) * 0.5 +
-    Math.min(1, Math.max(0, impact.pm25g?.mid ?? 0) / 2) * 0.5;
-  const qualitative = action.quantified ? 0 : 0.05;
+    (clamp((impact.co2kg?.mid ?? 0) / FULL_CUT.co2kg, 0, 1) +
+      clamp((impact.pm25g?.mid ?? 0) / FULL_CUT.pm25g, 0, 1)) /
+    2;
+  const qualitative = action.quantified ? 0 : QUALITATIVE_SCORE;
   const penalty = COST_PENALTY[action.cost] * BUDGET_WEIGHT[ctx.profile.budget];
   return protectWeight * protect + (1 - protectWeight) * prevent + qualitative - penalty;
 }

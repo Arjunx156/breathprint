@@ -1,9 +1,10 @@
 import { pm25At } from "../air";
-import { healthLevel } from "../aqi";
-import { burstExposure, hoursAway, inhalationRate } from "../exposure";
+import { healthLevel, LEVEL } from "../aqi";
+import { hoursAway } from "../exposure";
 import { type FactorId, type Pick, picker } from "../factors";
 import { clock } from "../format";
 import { hasCombustionIndoors, type Member } from "../profile";
+import { HOURS_PER_DAY } from "../time";
 import {
   airExchange,
   bedroomGroup,
@@ -77,12 +78,14 @@ export const diyPurifier: ActionDef = {
   quantified: true,
   appliesTo: bedroomGroup,
   // A build costs money, so it is only suggested for nights unhealthy for sensitive groups.
-  eligible: (ctx) => !ctx.profile.home.purifier && healthLevel(overnight(ctx)) >= 2,
+  eligible: (ctx) => !ctx.profile.home.purifier && healthLevel(overnight(ctx)) >= LEVEL.sensitive,
   impact: (ctx) => filterImpact(ctx, "boxFanCadr", "boxFanWatts", "boxFanBuildInr"),
 };
 
 const MORNING_AIRING = "08:00";
 const AIRING_HOURS = 0.5;
+/** Moving the airing is worth a step when the morning is 20% dirtier than the window. */
+const WORTH_MOVING = 1.2;
 
 /**
  * Airing the house resets indoor air to roughly the outdoor level; after the
@@ -105,30 +108,30 @@ export const ventilateWindow: ActionDef = {
   sources: ["chenZhao2011", "openMeteo"],
   quantified: true,
   appliesTo: (ctx) => {
-    const w = ctx.air.windows[0];
-    return w ? homeAt(ctx, clock(w.start)) : [];
+    const clean = ctx.air.windows[0];
+    return clean ? homeAt(ctx, clock(clean.start)) : [];
   },
   eligible: (ctx) => {
-    const w = ctx.air.windows[0];
-    return w !== undefined && pm25At(ctx.air, MORNING_AIRING) > w.meanPm25 * 1.2;
+    const clean = ctx.air.windows[0];
+    return clean !== undefined && pm25At(ctx.air, MORNING_AIRING) > clean.meanPm25 * WORTH_MOVING;
   },
   impact: (ctx) => {
-    const w = ctx.air.windows[0];
-    if (!w) return impact({});
+    const clean = ctx.air.windows[0];
+    if (!clean) return impact({});
     const morningPeople = homeAt(ctx, MORNING_AIRING);
-    const windowPeople = homeAt(ctx, clock(w.start));
+    const windowPeople = homeAt(ctx, clock(clean.start));
     const morning = pm25At(ctx.air, MORNING_AIRING);
     const model = (p: Pick) => {
       const before = airingExcess(ctx, morningPeople, morning, p);
-      const after = airingExcess(ctx, windowPeople, w.meanPm25, p);
+      const after = airingExcess(ctx, windowPeople, clean.meanPm25, p);
       return { exposure: before.exposure - after.exposure, dose: before.dose - after.dose };
     };
     return protectImpact(ctx, morningPeople, model, {
       method: [
         {
           label: "method.airingSwap",
-          formula: "(C_out − C_in) × (0.5 h + 1/(a + k))",
-          result: `${short(morning)} → ${short(w.meanPm25)} µg/m³ outside`,
+          formula: `(C_out − C_in) × (${AIRING_HOURS} h + 1/(a + k))`,
+          result: `${short(morning)} → ${short(clean.meanPm25)} µg/m³ outside`,
         },
       ],
     });
@@ -160,7 +163,9 @@ export const sealGaps: ActionDef = {
     const room = (p: Pick, a: number) => (p("penetration") * a * outdoor) / (a + p("deposition"));
     const model = (p: Pick) => {
       const delta = room(p, airExchange(ctx, p)) - room(p, p(tighter));
-      return total(people.map((m) => exposed(m, delta, 24 - hoursAway(ctx.profile, m), "rest")));
+      return total(
+        people.map((m) => exposed(m, delta, HOURS_PER_DAY - hoursAway(ctx.profile, m), "rest")),
+      );
     };
     return protectImpact(ctx, people, model, {
       inrOnce: ranged((p) => p("sealKitInr")),
@@ -173,77 +178,6 @@ export const sealGaps: ActionDef = {
       ],
     });
   },
-};
-
-function burstImpact(
-  ctx: Context,
-  people: Member[],
-  massMg: (p: Pick) => number,
-  room: "roomVolume" | "livingRoomVolume",
-  activity: "rest" | "sleep",
-): Impact {
-  const model = (p: Pick) => {
-    const area = burstExposure(massMg(p) * 1000, p(room), airExchange(ctx, p), p("deposition"));
-    return total(
-      people.map((m) => ({ exposure: area, dose: area * inhalationRate(m.group, activity) })),
-    );
-  };
-  return protectImpact(
-    ctx,
-    people,
-    model,
-    {
-      pm25g: ranged((p) => massMg(p) / 1000),
-      method: [
-        {
-          label: "method.burst",
-          formula: "exposure = mass / (V × (a + k))",
-          result: `${short(massMg(pickMid))} mg → ${short(model(pickMid).exposure / Math.max(1, people.length))} µg·h/m³ each`,
-        },
-      ],
-    },
-    true,
-  );
-}
-
-export const skipIncense: ActionDef = {
-  id: "skip-incense",
-  ledgers: ["protect", "prevent"],
-  category: "home",
-  timing: "morning",
-  cost: "free",
-  sources: ["jetter2002", "chenZhao2011"],
-  quantified: true,
-  appliesTo: (ctx) => homeAt(ctx, "07:00"),
-  eligible: (ctx) => ctx.profile.home.incense,
-  impact: (ctx) =>
-    burstImpact(
-      ctx,
-      homeAt(ctx, "07:00"),
-      (p) => p("incensePm25PerStick") * p("incenseSticksPerDay"),
-      "livingRoomVolume",
-      "rest",
-    ),
-};
-
-export const swapCoil: ActionDef = {
-  id: "swap-coil",
-  ledgers: ["protect", "prevent"],
-  category: "home",
-  timing: "night",
-  cost: "low",
-  sources: ["liu2003", "chenZhao2011"],
-  quantified: true,
-  appliesTo: bedroomGroup,
-  eligible: (ctx) => ctx.profile.home.mosquitoCoil,
-  impact: (ctx) =>
-    burstImpact(
-      ctx,
-      bedroomGroup(ctx),
-      (p) => p("coilMgPerHour") * p("coilHours"),
-      "roomVolume",
-      "sleep",
-    ),
 };
 
 export const heatOneRoom: ActionDef = {
@@ -279,6 +213,6 @@ export const wetCleaning: ActionDef = {
   sources: ["epaPurifier"],
   quantified: false,
   appliesTo: (ctx) => ctx.profile.members,
-  eligible: (ctx) => healthLevel(ctx.air.today.mean) >= 3,
+  eligible: (ctx) => healthLevel(ctx.air.today.mean) >= LEVEL.unhealthy,
   impact: () => impact({}),
 };

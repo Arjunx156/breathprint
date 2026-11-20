@@ -1,4 +1,5 @@
 import { z } from "zod/mini";
+import { oneDecimal } from "./format";
 
 export const AGE_GROUPS = ["infant", "child", "teen", "adult", "older"] as const;
 export const CONDITIONS = ["asthma", "copd", "heart", "pregnant"] as const;
@@ -110,7 +111,7 @@ export const GRID_KM = 11;
 
 /** Rounds to 0.1 degree (about 11 km) so the server never learns a precise address. */
 export function coarse(value: number): number {
-  return Math.round(value * 10) / 10;
+  return oneDecimal(value);
 }
 
 /** A household nobody has described yet: one adult, average home, no trips. */

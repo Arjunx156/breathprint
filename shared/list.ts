@@ -1,3 +1,8 @@
+/** The average of a list of numbers; 0 for an empty one. */
+export function mean(values: readonly number[]): number {
+  return values.length === 0 ? 0 : values.reduce((sum, v) => sum + v, 0) / values.length;
+}
+
 /** A list with at least one item, so its first and last always exist. */
 export type NonEmpty<T> = readonly [T, ...T[]];
 

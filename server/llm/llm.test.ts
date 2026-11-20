@@ -2,8 +2,14 @@ import { describe, expect, test } from "bun:test";
 import { loadEnv } from "../env";
 import { DEFAULT_MODELS, llmFromEnv } from "./config";
 import { scripted } from "./fake";
-import { createLlm, LlmUnavailable, type LogLine, SILENT } from "./llm";
-import { type LlmRequest, type Provider, ProviderError } from "./types";
+import { createLlm, SILENT } from "./llm";
+import {
+  type LlmRequest,
+  LlmUnavailable,
+  type LogLine,
+  type Provider,
+  ProviderError,
+} from "./types";
 
 const req: LlmRequest = {
   job: "test",

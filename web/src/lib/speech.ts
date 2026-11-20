@@ -19,13 +19,14 @@ type Recognizer = {
 
 type RecognizerClass = new () => Recognizer;
 
+declare global {
+  var SpeechRecognition: RecognizerClass | undefined;
+  /** Chrome and Safari still ship the recogniser under its prefixed name. */
+  var webkitSpeechRecognition: RecognizerClass | undefined;
+}
+
 function recognizerClass(): RecognizerClass | null {
-  if (typeof window === "undefined") return null;
-  const w = window as unknown as {
-    SpeechRecognition?: RecognizerClass;
-    webkitSpeechRecognition?: RecognizerClass;
-  };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+  return globalThis.SpeechRecognition ?? globalThis.webkitSpeechRecognition ?? null;
 }
 
 export type DictationError = "blocked" | "silence" | "failed";
@@ -53,25 +54,25 @@ export function useDictation(lang: Language, onText: (text: string) => void) {
   const start = useCallback(() => {
     if (!Recognition) return;
     active.current?.abort();
-    const r = new Recognition();
-    r.lang = SPEECH_LANG[lang];
-    r.interimResults = true;
-    r.continuous = false;
-    r.onresult = (e) => {
+    const recognizer = new Recognition();
+    recognizer.lang = SPEECH_LANG[lang];
+    recognizer.interimResults = true;
+    recognizer.continuous = false;
+    recognizer.onresult = (e) => {
       const text = Array.from(e.results, (result) => result[0]?.transcript ?? "").join("");
       said.current(text);
     };
-    r.onerror = (e) => {
+    recognizer.onerror = (e) => {
       if (e.error !== "aborted") setError(errorOf(e.error));
     };
-    r.onend = () => {
+    recognizer.onend = () => {
       setListening(false);
-      if (active.current === r) active.current = null;
+      if (active.current === recognizer) active.current = null;
     };
-    active.current = r;
+    active.current = recognizer;
     setError(null);
     setListening(true);
-    r.start();
+    recognizer.start();
   }, [Recognition, lang]);
 
   const stop = useCallback(() => active.current?.stop(), []);
@@ -112,12 +113,13 @@ export function useReadAloud(lang: Language) {
       const voice = voiceFor(lang);
       const parts = pieces.filter((p) => p.trim());
       parts.forEach((text, i) => {
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = SPEECH_LANG[lang];
-        if (voice) u.voice = voice;
-        if (i === parts.length - 1) u.onend = () => setReading((r) => (r === id ? null : r));
-        u.onerror = () => setReading((r) => (r === id ? null : r));
-        speechSynthesis.speak(u);
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = SPEECH_LANG[lang];
+        if (voice) utterance.voice = voice;
+        if (i === parts.length - 1)
+          utterance.onend = () => setReading((r) => (r === id ? null : r));
+        utterance.onerror = () => setReading((r) => (r === id ? null : r));
+        speechSynthesis.speak(utterance);
       });
       setReading(parts.length > 0 ? id : null);
     },

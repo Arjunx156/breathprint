@@ -1,12 +1,7 @@
 import type { Candidate } from "../../shared/actions/catalogue";
 import type { Context } from "../../shared/actions/types";
-import {
-  checkPlan,
-  DayPlanSchema,
-  MAX_STEPS,
-  type PlanReply,
-  type PlanStep,
-} from "../../shared/plan";
+import { checkPlan } from "../../shared/checker";
+import { DayPlanSchema, MAX_STEPS, type PlanReply, type PlanStep } from "../../shared/plan";
 import type { Language } from "../../shared/profile";
 import type { Llm } from "../llm/llm";
 import type { LlmRequest } from "../llm/types";

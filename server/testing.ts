@@ -1,7 +1,9 @@
 import { fixtureSource } from "./air/fixture";
 import { createApp, type Deps } from "./app";
 import { loadEnv } from "./env";
+import { inTurn, scriptedLlm } from "./llm/fake";
 import { createLlm, type Llm, SILENT } from "./llm/llm";
+import type { LlmRequest } from "./llm/types";
 import { fromHeader } from "./middleware/rateLimit";
 
 /** A model client with nothing configured: every call fails fast as offline. */
@@ -22,3 +24,22 @@ export function testApp(overrides: Partial<Deps> = {}) {
     ...overrides,
   });
 }
+
+/** An app whose model answers from `replies` in turn, recording every request it is sent. */
+export function withModel(replies: Array<string | Error>, env = loadEnv({})) {
+  const seen: LlmRequest[] = [];
+  return { app: testApp({ env, llm: scriptedLlm(inTurn(replies, seen)) }), seen };
+}
+
+/** A same-origin JSON POST from one visitor, as the browser sends it. */
+export const post = (
+  app: ReturnType<typeof testApp>,
+  path: string,
+  body: unknown,
+  ip = "198.51.100.1",
+) =>
+  app.request(path, {
+    method: "POST",
+    headers: { origin: "http://localhost", "content-type": "application/json", "x-real-ip": ip },
+    body: JSON.stringify(body),
+  });

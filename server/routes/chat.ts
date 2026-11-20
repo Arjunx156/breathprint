@@ -63,6 +63,7 @@ export function chatRoutes({ llm, air }: { llm: Llm; air: AirSource }) {
         const flags = ungrounded(text, call.allowed);
         await send({ type: "done", model: reply.model, recorded: reply.recorded, flags });
       } catch {
+        // The model chain has logged why; the page keeps what arrived and marks it broken.
         await send({ type: "error" });
       }
     });
