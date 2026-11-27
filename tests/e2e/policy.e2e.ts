@@ -35,6 +35,13 @@ for (const path of PAGES) {
   });
 }
 
+test("security.txt says where to report a vulnerability", async ({ request }) => {
+  const res = await request.get("/.well-known/security.txt");
+  expect(res.status()).toBe(200);
+  expect(res.headers()["content-type"]).toContain("text/plain");
+  expect(await res.text()).toContain("Contact: https://github.com/Arjunx156/breathprint/security");
+});
+
 test("the app is cross-origin isolated and registers its worker through the policy", async ({
   page,
 }) => {

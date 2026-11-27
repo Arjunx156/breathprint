@@ -2,9 +2,11 @@ import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promi
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { IMMUTABLE, SECURITY_HEADERS } from "@server/headers";
+import { type MessageKey, t } from "@shared/i18n";
 import { itemAt } from "@shared/list";
+import { lostTitle, NOT_FOUND_FILE, PAGES, pageFile, pageTitle } from "@shared/pages";
 import { renderBlog } from "./blog";
-import { PRODUCTION_URL, robotsTxt, sitemapXml, siteUrl } from "./site";
+import { notFoundShell, PRODUCTION_URL, pageShell, robotsTxt, sitemapXml, siteUrl } from "./site";
 import { precacheList, stampWorker } from "./sw";
 
 /**
@@ -59,9 +61,11 @@ async function writeConfig() {
       { src: "/sw.js", headers: { "Cache-Control": "no-cache" }, continue: true },
       { src: "/blog", status: 308, headers: { Location: "/blog/" } },
       { src: "/blog/", dest: "/blog/index.html" },
+      ...PAGES.map((p) => ({ src: p.path, dest: `/${pageFile(p.path)}` })),
       { handle: "filesystem" },
       { src: "/api/(.*)", dest: "/api" },
-      { src: "/(.*)", dest: "/index.html" },
+      // The app's router would draw the lost page anyway; the status tells crawlers too.
+      { src: "/(.*)", status: 404, dest: `/${NOT_FOUND_FILE}` },
     ],
   };
   await writeFile(join(OUT, "config.json"), JSON.stringify(config, null, 2));
@@ -95,6 +99,19 @@ async function writeBlog() {
   await writeFile(page, shell.replace("<!--blog-->", body));
 }
 
+/**
+ * Each page's own copy of the app's HTML, titled and linked in English, and the
+ * lost page's. The front page's copy is index.html itself, rewritten as it was.
+ */
+async function writePages(origin: string) {
+  const html = await readFile(join(STATIC, "index.html"), "utf8");
+  const en = (key: MessageKey) => t("en", key);
+  const page = ({ path }: (typeof PAGES)[number]) =>
+    writeFile(join(STATIC, pageFile(path)), pageShell(html, path, pageTitle(path, en), origin));
+  const lost = writeFile(join(STATIC, NOT_FOUND_FILE), notFoundShell(html, lostTitle(en)));
+  await Promise.all([...PAGES.map(page), lost]);
+}
+
 async function writeServiceWorker() {
   const worker = join(STATIC, "sw.js");
   const files = precacheList(await readdir(join(STATIC, "assets")));
@@ -114,6 +131,7 @@ await run(["bun", "x", "vite", "build"]);
 await writeBlog();
 await writeServiceWorker();
 const site = siteUrl();
+await writePages(site);
 await writeFile(join(STATIC, "robots.txt"), robotsTxt(site));
 await writeFile(join(STATIC, "sitemap.xml"), sitemapXml(site));
 console.info(`site ${site}`);

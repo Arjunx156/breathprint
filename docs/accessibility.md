@@ -10,7 +10,9 @@ The bar is WCAG 2.2 AA. The people Breathprint is for include a grandparent on a
 - **Live updates are announced, not sprung.** Streamed answers, plan progress and save confirmations go through `aria-live` regions. The personalised plan only replaces the instant one when the user asks for it.
 - **Every page names itself.** The tab title follows the page, in the reader's language, so a screen reader announces where a link went and a list of tabs tells them apart.
 - **Focus is always visible and always placed.** Focus rings are 2 px outlines, which high contrast redraws in the system colour. A move between pages puts focus at the top of the new page. A button that goes away when pressed never strands focus: removing a person moves it to "Add a person", adding one moves it to their name field, and turning on Gemini keeps it on the notice that replaces the button. Forgetting the household asks first with focus on "Keep it", so a second Enter is safe, and backing out returns focus to the button that asked. After a room scan, focus moves to the results heading; after saving, it stays on the button.
-- **Targets are at least 44 px tall**, and the layout holds at 320 px wide without sideways scrolling.
+- **Contrast past AA.** Body text, the muted grey and the accent all reach WCAG AAA's 7:1 in both themes (4.5:1 for large text), so the app stays readable on a dim phone in a bright, hazy room.
+- **Nothing jumps while a page loads.** Every page reserves a full screen before its code and forecast arrive, so on a slow line a tap never lands on something that just moved. This matters most for shaky hands and for anyone who loses their place when text shifts.
+- **Targets are at least 44 px tall**, and every page holds at 320 px wide (a 1280 px window at 400% zoom) without sideways scrolling.
 - **Language is real.** English and Hindi throughout, and the page's `lang` attribute follows the choice so a screen reader switches voice.
 - **Voice both ways.** Questions can be dictated where the browser supports speech recognition, and every answer can be read aloud in English or Hindi. Neither is required to use any feature.
 - **Motion respects the system.** With reduced motion requested, nothing animates or transitions.
@@ -20,18 +22,20 @@ The bar is WCAG 2.2 AA. The people Breathprint is for include a grandparent on a
 
 Every push runs these in a real browser (`tests/e2e/`), and any failure blocks the build:
 
-| Check                                                                | Pages                              |
-| -------------------------------------------------------------------- | ---------------------------------- |
-| axe with every WCAG 2.0, 2.1 and 2.2 A and AA rule, zero violations  | All 8 pages, light and dark themes |
-| axe again under forced colours (Windows high contrast)               | Today, Ask, Indoors, Community     |
-| The chosen option looks different from the rest under forced colours | Settings                           |
-| Keyboard focus keeps a visible 2 px outline under forced colours     | Today                              |
-| Landmarks and navigation match the expected accessibility tree       | Today, Ask, Indoors                |
-| First Tab reaches the skip link, and it moves focus to the page      | Today                              |
-| No horizontal scroll at 320 px                                       | Today                              |
-| No animation or transition when reduced motion is requested          | Today                              |
-| Switching to Hindi changes the words and the page's `lang`           | Settings                           |
-| Pages open offline after one visit                                   | Today, Ask, Indoors, Community     |
+| Check                                                                                                                | Pages                              |
+| -------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| axe with every WCAG 2.0, 2.1 and 2.2 A and AA rule, the AAA contrast rules and axe's best practices, zero violations | All 8 pages, light and dark themes |
+| axe again under forced colours (Windows high contrast)                                                               | Today, Ask, Indoors, Community     |
+| The chosen option looks different from the rest under forced colours                                                 | Settings                           |
+| Keyboard focus keeps a visible 2 px outline under forced colours                                                     | Today                              |
+| Landmarks and navigation match the expected accessibility tree                                                       | Today, Ask, Indoors                |
+| First Tab reaches the skip link, and it moves focus to the page                                                      | Today                              |
+| No horizontal scroll at 320 px                                                                                       | All 8 pages                        |
+| No layout shift while the page loads on a slow phone line                                                            | Settings, Setup, Ask               |
+| An unknown address answers 404 and offers a way home                                                                 | A made-up address                  |
+| No animation or transition when reduced motion is requested                                                          | Today                              |
+| Switching to Hindi changes the words and the page's `lang`                                                           | Settings                           |
+| Pages open offline after one visit                                                                                   | Today, Ask, Indoors, Community     |
 
 Component tests (`bun test`) cover the live regions, page titles in both languages, focus after moving between pages, adding and removing a person, turning on Gemini, the forget question and saving a room's fixes, the forecast table, and the voice controls with a scripted recogniser.
 
@@ -39,7 +43,7 @@ Component tests (`bun test`) cover the live regions, page titles in both languag
 
 - **No manual screen reader pass yet.** Nothing here has been heard through NVDA, JAWS, VoiceOver or TalkBack. The structure tests make a good result likely, not certain, and a real pass with NVDA and TalkBack is the next step.
 - **Voice input on real devices.** Dictation is tested against a scripted recogniser, not a real microphone. Read-aloud has been checked in a desktop browser.
-- **Zoom at 400 percent** is covered by the 320 px test in principle, but it hasn't been checked by eye on every page.
+- **Zoom at 400 percent** has been checked by eye at 320 px on all eight pages in English. Hindi, whose words run longer, has only the automated test.
 - **Hindi readability.** The Hindi strings are written for plain reading, but no native reader has reviewed them for tone.
 
 If something here gets in your way, please open an issue on the repository and say what you were using.

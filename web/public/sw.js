@@ -33,9 +33,12 @@ self.addEventListener("fetch", (event) => {
   else if (url.pathname.startsWith("/assets/")) event.respondWith(asset(request));
 });
 
-/** Every app route is the same shell; the blog is its own page. */
+/**
+ * Each page is kept under its own address. Offline, a page never opened here
+ * gets the front page's copy, and the app's router draws the right one.
+ */
 async function page(request, url) {
-  const key = url.pathname.startsWith("/blog") ? "/blog/" : "/";
+  const key = url.pathname.startsWith("/blog") ? "/blog/" : url.pathname;
   const cache = await caches.open(CACHE);
   try {
     const res = await fetch(request);
@@ -44,7 +47,7 @@ async function page(request, url) {
     }
     return res;
   } catch {
-    return (await cache.match(key)) ?? Response.error();
+    return (await cache.match(key)) ?? (await cache.match("/")) ?? Response.error();
   }
 }
 

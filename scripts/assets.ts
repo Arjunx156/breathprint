@@ -11,7 +11,7 @@ import { demoAir } from "@shared/fixtures";
 const PUBLIC = "web/public";
 const INK = "#16171a";
 const BG = "#f4f3f0";
-const MUTED = "#5e6066";
+const MUTED = "#4b4d52";
 const ACCENT_ON_INK = "#8db8f2";
 const LEVELS = ["#3c8d5a", "#98b23d", "#d8b23a", "#e07b2e", "#c9372c", "#7a2335"];
 

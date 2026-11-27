@@ -30,9 +30,7 @@ jobs:
       - run: bun run scripts/coverage.ts
       - run: bun run build
       - run: bun run evals/run.ts --replay
-      # picomatch's ReDoS sits in Vite's build-time globbing, fed only our own
-      # config, and has no fixed release yet. Nothing that ships is affected.
-      - run: bun audit --ignore=GHSA-fc5q-39xc-vjpf
+      - run: bun audit
 
   # The demo path and an axe scan of every page, light and dark.
   e2e:

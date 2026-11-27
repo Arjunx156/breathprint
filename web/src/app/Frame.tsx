@@ -46,24 +46,11 @@ function Nav() {
   );
 }
 
-/** The name, which leads home, and the five pages. */
-export function Header() {
-  const { t } = useApp();
-  return (
-    <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-4 px-5 py-3 sm:px-8 print:hidden">
-      <Link href="/" className="num text-[1.75rem] leading-none">
-        {t("app.name")}
-      </Link>
-      <Nav />
-    </header>
-  );
-}
-
 /** Says the household on screen is the demo's, with a way back to your own. */
-export function DemoBanner() {
+function DemoBanner() {
   const { t, exitDemo } = useApp();
   return (
-    <div className="border-b border-line bg-surface print:hidden">
+    <div className="border-b border-line bg-surface">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-5 py-2 text-sm sm:px-8">
         <p>{t("demo.banner")}</p>
         <button type="button" onClick={exitDemo} className="link min-h-11 font-medium">
@@ -71,6 +58,26 @@ export function DemoBanner() {
         </button>
       </div>
     </div>
+  );
+}
+
+/**
+ * The site's banner: in the demo, a note that the household is Meera's, then
+ * the name, which leads home, and the five pages. The note sits inside the
+ * banner so a screen reader's landmark list reaches it with the navigation.
+ */
+export function Header() {
+  const { t, demo } = useApp();
+  return (
+    <header className="print:hidden">
+      {demo && <DemoBanner />}
+      <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-4 px-5 py-3 sm:px-8">
+        <Link href="/" className="num text-[1.75rem] leading-none">
+          {t("app.name")}
+        </Link>
+        <Nav />
+      </div>
+    </header>
   );
 }
 

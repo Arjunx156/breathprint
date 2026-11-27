@@ -55,8 +55,9 @@ test("switching to Hindi changes the words and the page language", async ({ page
   await expect(page.getByRole("link", { name: "आज" })).toBeVisible();
 });
 
-test("an unknown address has a way home", async ({ page }) => {
-  await page.goto("/no-such-page?demo=meera");
+test("an unknown address answers 404 and still has a way home", async ({ page }) => {
+  const res = await page.goto("/no-such-page?demo=meera");
+  expect(res?.status()).toBe(404);
   await expect(
     page.getByRole("heading", { name: "This page drifted off in the smog" }),
   ).toBeVisible();

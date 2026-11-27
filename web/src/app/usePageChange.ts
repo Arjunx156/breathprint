@@ -1,20 +1,6 @@
 import type { MessageKey } from "@shared/i18n";
+import { pageTitle } from "@shared/pages";
 import { type RefObject, useEffect, useRef } from "react";
-
-/** What each page is called in the browser tab; any other address is the lost page. */
-const TITLES: Readonly<Record<string, MessageKey>> = {
-  "/setup": "setup.title",
-  "/ask": "nav.ask",
-  "/indoors": "nav.indoors",
-  "/community": "nav.community",
-  "/settings": "nav.settings",
-};
-
-/** The tab title for a path. */
-export function pageTitle(path: string, t: (key: MessageKey) => string): string {
-  if (path === "/") return t("app.title");
-  return `${t(TITLES[path] ?? "notFound.title")} · ${t("app.name")}`;
-}
 
 /**
  * Names each page in the tab and, on a move between pages, puts focus at the

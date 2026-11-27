@@ -1,11 +1,11 @@
 import "../../test/page";
 import { describe, expect, spyOn, test } from "bun:test";
 import { t } from "@shared/i18n";
+import { PAGES } from "@shared/pages";
 import { fireEvent, waitFor } from "@testing-library/react";
 import { withPage } from "../../test/dom";
 import { renderDemo, renderWith, stubFetch } from "../../test/render";
 import { PageBoundary } from "./PageBoundary";
-import { pageTitle } from "./usePageChange";
 
 withPage();
 const en = (key: Parameters<typeof t>[1]) => t("en", key);
@@ -55,11 +55,18 @@ describe("App", () => {
     expect(data.getAttribute("rel")).toBe("noopener noreferrer");
   });
 
-  test("each page names itself in the tab, and the lost page says it's lost", () => {
-    const tEn = (key: Parameters<typeof t>[1]) => t("en", key);
-    expect(pageTitle("/", tEn)).toBe(en("app.title"));
-    expect(pageTitle("/ask", tEn)).toBe(`${en("nav.ask")} · Breathprint`);
-    expect(pageTitle("/nowhere", tEn)).toBe(`${en("notFound.title")} · Breathprint`);
+  test("every address the build writes a page for has a page behind it", async () => {
+    const restore = stubFetch(async () => new Response(null, { status: 503 }));
+    try {
+      for (const { path } of PAGES) {
+        const view = renderDemo(path);
+        const heading = await view.findByRole("heading", { level: 1 });
+        expect(heading.textContent).not.toBe(en("notFound.title"));
+        view.unmount();
+      }
+    } finally {
+      restore();
+    }
   });
 
   test("following a link names the new page and starts reading at its top", async () => {

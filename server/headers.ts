@@ -25,6 +25,37 @@ export const CONTENT_SECURITY_POLICY = [
   "upgrade-insecure-requests",
 ].join("; ");
 
+/**
+ * Location finds the household's place and the microphone takes a spoken
+ * question; the clipboard copies an advisory. Every other powerful feature is
+ * off, for this page and anything it could ever embed. Photos come through the
+ * file picker, which needs no camera grant.
+ */
+const PERMISSIONS_POLICY = [
+  "geolocation=(self)",
+  "microphone=(self)",
+  "camera=()",
+  "accelerometer=()",
+  "autoplay=()",
+  "bluetooth=()",
+  "browsing-topics=()",
+  "display-capture=()",
+  "encrypted-media=()",
+  "gyroscope=()",
+  "hid=()",
+  "idle-detection=()",
+  "local-fonts=()",
+  "magnetometer=()",
+  "midi=()",
+  "otp-credentials=()",
+  "payment=()",
+  "publickey-credentials-get=()",
+  "screen-wake-lock=()",
+  "serial=()",
+  "usb=()",
+  "xr-spatial-tracking=()",
+].join(", ");
+
 /** The headers every response carries; the only place they are set. */
 export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
   "Content-Security-Policy": CONTENT_SECURITY_POLICY,
@@ -32,7 +63,7 @@ export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
   "Referrer-Policy": "strict-origin-when-cross-origin",
-  "Permissions-Policy": "camera=(self), microphone=(self), geolocation=(self), payment=(), usb=()",
+  "Permissions-Policy": PERMISSIONS_POLICY,
   // Isolated from every other origin: nothing cross-origin loads, and nothing may embed or open it.
   "Cross-Origin-Opener-Policy": "same-origin",
   "Cross-Origin-Embedder-Policy": "require-corp",
