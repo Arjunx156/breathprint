@@ -32,6 +32,7 @@ export function sitemapXml(site: string): string {
 const TITLE = /<title>[^<]*<\/title>/;
 const CANONICAL = /<link rel="canonical" href="[^"]*" \/>/;
 const OG_URL = /<meta property="og:url" content="[^"]*" \/>/;
+const HEAD_END = /<\/head>/;
 
 const ESCAPES: Readonly<Record<string, string>> = {
   "&": "&amp;",
@@ -63,4 +64,19 @@ export function notFoundShell(html: string, title: string): string {
   const named = swap(html, TITLE, `<title>${escapeHtml(title)}</title>`);
   const unlinked = swap(named, CANONICAL, '<meta name="robots" content="noindex" />');
   return swap(unlinked, OG_URL, "");
+}
+
+/** Instrument Serif, the face every page's headings are set in. */
+const HEADING_FONT = /^instrument-serif-latin-400-normal-[\w-]+\.woff2$/;
+
+/**
+ * Asks for the heading face alongside the page's code instead of after the
+ * stylesheet that names it. On a slow line the headings are then drawn once,
+ * in their own narrow face, not first in a wider fallback that reflows the page.
+ */
+export function preloadHeadingFont(html: string, assets: readonly string[]): string {
+  const font = assets.find((name) => HEADING_FONT.test(name));
+  if (!font) throw new Error("the build has no heading font to preload");
+  const link = `<link rel="preload" href="/assets/${font}" as="font" type="font/woff2" crossorigin />`;
+  return swap(html, HEAD_END, `  ${link}\n  </head>`);
 }

@@ -42,6 +42,7 @@ test("each page's HTML names its own address before any script runs", async ({
   for (const path of ["/ask", "/community", "/settings"]) {
     const html = await (await request.get(path)).text();
     expect(html).toContain(`<link rel="canonical" href="${baseURL}${path}" />`);
+    expect(html).toMatch(/<link rel="preload" href="\/assets\/instrument-serif[^"]+" as="font"/);
   }
   const lost = await request.get("/no-such-page");
   expect(lost.status()).toBe(404);

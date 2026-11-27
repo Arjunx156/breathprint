@@ -1,5 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { notFoundShell, PRODUCTION_URL, pageShell, robotsTxt, sitemapXml, siteUrl } from "./site";
+import {
+  notFoundShell,
+  PRODUCTION_URL,
+  pageShell,
+  preloadHeadingFont,
+  robotsTxt,
+  sitemapXml,
+  siteUrl,
+} from "./site";
 
 const SHELL = `<head><title>Breathprint</title>
 <link rel="canonical" href="https://air.example/" />
@@ -69,5 +77,19 @@ describe("site", () => {
     expect(fields.get("Contact")).toStartWith("https://github.com/Arjunx156/breathprint/security");
     expect(fields.get("Canonical")).toBe(`${PRODUCTION_URL}/.well-known/security.txt`);
     expect(Date.parse(fields.get("Expires") ?? "")).toBeGreaterThan(Date.now());
+  });
+
+  test("the heading face is asked for with the page, not after its stylesheet", () => {
+    const assets = [
+      "app-x1.js",
+      "instrument-serif-latin-400-italic-Ab1.woff2",
+      "instrument-serif-latin-400-normal-Cd2_e.woff2",
+    ];
+    const html = preloadHeadingFont(SHELL, assets);
+    expect(html).toContain(
+      '<link rel="preload" href="/assets/instrument-serif-latin-400-normal-Cd2_e.woff2" as="font" type="font/woff2" crossorigin />',
+    );
+    expect(html.indexOf("preload")).toBeLessThan(html.indexOf("</head>"));
+    expect(() => preloadHeadingFont(SHELL, ["app-x1.js"])).toThrow(/heading font/);
   });
 });

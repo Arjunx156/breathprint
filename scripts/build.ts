@@ -6,7 +6,15 @@ import { type MessageKey, t } from "@shared/i18n";
 import { itemAt } from "@shared/list";
 import { lostTitle, NOT_FOUND_FILE, PAGES, pageFile, pageTitle } from "@shared/pages";
 import { renderBlog } from "./blog";
-import { notFoundShell, PRODUCTION_URL, pageShell, robotsTxt, sitemapXml, siteUrl } from "./site";
+import {
+  notFoundShell,
+  PRODUCTION_URL,
+  pageShell,
+  preloadHeadingFont,
+  robotsTxt,
+  sitemapXml,
+  siteUrl,
+} from "./site";
 import { precacheList, stampWorker } from "./sw";
 
 /**
@@ -112,6 +120,15 @@ async function writePages(origin: string) {
   await Promise.all([...PAGES.map(page), lost]);
 }
 
+/** Points the app's page and the blog at the heading face before anything else reads them. */
+async function preloadFonts() {
+  const assets = await readdir(join(STATIC, "assets"));
+  for (const page of ["index.html", "blog/index.html"]) {
+    const file = join(STATIC, page);
+    await writeFile(file, preloadHeadingFont(await readFile(file, "utf8"), assets));
+  }
+}
+
 async function writeServiceWorker() {
   const worker = join(STATIC, "sw.js");
   const files = precacheList(await readdir(join(STATIC, "assets")));
@@ -129,6 +146,7 @@ async function totalSize(dir: string): Promise<number> {
 await rm(OUT, { recursive: true, force: true });
 await run(["bun", "x", "vite", "build"]);
 await writeBlog();
+await preloadFonts();
 await writeServiceWorker();
 const site = siteUrl();
 await writePages(site);
